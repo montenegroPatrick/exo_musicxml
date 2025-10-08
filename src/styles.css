@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+@plugin "tailwindcss-primeui";
+@import "primeicons/primeicons.css";
+
+@theme {
+  --font-family: 'Raleway', 'Helvetica Neue', Helvetica,Arial, sans-serif;
+  --color-primary: #AEC739;
+  --color-secondary: #5A6B7B;
+}

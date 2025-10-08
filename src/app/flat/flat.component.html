@@ -1,0 +1,129 @@
+<div class="h-screen flex flex-col w-screen items-center justify-start">
+  <div class="w-full h-20"></div>
+  <div class="w-full md:max-w-[80%] flex-1 max-h-[30%]" #flatContainer></div>
+  @if(exerciceStatus() !== 'finish') {
+  <div class="w-full p-4 text-center">
+    <div class="flex flex-col gap-2 items-center justify-center">
+      <p class="text-lg w-80">
+        @switch(countInMetronome()) { @case('play') {
+        <span class="text-4xl text-secondaryfont-bold">{{
+          metronomeTick()
+        }}</span>
+        } @case('finish') { C'est parti ! } @case('not-started') { Appuyer sur
+        le bouton pour "Commencer" quand vous êtes prêt. } }
+      </p>
+
+      <p-button
+        [disabled]="!xmlIsLoaded()"
+        secondary
+        label=" {{ isPlaying() ? 'Arrêter' : 'Commencer' }}"
+        icon="{{ isPlaying() ? 'pi pi-stop' : 'pi pi-play' }}"
+        class="text-3xl font-bold"
+        (click)="handlePlayStop()"
+      ></p-button>
+    </div>
+  </div>
+  }@else if (exerciceStatus() === 'finish') {
+  <div class="w-full p-4 text-center flex flex-col items-center gap-4">
+    <h2 class="text-lg text-black font-bold">
+      @if(resultPercentage < 30) {
+      <span>Mauvais</span>
+      } @else if(resultPercentage < 50) {
+      <span>Passable</span>
+      } @else if(resultPercentage < 70) {
+      <span>Bien</span>
+      } @else if(resultPercentage < 90) {
+      <span>Très bien</span>
+      } @else {
+      <span>Excellent</span>
+      }
+    </h2>
+    <div class="relative">
+      <p-knob
+        [(ngModel)]="resultPercentage"
+        [size]="150"
+        [strokeWidth]="4"
+        [readonly]="true"
+        [showValue]="true"
+      />
+      <!-- <div class="absolute inset-0 flex flex-col items-center justify-center">
+        
+      </div> -->
+    </div>
+    <div class="flex flex-col gap-4 items-stretch w-fit">
+      <p-button
+        label="Recommencer"
+        icon="pi pi-refresh"
+        styleClass="w-full text-3xl font-bold bg-red-500"
+        (click)="resetExercice()"
+      ></p-button>
+      <p-button
+        outlined
+        label="Continuer"
+        styleClass="w-full text-3xl font-bold"
+      ></p-button>
+    </div>
+  </div>
+  } @if(isPlaying() && exerciceStatus() !== 'finish') {
+
+  <div class="w-full max-w-75 md:max-w-85 max-h-10 flex-1 p-2">
+    <div
+      class="w-full h-full border rounded-lg relative bg-gray-100 overflow-hidden"
+      #tapViewContainer
+    >
+      <!-- Ligne de progression fixe au centre -->
+      <div
+        class="absolute top-0 bottom-0 left-1/2 w-1 bg-blue-600 z-10 -translate-x-1/2"
+      ></div>
+
+      <!-- Container qui défile avec les barres de feedback -->
+      <div
+        class="w-full md:max-w-[30%] absolute inset-0 transition-all duration-100"
+      >
+        @for (tap of userTaps(); track $index) {
+        <div
+          class="absolute top-0 bottom-0 w-1.5 opacity-75 flex items-center"
+          [style.left]="getTapPositionWithScroll(tap.timeMs)"
+          [class]="getTapColor(tap.result)"
+        >
+          <!-- Label avec le résultat -->
+          <div
+            class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold whitespace-nowrap px-2 py-1 rounded"
+            [class]="
+              tap.result === 'Good'
+                ? 'bg-green-100 text-green-800'
+                : tap.result === 'Too early'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-red-100 text-red-800'
+            "
+          >
+            {{ tap.result }} ({{ tap.diffMs }}ms)
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+  @if(userTaps().length > 0) {
+  <p class="text-center text-sm">
+    @switch(userTaps()[userTaps().length - 1].result) { @case('Good') { }
+    @case('Too early') {
+    <span>En avance de </span>
+    } @case('Too late') {
+    <span>En retard de </span>
+    } }
+    {{ userTaps()[userTaps().length - 1].diffMs }}
+    ms
+  </p>
+  }
+  <button
+    #tapButton
+    label="TAP"
+    icon="pi pi-fingerprint"
+    class="h-40 w-75 md:w-80 rounded-lg text-xl font-bold bg-secondary text-white shadow-2xl active:bg-secondary/90 duration-50 active:scale-99 transition-transform"
+    (click)="handleUserTap()"
+  >
+    TAP
+  </button>
+  }
+</div>

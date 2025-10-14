@@ -7,6 +7,7 @@ import { CountInStatus } from '../flat/models/tap.model';
 export class MetronomeService {
   private _countInStatus = signal<CountInStatus>('not-started');
   private _metronomeTick = signal<number>(1);
+  private _originalBpm = signal<number>(0);
   private _bpm = signal<number>(0);
   private _timeSignature = signal<number>(4);
   private timerIntervalId: any = null;
@@ -15,11 +16,13 @@ export class MetronomeService {
   readonly metronomeTick = this._metronomeTick.asReadonly();
   readonly bpm = this._bpm.asReadonly();
   readonly timeSignature = this._timeSignature.asReadonly();
-
+  readonly originalBpm = this._originalBpm.asReadonly();
   setBpm(bpm: number): void {
     this._bpm.set(bpm);
   }
-
+  setOriginalBpm(bpm: number): void {
+    this._originalBpm.set(bpm);
+  }
   setTimeSignature(timeSignature: number): void {
     this._timeSignature.set(timeSignature);
   }

@@ -4,6 +4,7 @@ import { environment } from '@environments/environment';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { api_url } from 'src/core/constant/api_url';
 import { IJsonXml } from '../interface/flat.interface';
+import { Level } from '../models/tap.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +14,7 @@ export class TapRythmService {
   static readonly FLAT_APP_ID = environment.FLAT_APP_ID;
 
   musicXml = signal<string>('');
+  jsonXmlOriginal = signal<IJsonXml>({});
   jsonXml = signal<IJsonXml>({});
   isError = signal<boolean>(false);
 
@@ -65,6 +67,7 @@ export class TapRythmService {
         map((res: HttpResponse<any>) => {
           if (res.status === 200 && res.body != null) {
             console.log('JSON', res.body!);
+            this.jsonXmlOriginal.set(res.body!);
             this.jsonXml.set(res.body!);
             this.isError.set(false);
           } else {
@@ -80,5 +83,24 @@ export class TapRythmService {
           );
         })
       );
+  }
+  changeSpeedNotes(speed: Level): void {
+    if (speed === 1) {
+      this.jsonXml.set(this.jsonXmlOriginal());
+      return;
+    }
+
+    console.log('original duration', this.jsonXmlOriginal()?.duration);
+    this.jsonXml.update((jsonXml) => {
+      if (jsonXml.notes) {
+        return {
+          ...jsonXml,
+          duration: (this.jsonXmlOriginal()?.duration ?? 100000) / speed,
+          notes: this.jsonXmlOriginal()?.notes?.map((note) => note / speed),
+        };
+      }
+      return jsonXml;
+    });
+    console.log('new jsonXml', this.jsonXml());
   }
 }

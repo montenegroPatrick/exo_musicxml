@@ -21,6 +21,7 @@ import { TapVisualizerComponent } from './components/tap-visualizer/tap-visualiz
 import { TapButtonComponent } from './components/tap-button/tap-button.component';
 import { ControlButtonsComponent } from './components/control-buttons/control-buttons.component';
 import { SettingsButtonComponent } from './components/settings-button/settings-button.component';
+import { Level } from './models/tap.model';
 
 @Component({
   standalone: true,
@@ -50,9 +51,9 @@ export class FlatComponent implements AfterViewInit {
   xmlContent = computed(() => this.tapRythmService.musicXml());
   jsonContent = computed(() => this.tapRythmService.jsonXml());
   isXmlError = computed(() => this.tapRythmService.isError());
-
   totalDurationMs = computed(() => this.jsonContent().duration ?? 100000);
   partsSignal = signal<any[]>([]);
+
   async ngAfterViewInit() {
     const width = window.innerWidth;
     this.embed = new Embed(this.flatContainer.nativeElement, {
@@ -72,14 +73,20 @@ export class FlatComponent implements AfterViewInit {
     this.exerciseState.setXmlIsLoaded(true);
     await this.embed?.setMetronomeMode(1);
     const mesureDetails = await this.embed?.getMeasureDetails();
+    this.metronome.setOriginalBpm(mesureDetails?.tempo?.bpm || 0);
     this.metronome.setBpm(mesureDetails?.tempo?.bpm || 0);
     this.metronome.setTimeSignature(mesureDetails?.time?.beats || 4);
+
+    // Apply saved settings
+    await this.embed?.setMasterVolume({ volume: this.exerciseState.masterVolume() });
+    await this.embed?.setPlaybackSpeed(this.exerciseState.level());
 
     this.initEmbedEvents();
   }
 
   private initEmbedEvents = async () => {
     const parts = await this.embed?.getParts();
+
     this.partsSignal.set(parts || []);
     this.embed?.on('play', async () => {
       if (this.exerciseState.isListening()) return;
@@ -148,7 +155,7 @@ export class FlatComponent implements AfterViewInit {
       try {
         await this.embed?.setPartVolume({
           partUuid: this.partsSignal()?.[0]?.uuid!,
-          volume: 0,
+          volume: this.exerciseState.partSound() ? 100 : 0,
         });
       } catch (error) {
         console.error('Error setting part volume', error);
@@ -169,5 +176,37 @@ export class FlatComponent implements AfterViewInit {
   handleContinue = () => {
     // To be implemented: navigate to next exercise
     console.log('Continue to next exercise');
+  };
+
+  handleMasterVolumeChange = async (value: number) => {
+    console.log('volume', value);
+    this.exerciseState.setMasterVolume(value);
+    await this.embed?.setMasterVolume({ volume: value });
+  };
+  handleMetronomeVolumeChange = async (value: number) => {
+    console.log('volume', value);
+  };
+  handleTapVolumeChange = async (value: number) => {
+    console.log('volume', value);
+    this.exerciseState.setTapVolume(value);
+  };
+  handleLevelChange = async (value: Level) => {
+    console.log('level', value);
+    this.exerciseState.setLevel(value);
+    await this.embed?.setPlaybackSpeed(value);
+    this.metronome.setBpm(this.metronome.originalBpm() * value);
+    console.log('new bpm', this.metronome.bpm());
+
+    this.tapRythmService.changeSpeedNotes(value);
+    // recharger la page avec le nouvel exercice
+  };
+  handlePartSoundChange = async (value: boolean) => {
+    this.exerciseState.setPartSound(value);
+    if (this.exerciseState.isPlaying()) {
+      await this.embed?.setPartVolume({
+        partUuid: this.partsSignal()?.[0]?.uuid!,
+        volume: this.exerciseState.partSound() ? 100 : 0,
+      });
+    }
   };
 }

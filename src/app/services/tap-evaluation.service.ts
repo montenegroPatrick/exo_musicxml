@@ -5,7 +5,7 @@ import { IUserTap } from '../flat/models/tap.model';
   providedIn: 'root',
 })
 export class TapEvaluationService {
-  private readonly TOLERANCE_MS = 200;
+  private readonly TOLERANCE_MS = 100;
 
   evaluateTap(tapMs: number, notes: number[]): IUserTap {
     if (!notes || notes.length === 0) {
@@ -32,7 +32,19 @@ export class TapEvaluationService {
         result: 'Good',
         diffMs: closestNote.diffMs,
       };
-    } else if (tapMs > closestNote.noteMs) {
+    } else if (tapMs > closestNote.noteMs && closestNote.diffMs < 200) {
+      return {
+        timeMs: tapMs,
+        result: 'Late',
+        diffMs: closestNote.diffMs,
+      };
+    } else if (tapMs < closestNote.noteMs && closestNote.diffMs < 200) {
+      return {
+        timeMs: tapMs,
+        result: 'Early',
+        diffMs: closestNote.diffMs,
+      };
+    } else if (tapMs > closestNote.noteMs && closestNote.diffMs > 200) {
       return {
         timeMs: tapMs,
         result: 'Too late',

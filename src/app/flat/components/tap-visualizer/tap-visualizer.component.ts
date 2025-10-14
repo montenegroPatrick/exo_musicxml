@@ -96,8 +96,12 @@ export class TapVisualizerComponent {
     switch (result) {
       case 'Good':
         return 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]';
-      case 'Too early':
+      case 'Late':
         return 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.6)]';
+      case 'Early':
+        return 'bg-yellow-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]';
+      case 'Too early':
+        return 'bg-red-500 shadow-[0_0_15px_rgba(234,179,8,0.6)]';
       case 'Too late':
         return 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)]';
       default:

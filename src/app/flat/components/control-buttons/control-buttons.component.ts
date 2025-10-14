@@ -1,10 +1,10 @@
 import { Component, input, output } from '@angular/core';
-import { ButtonModule } from 'primeng/button';
+import { Button, ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-control-buttons',
   standalone: true,
-  imports: [ButtonModule],
+  imports: [Button, ButtonModule],
   template: `
     <div class="flex gap-2 items-center">
       @if(!isPlaying()) {

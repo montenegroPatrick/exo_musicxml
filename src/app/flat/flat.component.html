@@ -8,12 +8,23 @@
   <div
     class="w-fit md:w-full text-center md:max-w-[1024px] flex-grow md:flex-grow-0 h-fit no-scrollbar p-5 border border-gray-200/50 rounded-2xl shadow-2xl relative"
     #flatContainer
-  ></div>
-  <!-- Settings button absolute right-0 bottom-0 -->
-  <app-settings-button
-    [isListening]="exerciseState.isListening()"
-    [isPlaying]="exerciseState.isPlaying()"
-  />
+  >
+    <!-- Settings button absolute right-0 bottom-0 -->
+    @if((!exerciseState.isPlaying() && !exerciseState.isListening()) ||
+    (exerciseState.isPlaying() && exerciseState.isListening())) {
+    <div class="absolute right-4 bottom-4">
+      <app-settings-button
+        (handleLevelChange)="handleLevelChange($event)"
+        (handlePartSoundChange)="handlePartSoundChange($event)"
+        (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
+        (handleMetronomeVolumeChange)="handleMetronomeVolumeChange($event)"
+        (handleTapVolumeChange)="handleTapVolumeChange($event)"
+        [isListening]="exerciseState.isListening()"
+        [isPlaying]="exerciseState.isPlaying()"
+      />
+    </div>
+    }
+  </div>
   <!-- Tap Visualizer (when playing or finished) -->
   @if(exerciseState.isPlaying() && metronome.countInStatus() === 'finish' ||
   exerciseState.exerciseStatus() === 'finish') {

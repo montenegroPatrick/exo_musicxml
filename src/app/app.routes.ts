@@ -5,6 +5,6 @@ export const routes: Routes = [
   {
     path: '',
     resolve: {},
-    component: FlatComponent,
+    loadChildren: () => import('./flat/flat.routes'),
   },
 ];

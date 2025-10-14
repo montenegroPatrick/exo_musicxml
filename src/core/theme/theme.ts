@@ -1,8 +1,19 @@
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
+import { root } from '../constant/api_url';
+import { COLORS } from '../constant/colors';
 
 export const myTheme = definePreset(Aura, {
-  primitives: {},
+  primitives: {
+    colorScheme: {
+      light: {
+        root: {
+          background: COLORS.background.main,
+          color: COLORS.text.primary,
+        },
+      },
+    },
+  },
   semantic: {
     primary: {
       50: '#f7fae8',
@@ -19,21 +30,25 @@ export const myTheme = definePreset(Aura, {
     },
     colorScheme: {
       light: {
+        root: {
+          background: COLORS.background.main,
+          color: COLORS.text.primary,
+        },
         primary: {
-          color: '#AEC739',
-          contrastColor: '#ffffff',
-          hoverColor: '#9db230',
-          activeColor: '#8c9e27',
+          color: COLORS.primary.main,
+          contrastColor: COLORS.text.white,
+          hoverColor: COLORS.primary.hover,
+          activeColor: COLORS.primary.active,
         },
         surface: {
-          0: '#ffffff',
+          0: COLORS.background.main,
           50: '{zinc.50}',
           100: '{zinc.100}',
           200: '{zinc.200}',
           300: '{zinc.300}',
           400: '{zinc.400}',
           500: '{zinc.500}',
-          600: '#5A6B7B',
+          600: COLORS.secondary.main,
           700: '{zinc.700}',
           800: '{zinc.800}',
           900: '{zinc.900}',
@@ -41,21 +56,25 @@ export const myTheme = definePreset(Aura, {
         },
       },
       dark: {
+        root: {
+          background: COLORS.background.dark,
+          color: COLORS.text.primary,
+        },
         primary: {
-          color: '#AEC739',
-          contrastColor: '#1f2937',
+          color: COLORS.primary.main,
+          contrastColor: COLORS.background.dark,
           hoverColor: '#c1d954',
           activeColor: '#d2e66f',
         },
         surface: {
-          0: '#ffffff',
+          0: COLORS.background.main,
           50: '{zinc.50}',
           100: '{zinc.100}',
           200: '{zinc.200}',
           300: '{zinc.300}',
           400: '{zinc.400}',
           500: '{zinc.500}',
-          600: '#5A6B7B',
+          600: COLORS.secondary.main,
           700: '{zinc.700}',
           800: '{zinc.800}',
           900: '{zinc.900}',
@@ -70,7 +89,9 @@ export const myTheme = definePreset(Aura, {
         paddingX: '1.5rem',
         paddingY: '0.5rem',
         borderRadius: '45px',
-
+        label: {
+          fontWeight: '300',
+        },
         sm: {
           fontSize: '0.875rem',
           paddingX: '0.75rem',
@@ -86,52 +107,52 @@ export const myTheme = definePreset(Aura, {
         light: {
           root: {
             primary: {
-              background: '#5A6B7B',
-              hoverBackground: '#4a5a69',
-              activeBackground: '#3d4d5a',
-              borderColor: '#5A6B7B',
-              hoverBorderColor: '#4a5a69',
-              activeBorderColor: '#3d4d5a',
-              color: '#ffffff',
-              hoverColor: '#ffffff',
-              activeColor: '#ffffff',
+              background: COLORS.primary.main,
+              hoverBackground: COLORS.primary.hover,
+              activeBackground: COLORS.primary.active,
+              borderColor: COLORS.primary.main,
+              hoverBorderColor: COLORS.primary.hover,
+              activeBorderColor: COLORS.primary.active,
+              color: COLORS.text.white,
+              hoverColor: COLORS.text.white,
+              activeColor: COLORS.text.white,
             },
             secondary: {
-              background: '#5A6B7B',
-              hoverBackground: '#4a5a69',
-              activeBackground: '#3d4d5a',
-              borderColor: '#5A6B7B',
-              hoverBorderColor: '#4a5a69',
-              activeBorderColor: '#3d4d5a',
-              color: '#ffffff',
-              hoverColor: '#ffffff',
-              activeColor: '#ffffff',
+              background: COLORS.secondary.main,
+              hoverBackground: COLORS.secondary.hover,
+              activeBackground: COLORS.secondary.active,
+              borderColor: COLORS.secondary.main,
+              hoverBorderColor: COLORS.secondary.hover,
+              activeBorderColor: COLORS.secondary.active,
+              color: COLORS.text.white,
+              hoverColor: COLORS.text.white,
+              activeColor: COLORS.text.white,
             },
           },
         },
         dark: {
           root: {
             primary: {
-              background: '#5A6B7B',
+              background: COLORS.secondary.main,
               hoverBackground: '#6a7b8b',
               activeBackground: '#7a8b9b',
-              borderColor: '#5A6B7B',
+              borderColor: COLORS.secondary.main,
               hoverBorderColor: '#6a7b8b',
               activeBorderColor: '#7a8b9b',
-              color: '#ffffff',
-              hoverColor: '#ffffff',
-              activeColor: '#ffffff',
+              color: COLORS.text.white,
+              hoverColor: COLORS.text.white,
+              activeColor: COLORS.text.white,
             },
             secondary: {
-              background: '#5A6B7B',
-              hoverBackground: '#4a5a69',
-              activeBackground: '#3d4d5a',
-              borderColor: '#5A6B7B',
-              hoverBorderColor: '#4a5a69',
-              activeBorderColor: '#3d4d5a',
-              color: '#ffffff',
-              hoverColor: '#ffffff',
-              activeColor: '#ffffff',
+              background: COLORS.secondary.main,
+              hoverBackground: COLORS.secondary.hover,
+              activeBackground: COLORS.secondary.active,
+              borderColor: COLORS.secondary.main,
+              hoverBorderColor: COLORS.secondary.hover,
+              activeBorderColor: COLORS.secondary.active,
+              color: COLORS.text.white,
+              hoverColor: COLORS.text.white,
+              activeColor: COLORS.text.white,
             },
           },
         },
@@ -157,14 +178,14 @@ export const myTheme = definePreset(Aura, {
       colorScheme: {
         light: {
           root: {
-            background: '#ffffff',
+            background: COLORS.background.main,
             disabledBackground: '{zinc.200}',
             filledBackground: '{zinc.50}',
             filledHoverBackground: '{zinc.50}',
-            filledFocusBackground: '#ffffff',
+            filledFocusBackground: COLORS.background.main,
             borderColor: '{zinc.300}',
             hoverBorderColor: '{zinc.400}',
-            focusBorderColor: '#AEC739',
+            focusBorderColor: COLORS.primary.main,
             invalidBorderColor: '{red.500}',
             color: '{zinc.900}',
             disabledColor: '{zinc.400}',
@@ -180,7 +201,7 @@ export const myTheme = definePreset(Aura, {
             filledFocusBackground: '{zinc.950}',
             borderColor: '{zinc.700}',
             hoverBorderColor: '{zinc.600}',
-            focusBorderColor: '#AEC739',
+            focusBorderColor: COLORS.primary.main,
             invalidBorderColor: '{red.400}',
             color: '{zinc.50}',
             disabledColor: '{zinc.500}',

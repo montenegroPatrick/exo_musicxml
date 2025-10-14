@@ -1,9 +1,24 @@
 @import "tailwindcss";
 @plugin "tailwindcss-primeui";
 @import "primeicons/primeicons.css";
+@layer utilities {
+  @variants responsive {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
 
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+  }
+}
 @theme {
   --font-family: 'Raleway', 'Helvetica Neue', Helvetica,Arial, sans-serif;
   --color-primary: #AEC739;
   --color-secondary: #5A6B7B;
+  --color-text: #A1A8AD;
+  --color-text-primary: #A1A8AD;
+  --color-background: #A18C38;
 }

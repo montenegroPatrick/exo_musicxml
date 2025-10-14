@@ -15,7 +15,7 @@ import { TimerService } from '@app/services/timer.service';
   selector: 'app-tap-visualizer',
   standalone: true,
   template: `
-    <div class="w-75 md:w-85 h-24 flex-1 p-3">
+    <div class="w-full max-w-[1024px] h-10   absolute bottom-0 left-0 right-0">
       <div
         class="w-full h-full rounded-2xl relative overflow-hidden shadow-2xl border border-gray-200/50"
         style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);"
@@ -76,7 +76,7 @@ export class TapVisualizerComponent {
   currentTime = computed(() => this.timer.currentTimeMs());
   taps = computed(() => this.exerciseState.userTaps());
   progressPosition = computed(() => {
-    return this.getTapPosition(this.currentTime());
+    return this.getTapPosition(this.currentTime() - 1000);
   });
 
   getTapPosition(tapTimeMs: number): string {

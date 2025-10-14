@@ -1,19 +1,25 @@
 <div
-  class="h-screen flex flex-col text-secondary w-screen items-center justify-start"
+  class="h-screen flex flex-col gap-1 text-secondary w-screen items-center no-scrollbar justify-start p-5"
 >
   @if(isXmlError()) {
   <app-error-message />
   } @else {
   <!-- Flat.io Editor Container -->
   <div
-    class="w-[90%] text-center md:max-w-[80%] flex-1 max-h-[50%] no-scrollbar"
+    class="w-fit md:w-full text-center md:max-w-[1024px] flex-grow md:flex-grow-0 h-fit no-scrollbar p-5 border border-gray-200/50 rounded-2xl shadow-2xl relative"
     #flatContainer
   ></div>
-
+  <!-- Settings button absolute right-0 bottom-0 -->
+  <app-settings-button
+    [isListening]="exerciseState.isListening()"
+    [isPlaying]="exerciseState.isPlaying()"
+  />
   <!-- Tap Visualizer (when playing or finished) -->
-  @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() === 'finish')
-  {
-  <app-tap-visualizer />
+  @if(exerciseState.isPlaying() && metronome.countInStatus() === 'finish' ||
+  exerciseState.exerciseStatus() === 'finish') {
+  <div class="flex-1 max-h-10 text-center w-full relative max-w-[1024px] p-5">
+    <app-tap-visualizer />
+  </div>
   }
   <!-- Main Content -->
   @if(exerciseState.exerciseStatus() === 'finish') {
@@ -32,7 +38,9 @@
     @if(!exerciseState.isPlaying()) {
     <app-control-buttons
       [isPlaying]="exerciseState.isPlaying()"
+      [isListening]="exerciseState.isListening()"
       [xmlLoaded]="exerciseState.xmlIsLoaded()"
+      (toggleListen)="handleToggleListen()"
       (playStop)="handlePlayStop()"
     />
     }
@@ -49,7 +57,9 @@
   >
     <app-control-buttons
       [isPlaying]="exerciseState.isPlaying()"
+      [isListening]="exerciseState.isListening()"
       [xmlLoaded]="exerciseState.xmlIsLoaded()"
+      (toggleListen)="handleToggleListen()"
       (playStop)="handlePlayStop()"
     />
   </app-tap-button>

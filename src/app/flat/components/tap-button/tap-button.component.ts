@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   ElementRef,
   HostListener,
   input,
@@ -27,11 +28,14 @@ import { IUserTap } from '../../models/tap.model';
         #tapButton
         label="TAP"
         icon="pi pi-fingerprint"
-        class="h-40 w-75 md:w-80 rounded-xl text-xl text-secondary shadow-xl duration-50 active:scale-99 transition-transform"
+        class="h-40 w-75 md:w-80 rounded-xl text-xl text-secondary shadow-2xl  active:shadow-inner active:border-1 active:border-primary/50 duration-100 active:scale-95 transition-transform flex flex-col gap-2 items-center justify-center"
         [disabled]="disabled()"
         (click)="handleTap()"
       >
-        TAP
+        <p>TAP</p>
+        @if(screenWidth() > 800) {
+        <span class="text-sm">Vous pouvez utiliser la barre espace</span>
+        }
       </button>
 
       <ng-content></ng-content>
@@ -45,7 +49,7 @@ export class TapButtonComponent {
   tap = output<void>();
 
   tapButton = viewChild<ElementRef<HTMLButtonElement>>('tapButton');
-
+  screenWidth = computed(() => window.innerWidth);
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
     if (event.code === 'Space' && !this.disabled()) {

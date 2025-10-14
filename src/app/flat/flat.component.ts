@@ -20,6 +20,7 @@ import { ExerciseResultsComponent } from './components/exercise-results/exercise
 import { TapVisualizerComponent } from './components/tap-visualizer/tap-visualizer.component';
 import { TapButtonComponent } from './components/tap-button/tap-button.component';
 import { ControlButtonsComponent } from './components/control-buttons/control-buttons.component';
+import { SettingsButtonComponent } from './components/settings-button/settings-button.component';
 
 @Component({
   standalone: true,
@@ -31,6 +32,7 @@ import { ControlButtonsComponent } from './components/control-buttons/control-bu
     TapVisualizerComponent,
     TapButtonComponent,
     ControlButtonsComponent,
+    SettingsButtonComponent,
   ],
   templateUrl: './flat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,24 +54,23 @@ export class FlatComponent implements AfterViewInit {
   totalDurationMs = computed(() => this.jsonContent().duration ?? 100000);
   partsSignal = signal<any[]>([]);
   async ngAfterViewInit() {
+    const width = window.innerWidth;
     this.embed = new Embed(this.flatContainer.nativeElement, {
       embedParams: {
         appId: TapRythmService.FLAT_APP_ID,
         controlsDisplay: false,
         playbackMetronome: 'active',
         layout: 'responsive',
-        zoom: 'auto',
+        zoom: width > 800 ? 'auto' : 1,
         displayFirstLinePartsNames: false,
         hideTempo: true,
       },
     });
 
     await this.embed?.loadMusicXML(this.xmlContent());
-    const parts = await this.embed?.getParts();
 
     this.exerciseState.setXmlIsLoaded(true);
     await this.embed?.setMetronomeMode(1);
-
     const mesureDetails = await this.embed?.getMeasureDetails();
     this.metronome.setBpm(mesureDetails?.tempo?.bpm || 0);
     this.metronome.setTimeSignature(mesureDetails?.time?.beats || 4);
@@ -81,15 +82,9 @@ export class FlatComponent implements AfterViewInit {
     const parts = await this.embed?.getParts();
     this.partsSignal.set(parts || []);
     this.embed?.on('play', async () => {
-      console.log('play');
+      if (this.exerciseState.isListening()) return;
 
-      this.exerciseState.resetTaps();
-      this.timer.reset();
-      this.metronome.startCountIn(() => {
-        this.timer.start();
-      });
-      this.exerciseState.setIsPlaying(true);
-      this.exerciseState.setExerciseStatus('playing');
+      this.startExercice();
     });
 
     this.embed?.on('pause', () => {
@@ -113,11 +108,31 @@ export class FlatComponent implements AfterViewInit {
       this.exerciseState.setIsPlaying(false);
     });
   };
+  startListening = () => {};
+  startExercice = () => {
+    this.exerciseState.resetTaps();
+    this.timer.reset();
 
+    this.metronome.startCountIn(() => {
+      this.timer.start();
+    });
+    this.exerciseState.setIsPlaying(true);
+    this.exerciseState.setExerciseStatus('playing');
+  };
   handleUserTap = () => {
-    const tapMs = this.timer.currentTimeMs();
+    const tapMs = this.timer.currentTimeMs() - 1000;
     const notes = this.jsonContent().notes ?? [];
     this.exerciseState.recordTap(tapMs, notes);
+  };
+
+  handleToggleListen = () => {
+    console.log('handleToggleListen', this.exerciseState.isListening());
+    if (this.exerciseState.isListening()) {
+      this.embed?.stop();
+    } else {
+      this.embed?.play();
+    }
+    this.exerciseState.setIsListening(!this.exerciseState.isListening());
   };
 
   handlePlayStop = async () => {

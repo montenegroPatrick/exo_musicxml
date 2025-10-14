@@ -13,13 +13,14 @@ export class ExerciseStateService {
   private _resultPercentage = signal<number>(0);
   private _isPlaying = signal<boolean>(false);
   private _xmlIsLoaded = signal<boolean>(false);
+  private _isListening = signal<boolean>(false);
 
   readonly exerciseStatus = this._exerciseStatus.asReadonly();
   readonly userTaps = this._userTaps.asReadonly();
   readonly resultPercentage = this._resultPercentage.asReadonly();
   readonly isPlaying = this._isPlaying.asReadonly();
   readonly xmlIsLoaded = this._xmlIsLoaded.asReadonly();
-
+  readonly isListening = this._isListening.asReadonly();
   readonly isFinished = computed(() => this._exerciseStatus() === 'finish');
   readonly canTap = computed(
     () => this._isPlaying() && this._exerciseStatus() === 'playing'
@@ -32,6 +33,9 @@ export class ExerciseStateService {
 
   setExerciseStatus(status: ExerciseStatus): void {
     this._exerciseStatus.set(status);
+  }
+  setIsListening(isListening: boolean): void {
+    this._isListening.set(isListening);
   }
 
   setIsPlaying(isPlaying: boolean): void {

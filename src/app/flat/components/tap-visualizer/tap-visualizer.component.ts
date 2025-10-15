@@ -17,7 +17,7 @@ import { TimerService } from '@app/services/timer.service';
   template: `
     <div class="w-full max-w-[1024px] h-10   absolute bottom-0 left-0 right-0">
       <div
-        class="w-full h-full rounded-2xl relative overflow-hidden shadow-2xl border border-gray-200/50"
+        class="w-full h-full  relative overflow-hidden shadow-lg border border-gray-200/50"
         style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);"
         #tapViewContainer
       >
@@ -70,13 +70,13 @@ export class TapVisualizerComponent {
   private timer = inject(TimerService);
 
   totalDuration = computed(
-    () => this.tapRythmService.jsonXml().duration ?? 100000
+    () => (this.tapRythmService.jsonXml().duration ?? 100000) + 1000
   );
   tapViewContainer = viewChild<ElementRef<HTMLDivElement>>('tapViewContainer');
   currentTime = computed(() => this.timer.currentTimeMs());
   taps = computed(() => this.exerciseState.userTaps());
   progressPosition = computed(() => {
-    return this.getTapPosition(this.currentTime() - 1000);
+    return this.getTapPosition(this.currentTime());
   });
 
   getTapPosition(tapTimeMs: number): string {

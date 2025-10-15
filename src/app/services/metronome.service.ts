@@ -11,12 +11,13 @@ export class MetronomeService {
   private _bpm = signal<number>(0);
   private _timeSignature = signal<number>(4);
   private timerIntervalId: any = null;
-
+  private _timeBetweenTicks = signal<number>(0);
   readonly countInStatus = this._countInStatus.asReadonly();
   readonly metronomeTick = this._metronomeTick.asReadonly();
   readonly bpm = this._bpm.asReadonly();
   readonly timeSignature = this._timeSignature.asReadonly();
   readonly originalBpm = this._originalBpm.asReadonly();
+  readonly timeBetweenTicks = this._timeBetweenTicks.asReadonly();
   setBpm(bpm: number): void {
     this._bpm.set(bpm);
   }
@@ -31,19 +32,19 @@ export class MetronomeService {
     this._countInStatus.set('play');
     this._metronomeTick.set(1);
 
-    const timeBetweenTicks = 60000 / this._bpm();
-    console.log('Time between ticks', timeBetweenTicks);
+    this._timeBetweenTicks.set(60000 / this._bpm());
+    console.log('Time between ticks', this._timeBetweenTicks());
 
     this.timerIntervalId = setInterval(() => {
       if (this._metronomeTick() === this._timeSignature()) {
+        onComplete();
         this._metronomeTick.set(1);
         this._countInStatus.set('finish');
         this.stop();
-        onComplete();
       } else {
         this._metronomeTick.update((tick) => tick + 1);
       }
-    }, timeBetweenTicks);
+    }, this._timeBetweenTicks());
   }
 
   stop(): void {

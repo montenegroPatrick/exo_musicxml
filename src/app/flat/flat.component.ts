@@ -75,10 +75,15 @@ export class FlatComponent implements AfterViewInit {
     const mesureDetails = await this.embed?.getMeasureDetails();
     this.metronome.setOriginalBpm(mesureDetails?.tempo?.bpm || 0);
     this.metronome.setBpm(mesureDetails?.tempo?.bpm || 0);
+    if (this.exerciseState.level() !== 1) {
+      this.handleLevelChange(this.exerciseState.level());
+    }
     this.metronome.setTimeSignature(mesureDetails?.time?.beats || 4);
 
     // Apply saved settings
-    await this.embed?.setMasterVolume({ volume: this.exerciseState.masterVolume() });
+    await this.embed?.setMasterVolume({
+      volume: this.exerciseState.masterVolume(),
+    });
     await this.embed?.setPlaybackSpeed(this.exerciseState.level());
 
     this.initEmbedEvents();
@@ -88,11 +93,7 @@ export class FlatComponent implements AfterViewInit {
     const parts = await this.embed?.getParts();
 
     this.partsSignal.set(parts || []);
-    this.embed?.on('play', async () => {
-      if (this.exerciseState.isListening()) return;
-
-      this.startExercice();
-    });
+    this.embed?.on('play', async () => {});
 
     this.embed?.on('pause', () => {
       console.log('pause');
@@ -127,7 +128,7 @@ export class FlatComponent implements AfterViewInit {
     this.exerciseState.setExerciseStatus('playing');
   };
   handleUserTap = () => {
-    const tapMs = this.timer.currentTimeMs() - 1000;
+    const tapMs = this.timer.currentTimeMs();
     const notes = this.jsonContent().notes ?? [];
     this.exerciseState.recordTap(tapMs, notes);
   };
@@ -148,6 +149,8 @@ export class FlatComponent implements AfterViewInit {
       this.resetExercice();
     } else {
       await this.embed?.play();
+      if (!this.exerciseState.isListening()) this.startExercice();
+
       // await 1second to let the part be loaded
       await new Promise((resolve) => setTimeout(resolve, 1000));
       console.log('parts', this.partsSignal());

@@ -31,7 +31,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
         #tapButton
         label="TAP"
         icon="pi pi-fingerprint"
-        class="h-40 w-75 md:w-80 rounded-xl text-xl text-secondary shadow-2xl  active:shadow-inner active:border-1 active:border-primary/50 duration-100 active:scale-95 transition-transform flex flex-col gap-2 items-center justify-center"
+        class="h-40 w-75 md:w-80 rounded-sm text-xl text-secondary shadow-lg  active:shadow-inner active:border-1 active:border-primary/50 duration-100 active:scale-95 transition-transform flex flex-col gap-2 items-center justify-center"
         [disabled]="disabled()"
         (click)="handleTap()"
       >

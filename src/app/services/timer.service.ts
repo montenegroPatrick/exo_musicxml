@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { MetronomeService } from './metronome.service';
 
 @Injectable({
   providedIn: 'root',
@@ -7,6 +8,7 @@ export class TimerService {
   private _currentTimeMs = signal<number>(0);
   private timerStartTime: number = 0;
   private timerIntervalId: any = null;
+  private metronomeService = inject(MetronomeService);
 
   readonly currentTimeMs = this._currentTimeMs.asReadonly();
 

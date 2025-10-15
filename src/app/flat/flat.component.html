@@ -45,6 +45,7 @@
   <app-countdown-display
     [status]="metronome.countInStatus()"
     [tick]="metronome.metronomeTick()"
+    [isListening]="exerciseState.isListening()"
   >
     @if(!exerciseState.isPlaying()) {
     <app-control-buttons

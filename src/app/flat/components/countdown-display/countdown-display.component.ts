@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CountInStatus } from '../../models/tap.model';
 
 @Component({
@@ -13,8 +13,8 @@ import { CountInStatus } from '../../models/tap.model';
           <span class="text-4xl text-red-500 font-bold">{{ tick() }}</span>
         </p>
         } @case('finish') { } @case('not-started') {
-        <p class=" text-center md:max-w-9/12">
-          Appuyer sur le bouton pour "Commencer" quand vous êtes prêt.
+        <p class=" text-center md:max-w-80">
+          {{ homeSentence() }}
         </p>
 
         } }
@@ -26,4 +26,11 @@ import { CountInStatus } from '../../models/tap.model';
 export class CountdownDisplayComponent {
   status = input.required<CountInStatus>();
   tick = input<number>(1);
+  isListening = input<boolean>(false);
+
+  readonly homeSentence = computed(() =>
+    this.isListening()
+      ? 'En écoute.'
+      : 'Appuyer sur le bouton pour "Commencer" quand vous êtes prêt.'
+  );
 }

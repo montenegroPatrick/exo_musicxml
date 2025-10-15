@@ -31,13 +31,15 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
         #tapButton
         label="TAP"
         icon="pi pi-fingerprint"
-        class="h-40 w-75 md:w-80 rounded-sm text-xl text-secondary shadow-lg  active:shadow-inner active:border-1 active:border-primary/50 duration-100 active:scale-95 transition-transform flex flex-col gap-2 items-center justify-center"
+        class="h-30 w-65 md:w-100 md:h-75 lg:w-130 lg:h-75 rounded-sm text-xl text-secondary shadow-lg   transition-transform flex flex-col gap-2 items-center justify-center"
         [disabled]="disabled()"
         (click)="handleTap()"
       >
-        <p>TAP</p>
+        <p class="select-none">TAP</p>
         @if(screenWidth() > 800) {
-        <span class="text-sm">Vous pouvez utiliser la barre espace</span>
+        <span class="text-sm select-none"
+          >Vous pouvez utiliser la barre espace</span
+        >
         }
       </button>
 

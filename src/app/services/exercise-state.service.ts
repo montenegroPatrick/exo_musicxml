@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { ExerciseStatus, IUserTap, Level } from '../flat/models/tap.model';
 import { TapEvaluationService } from './tap-evaluation.service';
 import { LocalStorageService } from './local-storage.service';
+import { TapRythmService } from '@app/flat/service/tap-rythm.service';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,7 @@ import { LocalStorageService } from './local-storage.service';
 export class ExerciseStateService {
   private tapEvaluationService = inject(TapEvaluationService);
   private localStorageService = inject(LocalStorageService);
-
+  private tapRythmService = inject(TapRythmService);
   private savedSettings = this.localStorageService.loadSettings();
 
   exerciseStatus = signal<ExerciseStatus>('not-started');
@@ -79,15 +80,38 @@ export class ExerciseStateService {
   calculateResult(): void {
     const taps = this.userTaps();
     const goodTaps = taps.filter((tap) => tap.result === 'Good').length;
-    const totalTaps = taps.length;
+    const lateTaps = taps.filter((tap) => tap.result === 'Late').length;
+    const earlyTaps = taps.filter((tap) => tap.result === 'Early').length;
+    const tooLateTaps = taps.filter((tap) => tap.result === 'Too late').length;
+    const tooEarlyTaps = taps.filter(
+      (tap) => tap.result === 'Too early'
+    ).length;
 
+    const totalTaps = taps.length;
+    const notes = this.tapRythmService.jsonXml().notes ?? [];
+    const totalNotes = notes.length;
+    const percentageGood = (goodTaps / totalNotes) * 100;
+    const percentageLate = (lateTaps / totalNotes) * 100;
+    const percentageEarly = (earlyTaps / totalNotes) * 100;
+    const percentageTooLate = (tooLateTaps / totalNotes) * 100;
+    const percentageTooEarly = (tooEarlyTaps / totalNotes) * 100;
+    let averageResult =
+      percentageGood -
+      percentageLate -
+      percentageEarly -
+      percentageTooLate -
+      percentageTooEarly;
+    if (averageResult < 0) {
+      averageResult = 0;
+    }
+    console.log('averageResult', averageResult);
+    this.resultPercentage.set(Math.round(averageResult));
     if (totalTaps === 0 || goodTaps === 0) {
       this.resultPercentage.set(0);
       return;
     }
 
-    const percentageGood = (goodTaps / totalTaps) * 100;
-    this.resultPercentage.set(Math.round(percentageGood));
+    this.resultPercentage.set(Math.round(averageResult));
     console.log('Result percentage', this.resultPercentage());
   }
   resetSettings(): void {

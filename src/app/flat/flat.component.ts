@@ -133,12 +133,16 @@ export class FlatComponent implements AfterViewInit {
     this.exerciseState.recordTap(tapMs, notes);
   };
 
-  handleToggleListen = () => {
+  handleToggleListen = async () => {
     console.log('handleToggleListen', this.exerciseState.isListening());
     if (this.exerciseState.isListening()) {
       this.embed?.stop();
     } else {
       this.embed?.play();
+      await this.embed?.setPartVolume({
+        partUuid: this.partsSignal()?.[0]?.uuid!,
+        volume: 100,
+      });
     }
     this.exerciseState.setIsListening(!this.exerciseState.isListening());
   };

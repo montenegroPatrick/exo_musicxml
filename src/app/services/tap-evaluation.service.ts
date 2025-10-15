@@ -5,7 +5,7 @@ import { IUserTap } from '../flat/models/tap.model';
   providedIn: 'root',
 })
 export class TapEvaluationService {
-  private readonly TOLERANCE_MS = 150;
+  private readonly TOLERANCE_MS = 100;
 
   evaluateTap(tapMs: number, notes: number[]): IUserTap {
     const latenceMetronomeSound = 100;

@@ -16,8 +16,8 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
   selector: 'app-tap-button',
   standalone: true,
   template: `
-    <div class="flex flex-col gap-2 items-center justify-center">
-      @if (lastTap() && showFeedback()) {
+    <div #tapButton [class]="class()" (click)="handleTap()">
+      <!-- @if (lastTap() && showFeedback()) {
       <p class="text-center text-sm">
         @switch(lastTap()?.result) { @case('Good') { } @case('Too early') {
         <span>En avance de </span>
@@ -25,9 +25,9 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
         <span>En retard de </span>
         } } {{ lastTap()?.diffMs }} ms
       </p>
-      }
+      } -->
 
-      <button
+      <!-- <button
         #tapButton
         label="TAP"
         icon="pi pi-fingerprint"
@@ -41,7 +41,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
           >Vous pouvez utiliser la barre espace</span
         >
         }
-      </button>
+      </button> -->
 
       <ng-content></ng-content>
     </div>
@@ -53,7 +53,7 @@ export class TapButtonComponent implements OnInit {
   lastTap = input<IUserTap | null>(null);
   showFeedback = input<boolean>(true);
   tap = output<void>();
-
+  class = input<string>('');
   tapButton = viewChild<ElementRef<HTMLButtonElement>>('tapButton');
   screenWidth = computed(() => window.innerWidth);
   audioContext = new AudioContext();

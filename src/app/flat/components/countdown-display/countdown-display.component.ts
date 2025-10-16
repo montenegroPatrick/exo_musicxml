@@ -6,16 +6,18 @@ import { CountInStatus } from '../../models/tap.model';
   standalone: true,
 
   template: `
-    <div class="w-full p-4 ">
-      <div class="flex flex-col gap-2 items-center justify-center">
+    <div class="w-full p-4 h-full">
+      <div
+        class="flex w-full  h-full flex-col gap-2 items-center justify-center"
+      >
         @switch(status()) { @case('play') {
         <p class="text-lg text-center">
-          <span class="text-4xl text-red-500 font-bold">{{ tick() }}</span>
+          <span class="text-7xl text-red-500 font-bold">{{ tick() }}</span>
         </p>
         } @case('finish') { } @case('not-started') {
-        <p class=" text-center md:max-w-80">
+        <!-- <p class=" text-center md:max-w-80">
           {{ homeSentence() }}
-        </p>
+        </p> -->
 
         } }
         <ng-content></ng-content>

@@ -1,10 +1,14 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { MetronomeService } from './metronome.service';
+import { TapEvaluationService } from './tap-evaluation.service';
+import { ExerciseStateService } from './exercise-state.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TimerService {
+  private evaluationService = inject(TapEvaluationService);
+  private exerciseState = inject(ExerciseStateService);
   private _currentTimeMs = signal<number>(0);
   private timerStartTime: number = 0;
   private timerIntervalId: any = null;

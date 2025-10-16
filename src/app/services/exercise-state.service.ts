@@ -3,6 +3,7 @@ import { ExerciseStatus, IUserTap, Level } from '../flat/models/tap.model';
 import { TapEvaluationService } from './tap-evaluation.service';
 import { LocalStorageService } from './local-storage.service';
 import { TapRythmService } from '@app/flat/service/tap-rythm.service';
+import { MetronomeService } from './metronome.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,7 +13,8 @@ export class ExerciseStateService {
   private localStorageService = inject(LocalStorageService);
   private tapRythmService = inject(TapRythmService);
   private savedSettings = this.localStorageService.loadSettings();
-
+  private metronomeService = inject(MetronomeService);
+  nbMeasures = signal<number>(0);
   exerciseStatus = signal<ExerciseStatus>('not-started');
   userTaps = signal<IUserTap[]>([]);
   resultPercentage = signal<number>(0);
@@ -25,13 +27,47 @@ export class ExerciseStateService {
   metronomeVolume = signal<number>(this.savedSettings.metronomeVolume);
   level = signal<Level>(this.savedSettings.level);
   readonly canTap = computed(
-    () => this.isPlaying() && this.exerciseStatus() === 'playing'
+    () =>
+      this.isPlaying() &&
+      this.exerciseStatus() === 'playing' &&
+      this.metronomeService.countInStatus() === 'finish'
   );
   readonly lastTap = computed(() => {
     const taps = this.userTaps();
     return taps.length > 0 ? taps[taps.length - 1] : null;
   });
 
+  readonly totalNotes = computed(() => {
+    const notes = this.tapRythmService.jsonXml().notes ?? [];
+    return notes.length;
+  });
+
+  readonly totalTaps = computed(() => this.userTaps().length);
+
+  readonly goodTaps = computed(
+    () => this.userTaps().filter((tap) => tap.result === 'Good').length
+  );
+
+  readonly lateTaps = computed(
+    () => this.userTaps().filter((tap) => tap.result === 'Late').length
+  );
+
+  readonly earlyTaps = computed(
+    () => this.userTaps().filter((tap) => tap.result === 'Early').length
+  );
+
+  readonly tooLateTaps = computed(
+    () => this.userTaps().filter((tap) => tap.result === 'Too late').length
+  );
+
+  readonly tooEarlyTaps = computed(
+    () => this.userTaps().filter((tap) => tap.result === 'Too early').length
+  );
+  readonly missedTaps = computed(() => this.tapEvaluationService.missedTaps());
+
+  setNbMeasures(nbMeasures: number): void {
+    this.nbMeasures.set(nbMeasures);
+  }
   setExerciseStatus(status: ExerciseStatus): void {
     this.exerciseStatus.set(status);
   }

@@ -22,6 +22,9 @@ import { TapButtonComponent } from './components/tap-button/tap-button.component
 import { ControlButtonsComponent } from './components/control-buttons/control-buttons.component';
 import { SettingsButtonComponent } from './components/settings-button/settings-button.component';
 import { Level } from './models/tap.model';
+import { ControlBarComponent } from './components/control-bar/control-bar.component';
+import { ButtonModule } from 'primeng/button';
+import { TapEvaluationService } from '@app/services/tap-evaluation.service';
 
 @Component({
   standalone: true,
@@ -34,6 +37,8 @@ import { Level } from './models/tap.model';
     TapButtonComponent,
     ControlButtonsComponent,
     SettingsButtonComponent,
+    ControlBarComponent,
+    ButtonModule,
   ],
   templateUrl: './flat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,7 +50,7 @@ export class FlatComponent implements AfterViewInit {
   protected exerciseState = inject(ExerciseStateService);
   protected timer = inject(TimerService);
   protected metronome = inject(MetronomeService);
-
+  protected tapEvaluationService = inject(TapEvaluationService);
   private embed: Embed | undefined;
 
   xmlContent = computed(() => this.tapRythmService.musicXml());
@@ -69,7 +74,8 @@ export class FlatComponent implements AfterViewInit {
     });
 
     await this.embed?.loadMusicXML(this.xmlContent());
-
+    const nbMeasures = await this.embed?.getNbMeasures();
+    this.exerciseState.setNbMeasures(nbMeasures);
     this.exerciseState.setXmlIsLoaded(true);
     await this.embed?.setMetronomeMode(1);
     const mesureDetails = await this.embed?.getMeasureDetails();
@@ -111,6 +117,9 @@ export class FlatComponent implements AfterViewInit {
       this.metronome.stop();
 
       if (this.timer.currentTimeMs() >= this.totalDurationMs()) {
+        this.tapEvaluationService.evaluateMissedTap(
+          this.exerciseState.userTaps()
+        );
         this.exerciseState.setExerciseStatus('finish');
       } else {
         this.exerciseState.setExerciseStatus('not-started');

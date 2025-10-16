@@ -8,7 +8,6 @@ export class TimerService {
   private _currentTimeMs = signal<number>(0);
   private timerStartTime: number = 0;
   private timerIntervalId: any = null;
-  private metronomeService = inject(MetronomeService);
 
   readonly currentTimeMs = this._currentTimeMs.asReadonly();
 

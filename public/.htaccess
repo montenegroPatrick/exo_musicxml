@@ -9,6 +9,18 @@
   RewriteRule ^ index.html [L]
 </IfModule>
 
+# Allow iframe embedding from any domain
+<IfModule mod_headers.c>
+  # Remove X-Frame-Options to allow iframe embedding
+  Header always unset X-Frame-Options
+
+  # Allow all domains to embed this app in iframe
+  Header always set Content-Security-Policy "frame-ancestors *"
+
+  # Allow credentials for Flat.io API
+  Header always set Access-Control-Allow-Credentials "true"
+</IfModule>
+
 # Si mod_rewrite n'est pas disponible, afficher une erreur
 <IfModule !mod_rewrite.c>
   ErrorDocument 404 /index.html

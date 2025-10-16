@@ -90,7 +90,6 @@ export class TapRythmService {
       return;
     }
 
-    console.log('original duration', this.jsonXmlOriginal()?.duration);
     this.jsonXml.update((jsonXml) => {
       if (jsonXml.notes) {
         return {

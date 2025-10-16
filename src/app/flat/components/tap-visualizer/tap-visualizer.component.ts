@@ -10,6 +10,7 @@ import { IUserTap } from '../../models/tap.model';
 import { TapRythmService } from '@app/flat/service/tap-rythm.service';
 import { ExerciseStateService } from '@app/services/exercise-state.service';
 import { TimerService } from '@app/services/timer.service';
+import { MetronomeService } from '@app/services/metronome.service';
 
 @Component({
   selector: 'app-tap-visualizer',
@@ -68,6 +69,7 @@ export class TapVisualizerComponent {
   private tapRythmService = inject(TapRythmService);
   private exerciseState = inject(ExerciseStateService);
   private timer = inject(TimerService);
+  private metronome = inject(MetronomeService);
 
   totalDuration = computed(
     () => (this.tapRythmService.jsonXml().duration ?? 100000) + 1000
@@ -84,6 +86,7 @@ export class TapVisualizerComponent {
     if (!container) return '0%';
 
     const containerWidth = container.nativeElement.offsetWidth;
+
     const pixelsPerMs = containerWidth / this.totalDuration();
 
     // Position absolue depuis le début de la timeline

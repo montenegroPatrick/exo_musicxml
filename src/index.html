@@ -6,6 +6,18 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- Allow iframe embedding and Flat.io resources -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="
+      frame-ancestors *;
+      frame-src 'self' https://*.flat.io https://flat.io https://embed.flat.io;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.flat.io;
+      connect-src 'self' https://*.flat.io https://prod.flat-cdn.com wss://*.flat.io;
+      img-src 'self' data: https: blob:;
+      style-src 'self' 'unsafe-inline' https://*.flat.io;
+      media-src 'self' https://*.flat.io blob:;
+      worker-src 'self' blob:;
+    "> -->
   </head>
   <body>
     <app-root></app-root>

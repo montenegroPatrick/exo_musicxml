@@ -78,6 +78,10 @@ export class FlatComponent implements AfterViewInit {
     if (this.exerciseState.level() !== 1) {
       this.handleLevelChange(this.exerciseState.level());
     }
+    this.metronome.setTimeBeatType(
+      mesureDetails?.time?.['beat-type'] as number
+    );
+
     this.metronome.setTimeSignature(mesureDetails?.time?.beats || 4);
 
     // Apply saved settings

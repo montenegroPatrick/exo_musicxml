@@ -21,6 +21,7 @@
     "@primeuix/themes": "^1.2.5",
     "@tailwindcss/cli": "^4.1.14",
     "@tailwindcss/postcss": "^4.1.14",
+    "angular-l10n": "^17.0.1",
     "flat-embed": "^2.5.1",
     "primeicons": "^7.0.0",
     "primeng": "^20.2.0",

@@ -116,6 +116,7 @@ export class TapEvaluationService {
       const noteMs = notes[i];
       const nextNoteMs = notes[i + 1];
       if (nextNoteMs == undefined) {
+        return;
       }
       if (userTaps.length === 0) {
         this.missedTaps.set(notes.length);

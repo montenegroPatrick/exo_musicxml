@@ -42,7 +42,7 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
     />
     <p-dialog
       [(visible)]="visible"
-      header="Paramètres"
+      [header]="'label.exo_xml.settings' | translate : locale.language"
       [modal]="true"
       [style]="{
         width: screenWidth() > 800 ? '500px' : '80%',
@@ -98,21 +98,13 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
       </div>
       <ng-template #footer>
         <p-button
-          label="label.root.cancel"
-          |
-          translate
-          :
-          locale.language,
+          [label]="'label.root.cancel' | translate : locale.language"
           [text]="true"
           severity="secondary"
           (click)="cancelSettings()"
         />
         <p-button
-          label="label.root.save"
-          |
-          translate
-          :
-          locale.language,
+          [label]="'label.root.save' | translate : locale.language"
           [outlined]="true"
           severity="secondary"
           (click)="saveSettings()"

@@ -31,7 +31,16 @@
             "total_notes" : "Number of notes",
             "total_taps" : "Number of taps",
             "listen" : "Listen",
-            "exercise" : "Exercise"
+            "exercise" : "Exercise",
+            "detailed_results" : "Detailed results",
+            "result_level": {
+                "1": "To redo",
+                "2": "Acceptable",
+                "3": "Good",
+                "4": "Very good",
+                "5": "Excellent"
+            },
+            "user_taps" : "Your taps"
 
         }
 

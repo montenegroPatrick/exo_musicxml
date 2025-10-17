@@ -38,7 +38,7 @@ import { MetronomeService } from '@app/services/metronome.service';
 
       <!-- Center playhead line with glow -->
       <div
-        class="absolute top-0 bottom-0 w-1 z-10 bg-[#a9bb5a] shadow-xl"
+        class="absolute top-0 bottom-0 w-1 z-10 bg-[#4d5529] shadow-xl"
         [style.width]="progressPosition()"
         style="box-shadow: 0 0 15px rgba(174, 199, 57, 0.6), 0 0 30px rgba(174, 199, 57, 0.3);"
       >

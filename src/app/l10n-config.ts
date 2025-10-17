@@ -16,8 +16,9 @@ import {
 export const l10nConfig: L10nConfig = {
   format: 'language-region',
   providers: [{ name: 'language', asset: 'language' }],
-  cache: true,
+  cache: false,
   keySeparator: '.',
+
   defaultLocale: {
     language: 'fr-FR',
     currency: 'EUR',
@@ -34,7 +35,18 @@ export const l10nConfig: L10nConfig = {
     {
       locale: { language: 'en-GB', currency: 'GBP', timeZone: 'Europe/London' },
     },
+    {
+      locale: { language: 'en', currency: 'GBP', timeZone: 'Europe/London' },
+    },
+    {
+      locale: {
+        language: 'en-US',
+        currency: 'USD',
+        timeZone: 'America/New_York',
+      },
+    },
     { locale: { language: 'it-IT', currency: 'EUR', timeZone: 'Europe/Rome' } },
+    { locale: { language: 'it', currency: 'EUR', timeZone: 'Europe/Rome' } },
     {
       locale: { language: 'de-DE', currency: 'EUR', timeZone: 'Europe/Berlin' },
     },
@@ -43,6 +55,16 @@ export const l10nConfig: L10nConfig = {
     },
     {
       locale: { language: 'pt-PT', currency: 'EUR', timeZone: 'Europe/Lisbon' },
+    },
+    {
+      locale: {
+        language: 'pt-BR',
+        currency: 'BRL',
+        timeZone: 'America/Sao_Paulo',
+      },
+    },
+    {
+      locale: { language: 'pt', currency: 'EUR', timeZone: 'Europe/Lisbon' },
     },
   ],
 };

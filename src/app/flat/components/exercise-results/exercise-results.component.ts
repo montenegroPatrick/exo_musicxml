@@ -1,13 +1,23 @@
-import { Component, computed, Input, input, output } from '@angular/core';
+import {
+  Component,
+  computed,
+  inject,
+  Input,
+  input,
+  OnInit,
+  output,
+} from '@angular/core';
 import { Knob } from 'primeng/knob';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
+import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import { ExerciseStateService } from '@app/services/exercise-state.service';
 
 @Component({
   selector: 'app-exercise-results',
   standalone: true,
-  imports: [Knob, FormsModule, ButtonModule, Dialog],
+  imports: [Knob, FormsModule, ButtonModule, Dialog, L10nTranslatePipe],
   template: `
     <p-dialog
       [(visible)]="visible"
@@ -19,15 +29,25 @@ import { Dialog } from 'primeng/dialog';
       <div class="w-full p-4 text-center flex flex-col items-center gap-4">
         <h2 class="text-2xl font-bold">
           @if (percentage() < 30) {
-          <span>A refaire</span>
+          <span>{{
+            'label.exo_xml.result_level.1' | translate : locale.language
+          }}</span>
           } @else if (percentage() < 50) {
-          <span>Passable</span>
+          <span>{{
+            'label.exo_xml.result_level.2' | translate : locale.language
+          }}</span>
           } @else if (percentage() < 70) {
-          <span>Bien</span>
+          <span>{{
+            'label.exo_xml.result_level.3' | translate : locale.language
+          }}</span>
           } @else if (percentage() < 90) {
-          <span>Très bien</span>
+          <span>{{
+            'label.exo_xml.result_level.4' | translate : locale.language
+          }}</span>
           } @else {
-          <span>Excellent</span>
+          <span>{{
+            'label.exo_xml.result_level.5' | translate : locale.language
+          }}</span>
           }
         </h2>
         <div class="relative">
@@ -43,46 +63,81 @@ import { Dialog } from 'primeng/dialog';
 
         <!-- Statistiques détaillées -->
         <div class="w-full bg-surface-50 rounded-lg p-4 space-y-3">
-          <h3 class="text-lg font-semibold mb-3">Résultats détaillés</h3>
+          <h3 class="text-lg font-semibold mb-3">
+            {{ 'label.exo_xml.detailed_results' | translate : locale.language }}
+          </h3>
 
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div class="flex justify-between p-2 bg-white rounded">
-              <span class="font-medium">Notes totales:</span>
+              <span class="font-medium"
+                >{{
+                  'label.exo_xml.total_notes' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold">{{ totalNotes() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-white rounded">
-              <span class="font-medium">Vos taps:</span>
+              <span class="font-medium"
+                >{{
+                  'label.exo_xml.user_taps' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold">{{ totalTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-green-100 rounded">
-              <span class="font-medium text-green-800">✓ Parfait:</span>
+              <span class="font-medium text-green-800"
+                >✓
+                {{
+                  'label.exo_xml.perfect' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold text-green-800">{{ goodTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-orange-100 rounded">
-              <span class="font-medium text-orange-700">↗ En avance:</span>
+              <span class="font-medium text-orange-700"
+                >↗
+                {{ 'label.exo_xml.early' | translate : locale.language }}:</span
+              >
               <span class="font-bold text-orange-700">{{ earlyTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-blue-100 rounded">
-              <span class="font-medium text-blue-700">↘ En retard:</span>
+              <span class="font-medium text-blue-700"
+                >↘
+                {{ 'label.exo_xml.late' | translate : locale.language }}:</span
+              >
               <span class="font-bold text-blue-700">{{ lateTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-red-100 rounded">
-              <span class="font-medium text-red-700">✗ Très en avance:</span>
+              <span class="font-medium text-red-700"
+                >✗
+                {{
+                  'label.exo_xml.too_early' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold text-red-700">{{ tooEarlyTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-red-100 rounded">
-              <span class="font-medium text-red-700">✗ Très en retard:</span>
+              <span class="font-medium text-red-700"
+                >✗
+                {{
+                  'label.exo_xml.too_late' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold text-red-700">{{ tooLateTaps() }}</span>
             </div>
 
             <div class="flex justify-between p-2 bg-gray-100 rounded">
-              <span class="font-medium text-gray-700">Manqués:</span>
+              <span class="font-medium text-gray-700"
+                >{{
+                  'label.exo_xml.missed' | translate : locale.language
+                }}:</span
+              >
               <span class="font-bold text-gray-700">{{ missedTaps() }}</span>
             </div>
           </div>
@@ -90,14 +145,14 @@ import { Dialog } from 'primeng/dialog';
 
         <div class="flex flex-col gap-3 items-stretch w-full">
           <p-button
-            label="Recommencer"
+            [label]="'label.exo_xml.restart' | translate : locale.language"
             severity="danger"
             styleClass="w-full text-xl font-bold"
             (click)="restart.emit()"
           ></p-button>
           <p-button
             severity="primary"
-            label="Continuer"
+            [label]="'label.exo_xml.continue' | translate : locale.language"
             styleClass="w-full text-xl font-bold"
             (click)="continue.emit()"
           ></p-button>
@@ -106,18 +161,26 @@ import { Dialog } from 'primeng/dialog';
     </p-dialog>
   `,
 })
-export class ExerciseResultsComponent {
-  percentage = input.required<number>();
-  totalNotes = input.required<number>();
-  totalTaps = input.required<number>();
-  goodTaps = input.required<number>();
-  lateTaps = input.required<number>();
-  earlyTaps = input.required<number>();
-  tooLateTaps = input.required<number>();
-  tooEarlyTaps = input.required<number>();
-  missedTaps = input.required<number>();
+export class ExerciseResultsComponent implements OnInit {
+  ngOnInit(): void {
+    this.visible = true;
+  }
+  private exerciseState = inject(ExerciseStateService);
+  locale = inject(L10N_LOCALE);
+  percentage = computed(() => this.exerciseState.resultPercentage());
+  totalNotes = computed(() => this.exerciseState.totalNotes());
+  totalTaps = computed(() => this.exerciseState.totalTaps());
+  goodTaps = computed(() => this.exerciseState.goodTaps());
+  lateTaps = computed(() => this.exerciseState.lateTaps());
+  earlyTaps = computed(() => this.exerciseState.earlyTaps());
+  tooLateTaps = computed(() => this.exerciseState.tooLateTaps());
+  tooEarlyTaps = computed(() => this.exerciseState.tooEarlyTaps());
+  missedTaps = computed(() => this.exerciseState.missedTaps());
   restart = output<void>();
   continue = output<void>();
-  @Input() visible: boolean = false;
+  visible = false;
+  exerciceStatus = computed(
+    () => this.exerciseState.exerciseStatus() === 'finish'
+  );
   missed = computed(() => Math.abs(this.missedTaps() - this.goodTaps()));
 }

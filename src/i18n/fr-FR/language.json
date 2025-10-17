@@ -1,3 +1,49 @@
 {
-    
+    "label" : {
+        "root": {
+        "cancel" : "Annuler",
+        "save" : "Enregistrer"
+        },
+        "exo_xml": {
+            "tap" : "TAP",
+            "spacebar" : "Vous pouvez utiliser la barre espace",
+            "good" : "Bon",
+            "settings" : "Paramètres",
+            "master_volume" : "Volume",
+            "metronome_volume" : "Volume du métronome",
+            "tap_volume" : "Volume du tap",
+            "level" : "Niveau",
+            "part_sound" : "Aide sonore",
+            "restart" : "Recommencer",
+            "continue" : "Continuer",
+            "results" : "Résultats",
+            "late" : "En retard",
+            "early" : "En avance",
+            "too_late" : "Trop en retard",
+            "too_early" : "Trop en avance",
+            "missed" : "Manqué",
+            "good_taps" : "Bon taps",
+            "late_taps" : "En retard taps",
+            "early_taps" : "En avance taps",
+            "too_late_taps" : "Trop en retard taps",
+            "too_early_taps" : "Trop en avance taps",
+            "missed_taps" : "Manqué taps",
+            "total_notes" : "Nombre de notes",
+            "total_taps" : "Nombre de taps",
+            "listen" : "Écoute",
+            "exercise" : "Exercice",
+            "detailed_results" : "Résultats détaillés",
+            "result_level": {
+                "1": "À refaire",
+                "2": "Passable",
+                "3": "Bon",
+                "4": "Très bon",
+                "5": "Excellent"
+            },
+            "user_taps" : "Vos taps"
+
+        }
+
+
+    }
 }

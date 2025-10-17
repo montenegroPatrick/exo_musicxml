@@ -18,6 +18,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SliderModule } from 'primeng/slider';
 import { TapRythmService } from '@app/flat/service/tap-rythm.service';
 import { ExerciseStateService } from '@app/services/exercise-state.service';
+import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
 @Component({
   selector: 'app-settings-button',
   imports: [
@@ -29,6 +30,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
     ToggleSwitchModule,
     NgTemplateOutlet,
     SliderModule,
+    L10nTranslatePipe,
   ],
 
   styles: ``,
@@ -47,19 +49,25 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
 
       }"
     >
-      <div class="flex  flex-col justify-between items-center gap-10 md:p-8">
+      <div class="flex flex-col justify-between items-center gap-10 md:p-8">
         <div class="flex w-full h-full justify-between items-center gap-10">
-          <p class="text-secondary">Niveau</p>
+          <p class="text-secondary">
+            {{ 'label.exo_xml.level' | translate : locale.language }}
+          </p>
           <p-select
             class="z-20"
             [options]="levelOptions"
             [(ngModel)]="level"
             (onChange)="handleLevelChange.emit(level)"
-            placeholder="Sélectionnez un niveau"
+            [placeholder]="
+              'label.exo_xml.select_level' | translate : locale.language
+            "
           />
         </div>
         <div class="flex w-full h-full justify-between items-center gap-10">
-          <p class="text-secondary">Aide sonore</p>
+          <p class="text-secondary">
+            {{ 'label.exo_xml.part_sound' | translate : locale.language }}
+          </p>
           <p-toggle-switch
             [(ngModel)]="partSound"
             (onChange)="handlePartSoundChange.emit(partSound)"
@@ -69,7 +77,8 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
           *ngTemplateOutlet="
             slideSetting;
             context: {
-              label: 'volume',
+              label:
+                'label.exo_xml.master_volume' | translate : locale.language,
               value: masterVolume,
               onChange: onMasterVolumeChange
             }
@@ -80,7 +89,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
           *ngTemplateOutlet="
             slideSetting;
             context: {
-              label: 'Tap volume',
+              label: 'label.exo_xml.tap_volume' | translate : locale.language,
               value: tapVolume,
               onChange: onTapVolumeChange
             }
@@ -89,13 +98,21 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
       </div>
       <ng-template #footer>
         <p-button
-          label="Cancel"
+          label="label.root.cancel"
+          |
+          translate
+          :
+          locale.language,
           [text]="true"
           severity="secondary"
           (click)="cancelSettings()"
         />
         <p-button
-          label="Save"
+          label="label.root.save"
+          |
+          translate
+          :
+          locale.language,
           [outlined]="true"
           severity="secondary"
           (click)="saveSettings()"
@@ -132,10 +149,10 @@ export class SettingsButtonComponent implements OnInit, OnDestroy {
   handleTapVolumeChange = output<number>();
   // service
   private tapRythmService = inject(TapRythmService);
+  locale = inject(L10N_LOCALE);
   private exerciseState = inject(ExerciseStateService);
   screenWidth = signal(window.innerWidth);
   screenHeight = signal(window.innerHeight);
-
   visible = false;
   levelOptions = LEVEL_OPTIONS;
   level: Level = this.exerciseState.level();

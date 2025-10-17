@@ -26,6 +26,7 @@ import { ControlBarComponent } from './components/control-bar/control-bar.compon
 import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/services/tap-evaluation.service';
 import { SoundService } from '@app/services/sound-service.service';
+import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
 
 @Component({
   standalone: true,
@@ -40,11 +41,13 @@ import { SoundService } from '@app/services/sound-service.service';
     SettingsButtonComponent,
     ControlBarComponent,
     ButtonModule,
+    L10nTranslatePipe,
   ],
   templateUrl: './flat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlatComponent implements AfterViewInit {
+  locale = inject(L10N_LOCALE);
   @ViewChild('flatContainer') flatContainer!: ElementRef<HTMLDivElement>;
   // injects
   private tapRythmService = inject(TapRythmService);
@@ -70,7 +73,7 @@ export class FlatComponent implements AfterViewInit {
         appId: TapRythmService.FLAT_APP_ID,
         controlsDisplay: false,
         playbackMetronome: 'active',
-        layout: width > 800 ? 'page' : 'responsive',
+        layout: 'responsive',
         zoom: width > 800 ? 'auto' : 1,
         displayFirstLinePartsNames: false,
         hideTempo: true,

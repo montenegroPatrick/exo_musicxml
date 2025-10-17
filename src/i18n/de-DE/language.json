@@ -1,0 +1,40 @@
+{
+    "label" : {
+        "root": {
+        "cancel" : "Abbrechen",
+        "save" : "Speichern"
+        },
+        "exo_xml": {
+            "tap" : "TAP",
+            "spacebar" : "Sie können die Leertaste verwenden",
+            "good" : "Gut",
+            "settings" : "Einstellungen",
+            "master_volume" : "Lautstärke",
+            "metronome_volume" : "Metronom-Lautstärke",
+            "tap_volume" : "Tap-Lautstärke",
+            "level" : "Niveau",
+            "part_sound" : "Klangunterstützung",
+            "restart" : "Neu starten",
+            "continue" : "Fortfahren",
+            "results" : "Ergebnisse",
+            "late" : "Zu spät",
+            "early" : "Zu früh",
+            "too_late" : "Viel zu spät",
+            "too_early" : "Viel zu früh",
+            "missed" : "Verpasst",
+            "good_taps" : "Gute Taps",
+            "late_taps" : "Zu späte Taps",
+            "early_taps" : "Zu frühe Taps",
+            "too_late_taps" : "Viel zu späte Taps",
+            "too_early_taps" : "Viel zu frühe Taps",
+            "missed_taps" : "Verpasste Taps",
+            "total_notes" : "Anzahl der Noten",
+            "total_taps" : "Anzahl der Taps",
+            "listen" : "Hören",
+            "exercise" : "Übung"
+
+        }
+
+
+    }
+}

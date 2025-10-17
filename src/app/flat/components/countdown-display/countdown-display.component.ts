@@ -14,12 +14,7 @@ import { CountInStatus } from '../../models/tap.model';
         <p class="text-lg text-center">
           <span class="text-7xl text-secondary font-bold">{{ tick() }}</span>
         </p>
-        } @case('finish') { } @case('not-started') {
-        <!-- <p class=" text-center md:max-w-80">
-          {{ homeSentence() }}
-        </p> -->
-
-        } }
+        } @case('finish') { } @case('not-started') { } }
         <ng-content></ng-content>
       </div>
     </div>

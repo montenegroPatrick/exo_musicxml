@@ -66,10 +66,12 @@
     styleClass="w-full p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl max-w-[1024px] "
   >
     <div class="flex flex-col gap-2 items-center font-semibold justify-center">
-      <p class="text-secondary text-xl">TAP</p>
+      <p class="text-secondary text-xl">
+        {{ "label.exo_xml.tap" | translate : locale.language }}
+      </p>
       @if(hasFinePointer) {
       <p class="text-secondary text-sm italic">
-        Vous pouvez utiliser la barre espace
+        {{ "label.exo_xml.spacebar" | translate : locale.language }}
       </p>
       }
     </div>
@@ -79,18 +81,8 @@
   @if(exerciseState.exerciseStatus() === 'finish') {
   <!-- Results Screen -->
   <app-exercise-results
-    [percentage]="exerciseState.resultPercentage()"
-    [totalNotes]="exerciseState.totalNotes()"
-    [totalTaps]="exerciseState.totalTaps()"
-    [goodTaps]="exerciseState.goodTaps()"
-    [lateTaps]="exerciseState.lateTaps()"
-    [earlyTaps]="exerciseState.earlyTaps()"
-    [tooLateTaps]="exerciseState.tooLateTaps()"
-    [tooEarlyTaps]="exerciseState.tooEarlyTaps()"
-    [missedTaps]="tapEvaluationService.missedTaps()"
     (restart)="resetExercice()"
     (continue)="handleContinue()"
-    [visible]="exerciseState.exerciseStatus() === 'finish'"
   />
   } @else {
   <!-- Countdown Display -->

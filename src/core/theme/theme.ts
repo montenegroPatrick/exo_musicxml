@@ -231,6 +231,7 @@ export const myTheme = definePreset(Aura, {
         color: '{surface.600}',
       },
     },
+
     panel: {
       root: {
         borderRadius: '{border.radius.lg}',

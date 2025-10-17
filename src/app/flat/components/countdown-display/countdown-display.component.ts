@@ -12,7 +12,7 @@ import { CountInStatus } from '../../models/tap.model';
       >
         @switch(status()) { @case('play') {
         <p class="text-lg text-center">
-          <span class="text-7xl text-red-500 font-bold">{{ tick() }}</span>
+          <span class="text-7xl text-secondary font-bold">{{ tick() }}</span>
         </p>
         } @case('finish') { } @case('not-started') {
         <!-- <p class=" text-center md:max-w-80">

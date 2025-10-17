@@ -33,7 +33,11 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
 
   styles: ``,
   template: `
-    <p-button icon="pi pi-cog" (click)="showDialog()" />
+    <p-button
+      icon="pi pi-cog"
+      (click)="showDialog()"
+      styleClass=" p-0! [&_.p-button-icon]:text-[25px]! "
+    />
     <p-dialog
       [(visible)]="visible"
       header="Paramètres"

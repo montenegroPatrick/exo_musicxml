@@ -20,7 +20,7 @@
     <!-- Settings button absolute right-0 bottom-0 -->
     <div class="absolute h-15 top-0 right-0 rounded-sm w-full left-0">
       <app-control-bar>
-        <div ngProjectAs="left-content">
+        <div class="p-2 flex items-center gap-4" ngProjectAs="left-content">
           <app-control-buttons
             [isPlaying]="exerciseState.isPlaying()"
             [isListening]="exerciseState.isListening()"
@@ -29,7 +29,7 @@
             (playStop)="handlePlayStop()"
           />
         </div>
-        <div ngProjectAs="right-content">
+        <div class="p-2" ngProjectAs="right-content">
           @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
           <app-settings-button
             (handleLevelChange)="handleLevelChange($event)"
@@ -60,17 +60,21 @@
     }
   </div>
 
-  <app-tap-button
-    [class]="'w-full '"
+  <p-button
     [disabled]="!exerciseState.canTap()"
-    (tap)="handleUserTap()"
+    (onClick)="handleUserTap()"
+    styleClass="w-full p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl max-w-[1024px] "
   >
-    <p-button
-      label="TAP"
-      [disabled]="!exerciseState.canTap()"
-      styleClass="w-full p-5 bg-secondary! max-w-[1024px] "
-    />
-  </app-tap-button>
+    <div class="flex flex-col gap-2 items-center font-semibold justify-center">
+      <p class="text-secondary text-xl">TAP</p>
+      @if(hasFinePointer) {
+      <p class="text-secondary text-sm italic">
+        Vous pouvez utiliser la barre espace
+      </p>
+      }
+    </div>
+  </p-button>
+
   <!-- Main Content -->
   @if(exerciseState.exerciseStatus() === 'finish') {
   <!-- Results Screen -->

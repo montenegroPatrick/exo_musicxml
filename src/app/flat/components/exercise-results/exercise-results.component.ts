@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, Input, input, output } from '@angular/core';
 import { Knob } from 'primeng/knob';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -9,7 +9,13 @@ import { Dialog } from 'primeng/dialog';
   standalone: true,
   imports: [Knob, FormsModule, ButtonModule, Dialog],
   template: `
-    <p-dialog [visible]="visible()" [modal]="true" [style]="{ width: '600px' }">
+    <p-dialog
+      [(visible)]="visible"
+      [modal]="true"
+      [closable]="true"
+      [draggable]="false"
+      [style]="{ width: '600px', zIndex: '1000' }"
+    >
       <div class="w-full p-4 text-center flex flex-col items-center gap-4">
         <h2 class="text-2xl font-bold">
           @if (percentage() < 30) {
@@ -77,9 +83,7 @@ import { Dialog } from 'primeng/dialog';
 
             <div class="flex justify-between p-2 bg-gray-100 rounded">
               <span class="font-medium text-gray-700">Manqués:</span>
-              <span class="font-bold text-gray-700">{{
-                missedTaps() - goodTaps()
-              }}</span>
+              <span class="font-bold text-gray-700">{{ missedTaps() }}</span>
             </div>
           </div>
         </div>
@@ -114,5 +118,6 @@ export class ExerciseResultsComponent {
   missedTaps = input.required<number>();
   restart = output<void>();
   continue = output<void>();
-  visible = input<boolean>(false);
+  @Input() visible: boolean = false;
+  missed = computed(() => Math.abs(this.missedTaps() - this.goodTaps()));
 }

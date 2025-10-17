@@ -25,6 +25,7 @@ import { Level } from './models/tap.model';
 import { ControlBarComponent } from './components/control-bar/control-bar.component';
 import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/services/tap-evaluation.service';
+import { SoundService } from '@app/services/sound-service.service';
 
 @Component({
   standalone: true,
@@ -51,8 +52,9 @@ export class FlatComponent implements AfterViewInit {
   protected timer = inject(TimerService);
   protected metronome = inject(MetronomeService);
   protected tapEvaluationService = inject(TapEvaluationService);
+  protected soundService = inject(SoundService);
   private embed: Embed | undefined;
-
+  hasFinePointer = window.matchMedia('(pointer: fine)').matches;
   xmlContent = computed(() => this.tapRythmService.musicXml());
   jsonContent = computed(() => this.tapRythmService.jsonXml());
   isXmlError = computed(() => this.tapRythmService.isError());
@@ -66,13 +68,14 @@ export class FlatComponent implements AfterViewInit {
         appId: TapRythmService.FLAT_APP_ID,
         controlsDisplay: false,
         playbackMetronome: 'active',
-        layout: 'responsive',
+        layout: width > 800 ? 'page' : 'responsive',
         zoom: width > 800 ? 'auto' : 1,
         displayFirstLinePartsNames: false,
         hideTempo: true,
       },
     });
 
+    this.soundService.initAudioContext();
     await this.embed?.loadMusicXML(this.xmlContent());
     const nbMeasures = await this.embed?.getNbMeasures();
     this.exerciseState.setNbMeasures(nbMeasures);
@@ -142,6 +145,7 @@ export class FlatComponent implements AfterViewInit {
   };
   handleUserTap = () => {
     const tapMs = this.timer.currentTimeMs();
+    this.soundService.playTapSound();
     const notes = this.jsonContent().notes ?? [];
     this.exerciseState.recordTap(tapMs, notes);
   };

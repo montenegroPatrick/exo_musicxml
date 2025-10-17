@@ -18,9 +18,10 @@ import { SplitButtonModule } from 'primeng/splitbutton';
       [icon]="icon()"
       [severity]="severity()"
       (onClick)="startStop()"
+      size="large"
       [model]="menuItems"
       dropdownIcon="pi pi-ellipsis-v"
-      class="icon-size-15 [&_.p-button]:!p-0 [&_.p-split-button]:!p-0 [&_.p-button]:!bg-transparent [&_.p-button]:!hover:bg-transparent [&_.p-button]:!active:bg-transparent [&_.p-button]:!border-none "
+      class=" gap-4 [&_.p-button]:!p-0 rounded-sm! [&_.p-split-button]:!p-0 [&_.p-button]:!bg-transparent [&_.p-button]:!hover:bg-transparent [&_.p-button]:!active:bg-transparent [&_.p-button]:!border-none [&_.p-button-icon]:!text-[35px] [&_.p-split-button-dropdown-icon]:!text-[45px] "
     ></p-split-button>
   `,
 })
@@ -43,14 +44,20 @@ export class ControlButtonsComponent {
   );
   menuItems: MenuItem[] = [
     {
-      label: 'Ecoute seul',
+      label: 'Ecoute',
       icon: 'pi pi-headphones',
-      command: () => this.startMode.set('listening'),
+      command: () => {
+        this.startMode.set('listening');
+        this.startStop();
+      },
     },
     {
-      label: "Commencer l'exercice",
+      label: 'Exercice',
       icon: 'pi pi-play-circle',
-      command: () => this.startMode.set('playing'),
+      command: () => {
+        this.startMode.set('playing');
+        this.startStop();
+      },
     },
   ];
   startStop = () => {

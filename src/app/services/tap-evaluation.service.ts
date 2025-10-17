@@ -113,41 +113,21 @@ export class TapEvaluationService {
   evaluateMissedTap(userTaps: IUserTap[]): void {
     const notes = this.tapRythmService.jsonXml().notes ?? [];
 
-    for (let i = 0; i < userTaps.length; i++) {
-      const tap = userTaps[i];
-      const tapMs = tap.timeMs;
+    for (let i = 0; i < notes.length; i++) {
       const noteMs = notes[i];
-      console.log('noteMs', noteMs);
-
-      if (noteMs !== undefined) {
-        const nextNoteMs = notes[i + 1];
-        if (nextNoteMs !== undefined) {
-          if (tapMs < noteMs || tapMs > nextNoteMs) {
-            if (this.missedTaps() === notes.length) {
-              return;
-            }
-            this.missedTaps.set(this.missedTaps() + 1);
-          }
-        }
+      const nextNoteMs = notes[i + 1];
+      if (nextNoteMs == undefined) {
+      }
+      if (userTaps.length === 0) {
+        this.missedTaps.set(notes.length);
+        return;
+      }
+      const closesTap = userTaps.find(
+        (tap) => tap.timeMs > noteMs && tap.timeMs < nextNoteMs
+      );
+      if (closesTap == undefined) {
+        this.missedTaps.set(this.missedTaps() + 1);
       }
     }
-    // for (let index = 0; index < notes.length; index++) {
-    //   const noteMs = notes[index];
-    //   const nextNoteMs = notes[index + 1];
-    //   if (nextNoteMs !== undefined) {
-    //     if (userTaps.length === 0) {
-    //       this.missedTaps.set(notes.length);
-    //       return;
-    //     }
-
-    //     userTaps.forEach((tap) => {
-    //       if (noteMs < tap.timeMs && tap.timeMs < nextNoteMs) {
-    //         return;
-    //       }
-    //       console.log('missed tap', tap.timeMs);
-    //       this.missedTaps.set(this.missedTaps() + 1);
-    //     });
-    //   }
-    // }
   }
 }

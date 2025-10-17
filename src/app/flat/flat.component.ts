@@ -46,7 +46,7 @@ import { SoundService } from '@app/services/sound-service.service';
 })
 export class FlatComponent implements AfterViewInit {
   @ViewChild('flatContainer') flatContainer!: ElementRef<HTMLDivElement>;
-
+  // injects
   private tapRythmService = inject(TapRythmService);
   protected exerciseState = inject(ExerciseStateService);
   protected timer = inject(TimerService);
@@ -54,6 +54,7 @@ export class FlatComponent implements AfterViewInit {
   protected tapEvaluationService = inject(TapEvaluationService);
   protected soundService = inject(SoundService);
   private embed: Embed | undefined;
+  // computed
   hasFinePointer = window.matchMedia('(pointer: fine)').matches;
   xmlContent = computed(() => this.tapRythmService.musicXml());
   jsonContent = computed(() => this.tapRythmService.jsonXml());
@@ -63,6 +64,7 @@ export class FlatComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     const width = window.innerWidth;
+
     this.embed = new Embed(this.flatContainer.nativeElement, {
       embedParams: {
         appId: TapRythmService.FLAT_APP_ID,

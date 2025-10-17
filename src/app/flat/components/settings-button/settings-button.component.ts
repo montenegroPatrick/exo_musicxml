@@ -159,22 +159,13 @@ export class SettingsButtonComponent implements OnInit, OnDestroy {
     this.visible = true;
   };
 
-  // handleLevelChange() {
-  //   console.log('level', this.level);
-  // }
-  // handlePartSoundChange() {
-  //   console.log('partSound', this.partSound);
-  // }
   onMasterVolumeChange = (value: number) => {
-    console.log('volume', value);
     this.handleMasterVolumeChange.emit(value);
   };
   onMetronomeVolumeChange = (value: number) => {
-    console.log('volume', value);
     this.handleMetronomeVolumeChange.emit(value);
   };
   onTapVolumeChange = (value: number) => {
-    console.log('volume', value);
     this.handleTapVolumeChange.emit(value);
   };
   cancelSettings = () => {

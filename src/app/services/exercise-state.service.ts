@@ -91,7 +91,6 @@ export class ExerciseStateService {
   recordTap(tapMs: number, notes: number[]): void {
     const evaluatedTap = this.tapEvaluationService.evaluateTap(tapMs, notes);
     this.userTaps.update((taps) => [...taps, evaluatedTap]);
-    console.log('User taps', this.userTaps());
   }
 
   resetTaps(): void {
@@ -140,7 +139,7 @@ export class ExerciseStateService {
     if (averageResult < 0) {
       averageResult = 0;
     }
-    console.log('averageResult', averageResult);
+
     this.resultPercentage.set(Math.round(averageResult));
     if (totalTaps === 0 || goodTaps === 0) {
       this.resultPercentage.set(0);
@@ -148,7 +147,6 @@ export class ExerciseStateService {
     }
 
     this.resultPercentage.set(Math.round(averageResult));
-    console.log('Result percentage', this.resultPercentage());
   }
   resetSettings(): void {
     this.level.set(1);

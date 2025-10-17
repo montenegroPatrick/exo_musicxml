@@ -111,13 +111,11 @@ export class FlatComponent implements AfterViewInit {
     this.embed?.on('play', async () => {});
 
     this.embed?.on('pause', () => {
-      console.log('pause');
       this.timer.stop();
       this.exerciseState.setIsPlaying(false);
     });
 
     this.embed?.on('stop', () => {
-      console.log('stop');
       this.timer.stop();
       this.metronome.stop();
 
@@ -153,7 +151,6 @@ export class FlatComponent implements AfterViewInit {
   };
 
   handleToggleListen = async () => {
-    console.log('handleToggleListen', this.exerciseState.isListening());
     if (this.exerciseState.isListening()) {
       this.embed?.stop();
     } else {
@@ -176,8 +173,7 @@ export class FlatComponent implements AfterViewInit {
 
       // await 1second to let the part be loaded
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log('parts', this.partsSignal());
-      console.log('partUuid', this.partsSignal()?.[0]?.uuid);
+
       try {
         await this.embed?.setPartVolume({
           partUuid: this.partsSignal()?.[0]?.uuid!,
@@ -189,7 +185,6 @@ export class FlatComponent implements AfterViewInit {
       const partsVolumes = await this.embed?.getPartVolume({
         partUuid: this.partsSignal()?.[0]?.uuid!,
       });
-      console.log('partsVolumes', partsVolumes);
     }
   };
 
@@ -201,27 +196,20 @@ export class FlatComponent implements AfterViewInit {
 
   handleContinue = () => {
     // To be implemented: navigate to next exercise
-    console.log('Continue to next exercise');
   };
 
   handleMasterVolumeChange = async (value: number) => {
-    console.log('volume', value);
     this.exerciseState.setMasterVolume(value);
     await this.embed?.setMasterVolume({ volume: value });
   };
-  handleMetronomeVolumeChange = async (value: number) => {
-    console.log('volume', value);
-  };
+  handleMetronomeVolumeChange = async (value: number) => {};
   handleTapVolumeChange = async (value: number) => {
-    console.log('volume', value);
     this.exerciseState.setTapVolume(value);
   };
   handleLevelChange = async (value: Level) => {
-    console.log('level', value);
     this.exerciseState.setLevel(value);
     await this.embed?.setPlaybackSpeed(value);
     this.metronome.setBpm(this.metronome.originalBpm() * value);
-    console.log('new bpm', this.metronome.bpm());
 
     this.tapRythmService.changeSpeedNotes(value);
     // recharger la page avec le nouvel exercice

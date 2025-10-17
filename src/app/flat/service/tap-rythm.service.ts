@@ -33,9 +33,7 @@ export class TapRythmService {
       })
       .pipe(
         map((res: HttpResponse<string | null>) => {
-          console.log('Status:', res.status);
           if (res.status === 200 && res.body != null) {
-            console.log('Music XML', res.body!);
             this.musicXml.set(res.body!);
             this.isError.set(false);
             this.getJsonFile(seq).subscribe();
@@ -66,7 +64,6 @@ export class TapRythmService {
       .pipe(
         map((res: HttpResponse<any>) => {
           if (res.status === 200 && res.body != null) {
-            console.log('JSON', res.body!);
             this.jsonXmlOriginal.set(res.body!);
             this.jsonXml.set(res.body!);
             this.isError.set(false);
@@ -100,6 +97,5 @@ export class TapRythmService {
       }
       return jsonXml;
     });
-    console.log('new jsonXml', this.jsonXml());
   }
 }

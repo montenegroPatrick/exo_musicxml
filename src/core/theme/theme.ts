@@ -210,45 +210,5 @@ export const myTheme = definePreset(Aura, {
         },
       },
     },
-    card: {
-      root: {
-        borderRadius: '{border.radius.lg}',
-        background: '{surface.0}',
-        color: '{surface.700}',
-      },
-      body: {
-        padding: '1.25rem',
-        gap: '0.75rem',
-      },
-      caption: {
-        gap: '0.5rem',
-      },
-      title: {
-        fontSize: '1.25rem',
-        fontWeight: '600',
-      },
-      subtitle: {
-        color: '{surface.600}',
-      },
-    },
-
-    panel: {
-      root: {
-        borderRadius: '{border.radius.lg}',
-        borderColor: '{surface.200}',
-      },
-      header: {
-        background: '{surface.50}',
-        color: '{surface.800}',
-        padding: '1rem 1.25rem',
-        borderRadius: '{border.radius.lg} {border.radius.lg} 0 0',
-      },
-      content: {
-        padding: '1.25rem',
-      },
-      footer: {
-        padding: '1rem 1.25rem',
-      },
-    },
   },
 });

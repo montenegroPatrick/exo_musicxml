@@ -7,7 +7,7 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { Button, ButtonModule } from 'primeng/button';
+import { ButtonModule } from 'primeng/button';
 import { SplitButtonModule } from 'primeng/splitbutton';
 @Component({
   selector: 'app-control-buttons',

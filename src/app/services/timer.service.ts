@@ -17,7 +17,6 @@ export class TimerService {
 
   start(): void {
     if (this.timerIntervalId) {
-      console.log('Timer already running');
       return;
     }
 

@@ -18,7 +18,6 @@ export class TapEvaluationService {
       return { timeMs: tapMs, result: 'Too late', diffMs: 0 };
     }
     const tapMsWithLatence = tapMs - latenceMetronomeSound;
-    console.log('tapMsWithLatence', tapMsWithLatence);
 
     // Find closest note
     const diffs = notes.map((noteMs, index) => ({
@@ -28,7 +27,7 @@ export class TapEvaluationService {
     }));
 
     const closestNote = diffs.sort((a, b) => a.diffMs - b.diffMs)[0];
-    console.log(closestNote);
+
     // Evaluate tap result
     if (
       tapMsWithLatence === closestNote.noteMs ||

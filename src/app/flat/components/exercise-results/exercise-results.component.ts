@@ -6,6 +6,7 @@ import {
   input,
   OnInit,
   output,
+  signal,
 } from '@angular/core';
 import { Knob } from 'primeng/knob';
 import { FormsModule } from '@angular/forms';
@@ -26,7 +27,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
       [draggable]="false"
       [style]="{ width: '600px', zIndex: '1000' }"
     >
-      <div class="w-full p-4 text-center flex flex-col items-center gap-4">
+      <div class="w-full p-4 text-center  flex flex-col items-center gap-4">
         <h2 class="text-2xl font-bold">
           @if (percentage() < 30) {
           <span>{{
@@ -50,7 +51,8 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
           }}</span>
           }
         </h2>
-        <div class="relative">
+        @if(!showDetailedResults()) {
+        <div class="h-62 flex flex-col  justify-center items-center">
           <p-knob
             [ngModel]="percentage()"
             [size]="150"
@@ -60,7 +62,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
             valueTemplate="{{ percentage() }}%"
           />
         </div>
-
+        } @else {
         <!-- Statistiques détaillées -->
         <div class="w-full bg-surface-50 rounded-lg p-4 space-y-3">
           <h3 class="text-lg font-semibold mb-3">
@@ -90,7 +92,7 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
               <span class="font-medium text-green-800"
                 >✓
                 {{
-                  'label.exo_xml.perfect' | translate : locale.language
+                  'label.exo_xml.good_taps' | translate : locale.language
                 }}:</span
               >
               <span class="font-bold text-green-800">{{ goodTaps() }}</span>
@@ -143,7 +145,15 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
           </div>
         </div>
 
+        }
         <div class="flex flex-col gap-3 items-stretch w-full">
+          <p-button
+            link
+            severity="secondary"
+            [label]="showDetailedResults() ? 'Pourcentage' : 'Détails'"
+            styleClass="w-full !bg-transparent underline"
+            (click)="showDetailedResults.set(!showDetailedResults())"
+          ></p-button>
           <p-button
             [label]="'label.exo_xml.restart' | translate : locale.language"
             severity="danger"
@@ -166,6 +176,7 @@ export class ExerciseResultsComponent implements OnInit {
     this.visible = true;
   }
   private exerciseState = inject(ExerciseStateService);
+  showDetailedResults = signal<boolean>(false);
   locale = inject(L10N_LOCALE);
   percentage = computed(() => this.exerciseState.resultPercentage());
   totalNotes = computed(() => this.exerciseState.totalNotes());

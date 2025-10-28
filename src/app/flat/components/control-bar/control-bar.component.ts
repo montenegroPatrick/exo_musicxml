@@ -24,5 +24,6 @@ import { ExerciseStateService } from '@app/services/exercise-state.service';
 })
 export class ControlBarComponent {
   private exerciseState = inject(ExerciseStateService);
+
   isPlaying = computed(() => this.exerciseState.isPlaying());
 }

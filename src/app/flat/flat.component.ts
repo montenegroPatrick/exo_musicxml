@@ -146,7 +146,9 @@ export class FlatComponent implements AfterViewInit {
     this.exerciseState.setIsPlaying(true);
     this.exerciseState.setExerciseStatus('playing');
   };
-  handleUserTap = () => {
+  handleUserTap = (e: Event) => {
+    e.preventDefault();
+    e.stopPropagation();
     const tapMs = this.timer.currentTimeMs();
     this.soundService.playTapSound();
     const notes = this.jsonContent().notes ?? [];

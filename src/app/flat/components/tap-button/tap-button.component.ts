@@ -15,7 +15,12 @@ import { IUserTap } from '../../models/tap.model';
   selector: 'app-tap-button',
   standalone: true,
   template: `
-    <div #tapButton [class]="class()" (click)="handleTap()">
+    <div
+      #tapButton
+      [class]="class()"
+      (touchstart)="handleTap($event)"
+      (click)="handleTap($event)"
+    >
       <ng-content></ng-content>
     </div>
   `,
@@ -24,7 +29,7 @@ export class TapButtonComponent {
   disabled = input<boolean>(false);
   lastTap = input<IUserTap | null>(null);
   showFeedback = input<boolean>(true);
-  tap = output<void>();
+  tap = output<Event>();
   class = input<string>('');
   tapButton = viewChild<ElementRef<HTMLButtonElement>>('tapButton');
   screenWidth = computed(() => window.innerWidth);
@@ -40,9 +45,9 @@ export class TapButtonComponent {
     }
   }
 
-  handleTap = () => {
+  handleTap = (e: Event) => {
     if (!this.disabled()) {
-      this.tap.emit();
+      this.tap.emit(e);
     }
   };
 }

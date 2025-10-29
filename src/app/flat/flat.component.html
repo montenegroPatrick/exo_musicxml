@@ -16,7 +16,7 @@
         #tapButton
         [class]="'absolute bottom-0 right-0 left-0 top-15 '"
         [disabled]="!exerciseState.canTap()"
-        (tap)="handleUserTap()"
+        (tap)="handleUserTap($event)"
       ></app-tap-button>
 
       <!-- Settings button absolute right-0 bottom-0 -->
@@ -66,7 +66,8 @@
     <!-- tap button down page -->
     <p-button
       [disabled]="!exerciseState.canTap()"
-      (onClick)="handleUserTap()"
+      (onClick)="handleUserTap($event)"
+      (touchend)="handleUserTap($event)"
       styleClass="w-full!  p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl  "
     >
       <div

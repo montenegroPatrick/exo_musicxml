@@ -1,9 +1,9 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { ExerciseStatus, IUserTap, Level } from '../flat/models/tap.model';
+import { ExerciseStatus, IUserTap, Level } from '../models/tap.model';
 import { TapEvaluationService } from './tap-evaluation.service';
-import { LocalStorageService } from './local-storage.service';
-import { TapRythmService } from '@app/flat/service/tap-rythm.service';
-import { MetronomeService } from './metronome.service';
+import { LocalStorageService } from '../../../core/services/utils/local-storage.service';
+import { TapRythmService } from '@app/flat/services/tap-rythm.service';
+import { MetronomeService } from '../../../core/services/utils/metronome.service';
 
 @Injectable({
   providedIn: 'root',

@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { IUserTap } from '../flat/models/tap.model';
-import { TapRythmService } from '@app/flat/service/tap-rythm.service';
+import { IUserTap } from '../models/tap.model';
+import { TapRythmService } from '@app/flat/services/tap-rythm.service';
 import { ExerciseStateService } from './exercise-state.service';
 
 @Injectable({

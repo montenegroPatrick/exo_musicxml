@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Level } from '../flat/models/tap.model';
+import { Level } from '../../../app/flat/models/tap.model';
 
 export interface ExerciseSettings {
   level: Level;

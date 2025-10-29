@@ -7,10 +7,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { IUserTap } from '../../models/tap.model';
-import { TapRythmService } from '@app/flat/service/tap-rythm.service';
-import { ExerciseStateService } from '@app/services/exercise-state.service';
-import { TimerService } from '@app/services/timer.service';
-import { MetronomeService } from '@app/services/metronome.service';
+import { TapRythmService } from '@app/flat/services/tap-rythm.service';
+import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
+import { TimerService } from '@app/flat/services/timer.service';
+import { MetronomeService } from 'src/core/services/utils/metronome.service';
 
 @Component({
   selector: 'app-tap-visualizer',

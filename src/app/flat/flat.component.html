@@ -1,102 +1,98 @@
-<div
-  class="h-screen flex flex-col gap-1 text-secondary md:max-w-[1024px] mx-auto w-screen no-scrollbar justify-start p-5"
->
-  @if(isXmlError()) {
-  <app-error-message />
-  } @else {
-  <!-- Flat.io Editor Container -->
-
+<div class="w-full h-full flex flex-col items-center">
   <div
-    class="w-fit md:w-full mx-auto pt-20 pl-10 md:pt-25 rounded-sm flex-grow h-fit no-scrollbar border border-[#CCC] relative"
-    #flatContainer
+    class="flex flex-col w-full min-h-[calc(100vh-100px)] max-w-[1024px] h-full gap-1 text-secondary no-scrollbar p-5"
   >
-    <app-tap-button
-      #tapButton
-      [class]="'absolute bottom-0 right-0 left-0 top-15 '"
-      [disabled]="!exerciseState.canTap()"
-      (tap)="handleUserTap()"
-    ></app-tap-button>
+    @if(isXmlError()) {
+    <app-error-message />
+    } @else {
+    <!-- Flat.io Editor Container -->
 
-    <!-- Settings button absolute right-0 bottom-0 -->
-    <div class="absolute h-15 top-0 right-0 rounded-sm w-full left-0">
-      <app-control-bar>
-        <div class="p-2 flex items-center gap-4" ngProjectAs="left-content">
-          <app-control-buttons
-            [isPlaying]="exerciseState.isPlaying()"
-            [isListening]="exerciseState.isListening()"
-            [xmlLoaded]="exerciseState.xmlIsLoaded()"
-            (toggleListen)="handleToggleListen()"
-            (playStop)="handlePlayStop()"
-          />
-        </div>
-        <div class="p-2" ngProjectAs="right-content">
-          @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
-          <app-settings-button
-            (handleLevelChange)="handleLevelChange($event)"
-            (handlePartSoundChange)="handlePartSoundChange($event)"
-            (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
-            (handleMetronomeVolumeChange)="handleMetronomeVolumeChange($event)"
-            (handleTapVolumeChange)="handleTapVolumeChange($event)"
-          />
+    <div
+      class="md:w-full h-[calc(100vh-250px)] pt-20 pl-5 md:pl-10 md:pt-25 rounded-sm flex-grow no-scrollbar border border-[#CCC] relative"
+      #flatContainer
+    >
+      <!-- invisible tap button -->
+      <app-tap-button
+        #tapButton
+        [class]="'absolute bottom-0 right-0 left-0 top-15 '"
+        [disabled]="!exerciseState.canTap()"
+        (tap)="handleUserTap()"
+      ></app-tap-button>
+
+      <!-- Settings button absolute right-0 bottom-0 -->
+      <div class="absolute h-15 top-0 right-0 rounded-sm w-full left-0">
+        <app-control-bar>
+          <div class="p-2 flex items-center gap-4" ngProjectAs="left-content">
+            <app-control-buttons
+              [isPlaying]="exerciseState.isPlaying()"
+              [isListening]="exerciseState.isListening()"
+              [xmlLoaded]="exerciseState.xmlIsLoaded()"
+              (toggleListen)="handleToggleListen()"
+              (playStop)="handlePlayStop()"
+            />
+          </div>
+          <div class="p-2" ngProjectAs="right-content">
+            @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
+            <app-settings-button
+              (handleLevelChange)="handleLevelChange($event)"
+              (handlePartSoundChange)="handlePartSoundChange($event)"
+              (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
+              (handleMetronomeVolumeChange)="
+                handleMetronomeVolumeChange($event)
+              "
+              (handleTapVolumeChange)="handleTapVolumeChange($event)"
+            />
+            }
+          </div>
+          @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() ===
+          'finish') {
+          <div ngProjectAs="center-content" class="w-full h-15">
+            <app-tap-visualizer />
+          </div>
           }
-        </div>
-        @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() ===
-        'finish') {
-        <div ngProjectAs="center-content" class="w-full h-15">
-          <app-tap-visualizer />
-        </div>
-        }
-      </app-control-bar>
-    </div>
-    @if(metronome.countInStatus() == 'play') {
-    <div class="absolute bottom-15 right-0 left-0 top-0">
-      <app-countdown-display
-        [status]="metronome.countInStatus()"
-        [tick]="metronome.metronomeTick()"
-        [isListening]="exerciseState.isListening()"
-      >
-      </app-countdown-display>
-    </div>
-    }
-  </div>
-
-  <p-button
-    [disabled]="!exerciseState.canTap()"
-    (onClick)="handleUserTap()"
-    styleClass="w-full p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl max-w-[1024px] "
-  >
-    <div class="flex flex-col gap-2 items-center font-semibold justify-center">
-      <p class="text-secondary text-xl">
-        {{ "label.exo_xml.tap" | translate : locale.language }}
-      </p>
-      @if(hasFinePointer) {
-      <p class="text-secondary text-sm italic">
-        {{ "label.exo_xml.spacebar" | translate : locale.language }}
-      </p>
+        </app-control-bar>
+      </div>
+      @if(metronome.countInStatus() == 'play') {
+      <div class="absolute bottom-15 right-0 left-0 top-0">
+        <app-countdown-display
+          [status]="metronome.countInStatus()"
+          [tick]="metronome.metronomeTick()"
+          [isListening]="exerciseState.isListening()"
+        >
+        </app-countdown-display>
+      </div>
       }
     </div>
-  </p-button>
+    <!-- tap button down page -->
+    <p-button
+      [disabled]="!exerciseState.canTap()"
+      (onClick)="handleUserTap()"
+      styleClass="w-full!  p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl  "
+    >
+      <div
+        class="flex flex-col gap-2 items-center font-semibold justify-center"
+      >
+        <p class="text-secondary text-xl">
+          {{ "label.exo_xml.tap" | translate : locale.language }}
+        </p>
+        @if(hasFinePointer) {
+        <p class="text-secondary text-sm italic">
+          {{ "label.exo_xml.spacebar" | translate : locale.language }}
+        </p>
+        }
+      </div>
+    </p-button>
 
-  <!-- Main Content -->
-  @if(exerciseState.exerciseStatus() === 'finish') {
-  <!-- Results Screen -->
-  <app-exercise-results
-    (restart)="resetExercice()"
-    (continue)="handleContinue()"
-  />
-  } @else {
-  <!-- Countdown Display -->
+    <!-- Main Content -->
+    @if(exerciseState.exerciseStatus() === 'finish') {
+    <!-- Results Screen -->
+    <app-exercise-results
+      (restart)="resetExercice()"
+      (continue)="handleContinue()"
+    />
+    }
 
-  }
-
-  <!-- Tap Button (when playing and not finished) -->
-  @if(exerciseState.isPlaying() && exerciseState.exerciseStatus() !== 'finish')
-  {
-  <!-- <app-tap-button
-    [disabled]="!exerciseState.canTap()"
-    [lastTap]="exerciseState.lastTap()"
-    (tap)="handleUserTap()"
-  >
-  </app-tap-button> -->
-  } }
+    <!-- Tap Button (when playing and not finished) -->
+    }
+  </div>
 </div>

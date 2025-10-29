@@ -16,8 +16,8 @@ import { Dialog } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SliderModule } from 'primeng/slider';
-import { TapRythmService } from '@app/flat/service/tap-rythm.service';
-import { ExerciseStateService } from '@app/services/exercise-state.service';
+import { TapRythmService } from '@app/flat/services/tap-rythm.service';
+import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
 @Component({
   selector: 'app-settings-button',

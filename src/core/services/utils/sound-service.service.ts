@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ExerciseStateService } from './exercise-state.service';
+import { ExerciseStateService } from '../../../app/flat/services/exercise-state.service';
 
 @Injectable({
   providedIn: 'root',

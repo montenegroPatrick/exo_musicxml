@@ -10,10 +10,10 @@ import {
   ViewChild,
 } from '@angular/core';
 import Embed from 'flat-embed';
-import { TapRythmService } from './service/tap-rythm.service';
-import { ExerciseStateService } from '../services/exercise-state.service';
-import { TimerService } from '../services/timer.service';
-import { MetronomeService } from '../services/metronome.service';
+import { TapRythmService } from './services/tap-rythm.service';
+import { ExerciseStateService } from './services/exercise-state.service';
+import { TimerService } from './services/timer.service';
+import { MetronomeService } from '../../core/services/utils/metronome.service';
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
 import { CountdownDisplayComponent } from './components/countdown-display/countdown-display.component';
 import { ExerciseResultsComponent } from './components/exercise-results/exercise-results.component';
@@ -24,8 +24,8 @@ import { SettingsButtonComponent } from './components/settings-button/settings-b
 import { Level } from './models/tap.model';
 import { ControlBarComponent } from './components/control-bar/control-bar.component';
 import { ButtonModule } from 'primeng/button';
-import { TapEvaluationService } from '@app/services/tap-evaluation.service';
-import { SoundService } from '@app/services/sound-service.service';
+import { TapEvaluationService } from '@app/flat/services/tap-evaluation.service';
+import { SoundService } from 'src/core/services/utils/sound-service.service';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
 
 @Component({

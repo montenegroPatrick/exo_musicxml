@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { MetronomeService } from './metronome.service';
+import { MetronomeService } from '../../../core/services/utils/metronome.service';
 import { TapEvaluationService } from './tap-evaluation.service';
 import { ExerciseStateService } from './exercise-state.service';
 

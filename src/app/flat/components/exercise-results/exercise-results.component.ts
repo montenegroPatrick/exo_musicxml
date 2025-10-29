@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
-import { ExerciseStateService } from '@app/services/exercise-state.service';
+import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
 
 @Component({
   selector: 'app-exercise-results',

@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-import { ExerciseStateService } from '@app/services/exercise-state.service';
+import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
 
 @Component({
   selector: 'app-control-bar',

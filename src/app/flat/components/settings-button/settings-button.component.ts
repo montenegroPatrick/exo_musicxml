@@ -96,6 +96,15 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
             }
           "
         ></ng-container>
+        <div class="flex w-full h-full justify-center items-center">
+          <p-button
+            [label]="'label.exo_xml.onboarding.show_tutorial' | translate : locale.language"
+            [outlined]="true"
+            severity="secondary"
+            icon="pi pi-question-circle"
+            (click)="showTutorial()"
+          />
+        </div>
       </div>
       <ng-template #footer>
         <p-button
@@ -140,6 +149,7 @@ export class SettingsButtonComponent implements OnInit, OnDestroy {
   handleMasterVolumeChange = output<number>();
   handleMetronomeVolumeChange = output<number>();
   handleTapVolumeChange = output<number>();
+  handleShowTutorial = output<void>();
   // service
   private tapRythmService = inject(TapRythmService);
   locale = inject(L10N_LOCALE);
@@ -190,5 +200,9 @@ export class SettingsButtonComponent implements OnInit, OnDestroy {
   saveSettings = () => {
     this.exerciseState.saveSettings();
     this.visible = false;
+  };
+  showTutorial = () => {
+    this.visible = false;
+    this.handleShowTutorial.emit();
   };
 }

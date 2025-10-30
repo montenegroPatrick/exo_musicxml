@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "tailwindcss-primeui";
 @import "primeicons/primeicons.css";
+@import "driver.js/dist/driver.css";
 @layer utilities {
   @variants responsive {
   .no-scrollbar::-webkit-scrollbar {
@@ -21,4 +22,54 @@
   --color-text: #A1A8AD;
   --color-text-primary: #A1A8AD;
   --color-background: #A18C38;
+}
+
+/* Driver.js Custom Styling */
+.driver-popover {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: 'Raleway', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.driver-popover-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.driver-popover-description {
+  font-size: 14px;
+  color: #5a6b7b;
+  line-height: 1.6;
+}
+
+.driver-popover-next-btn,
+.driver-popover-prev-btn {
+  background-color: #5A6B7B;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 45px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.driver-popover-next-btn:hover,
+.driver-popover-prev-btn:hover {
+  background-color: #4a5a69;
+}
+
+.driver-popover-close-btn {
+  color: #5a6b7b;
+  font-size: 24px;
+}
+
+.driver-popover-close-btn:hover {
+  color: #2c3e50;
+}
+
+.driver-popover-progress-text {
+  color: #5a6b7b;
+  font-size: 12px;
 }

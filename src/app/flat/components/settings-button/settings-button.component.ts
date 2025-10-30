@@ -36,9 +36,10 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
   styles: ``,
   template: `
     <p-button
+      size="large"
+      styleClass="p-1!"
       icon="pi pi-cog"
       (click)="showDialog()"
-      styleClass=" p-0! [&_.p-button-icon]:text-[25px]! "
     />
     <p-dialog
       [(visible)]="visible"

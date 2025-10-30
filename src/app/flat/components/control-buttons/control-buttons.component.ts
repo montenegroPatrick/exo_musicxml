@@ -16,65 +16,118 @@ import {
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { OverlayBadgeModule } from 'primeng/overlaybadge';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { DividerModule } from 'primeng/divider';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-control-buttons',
   standalone: true,
-  imports: [ButtonModule, SplitButtonModule],
+  imports: [
+    ButtonModule,
+    SplitButtonModule,
+    L10nTranslatePipe,
+    OverlayBadgeModule,
+    SelectButtonModule,
+    CommonModule,
+    TooltipModule,
+    FormsModule,
+    DividerModule,
+  ],
   template: `
-    <p-split-button
+    <div class="flex items-center gap-2">
+      <!-- <p-button [icon]="icon()" (onClick)="startStop()" size="large"></p-button> -->
+      <div class="flex items-center gap-2  ">
+        <p-button
+          [icon]="icon()"
+          pTooltip="Exercice"
+          rounded="false"
+          [raised]="isPlaying()"
+          (onClick)="startStop(1)"
+          tooltipPosition="top"
+          styleClass="p-1!"
+          [tooltipDisabled]="isListening() || isPlaying()"
+          size="large"
+          [disabled]="isListening()"
+        ></p-button>
+
+        <p-button
+          [icon]="dropDownIcon()"
+          [tooltipDisabled]="isListening() || isPlaying()"
+          pTooltip="Écoute"
+          rounded="false"
+          [raised]="isListening()"
+          styleClass="p-1!"
+          tooltipPosition="top"
+          (onClick)="startStop(0)"
+          size="large"
+          [disabled]="isPlaying()"
+        ></p-button>
+      </div>
+    </div>
+    <!-- <p-split-button
       [icon]="icon()"
       [severity]="severity()"
       (onClick)="startStop()"
       size="large"
       [model]="menuItems()"
-      dropdownIcon="pi pi-ellipsis-v"
-      class=" gap-4 [&_.p-button]:!p-0 rounded-sm! [&_.p-split-button]:!p-0 [&_.p-button]:!bg-transparent [&_.p-button]:!hover:bg-transparent [&_.p-button]:!active:bg-transparent [&_.p-button]:!border-none [&_.p-button-icon]:!text-[35px] [&_.p-split-button-dropdown-icon]:!text-[45px] "
-    ></p-split-button>
+      [dropdownIcon]="dropdownIcon()"
+      class=" gap-4 [&_.p-button]:!p-0 rounded-sm! [&_.p-split-button]:!p-0 [&_.p-button]:!bg-transparent [&_.p-button]:!hover:bg-transparent [&_.p-button]:!active:bg-transparent [&_.p-button]:!border-none [&_.p-button-icon]:!text-[25px] [&_.p-split-button-dropdown-icon]:!text-[45px] "
+    ></p-split-button> -->
   `,
 })
 export class ControlButtonsComponent {
   private translation = inject(L10nTranslationService);
+
+  locale = inject(L10N_LOCALE);
 
   isPlaying = input<boolean>(false);
   isListening = input<boolean>(false);
   xmlLoaded = input<boolean>(false);
   playStop = output<void>();
   toggleListen = output<void>();
-  startMode: WritableSignal<'listening' | 'playing'> = signal('playing');
+  startMode: WritableSignal<number> = signal(1);
 
   icon = computed(() =>
-    this.startMode() === 'listening' && this.isListening()
-      ? 'pi pi-stop'
-      : this.startMode() === 'playing' && this.isPlaying()
+    this.startMode() === 1 && this.isPlaying()
       ? 'pi pi-stop-circle'
       : 'pi pi-play-circle'
   );
-
-  severity = computed(() =>
-    this.isListening() || this.isPlaying() ? 'warn' : 'primary'
-  );
-
-  menuItems = computed<MenuItem[]>(() => [
+  dropDownIcon = computed(() => 'pi pi-headphones');
+  options = computed<{ label: string; value: number }[]>(() => [
     {
       label: this.translation.translate('label.exo_xml.listen'),
-      icon: 'pi pi-headphones',
-      command: () => {
-        this.startMode.set('listening');
-        this.startStop();
-      },
+      value: 0,
     },
     {
       label: this.translation.translate('label.exo_xml.exercise'),
-      icon: 'pi pi-play-circle',
-      command: () => {
-        this.startMode.set('playing');
-        this.startStop();
-      },
+      value: 1,
     },
   ]);
-  startStop = () => {
-    if (this.startMode() === 'listening') {
+  // menuItems = computed<MenuItem[]>(() => [
+  //   {
+  //     label: this.translation.translate('label.exo_xml.listen'),
+  //     icon: 'pi pi-headphones',
+  //     command: () => {
+  //       this.startMode.set(0);
+  //       this.startStop();
+  //     },
+  //   },
+  //   {
+  //     label: this.translation.translate('label.exo_xml.exercise'),
+  //     icon: 'pi pi-play-circle',
+  //     command: () => {
+  //       this.startMode.set(1);
+  //       this.startStop();
+  //     },
+  //   },
+  // ]);
+  startStop = (mode: number) => {
+    this.startMode.set(mode);
+    if (mode === 0) {
       this.toggleListen.emit();
     } else {
       this.playStop.emit();

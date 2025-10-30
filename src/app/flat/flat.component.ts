@@ -27,6 +27,8 @@ import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/flat/services/tap-evaluation.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import { OnboardingService } from '../../core/services/utils/onboarding.service';
+import { DriveStep } from 'driver.js';
 
 @Component({
   standalone: true,
@@ -56,6 +58,7 @@ export class FlatComponent implements AfterViewInit {
   protected metronome = inject(MetronomeService);
   protected tapEvaluationService = inject(TapEvaluationService);
   protected soundService = inject(SoundService);
+  private onboardingService = inject(OnboardingService);
   private embed: Embed | undefined;
   // computed
   hasFinePointer = window.matchMedia('(pointer: fine)').matches;
@@ -105,6 +108,11 @@ export class FlatComponent implements AfterViewInit {
     await this.embed?.setPlaybackSpeed(this.exerciseState.level());
 
     this.initEmbedEvents();
+
+    // Start onboarding tour if not completed
+    if (!this.onboardingService.isCompleted()) {
+      setTimeout(() => this.startOnboardingTour(), 500);
+    }
   }
 
   private initEmbedEvents = async () => {
@@ -228,4 +236,77 @@ export class FlatComponent implements AfterViewInit {
       });
     }
   };
+
+  startOnboardingTour(): void {
+    const steps = this.buildTourSteps();
+    this.onboardingService.startTour(steps);
+  }
+
+  private buildTourSteps(): DriveStep[] {
+    const lang = this.locale.language;
+
+    const getTranslation = (key: string): string => {
+      const keys = key.split('.');
+      let result: any = this.locale;
+
+      try {
+        const translations = (window as any).__L10N_TRANSLATIONS__;
+        if (translations && translations[lang]) {
+          let value = translations[lang];
+          for (const k of keys) {
+            value = value[k];
+          }
+          return value || key;
+        }
+      } catch (e) {
+        console.warn('Translation not found:', key);
+      }
+      return key;
+    };
+
+    return [
+      {
+        element: '#onboarding-sheet-music',
+        popover: {
+          title: getTranslation('label.exo_xml.onboarding.sheet_music.title'),
+          description: getTranslation('label.exo_xml.onboarding.sheet_music.description'),
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '#onboarding-play-controls',
+        popover: {
+          title: getTranslation('label.exo_xml.onboarding.play_controls.title'),
+          description: getTranslation('label.exo_xml.onboarding.play_controls.description'),
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#onboarding-tap-button',
+        popover: {
+          title: getTranslation('label.exo_xml.onboarding.tap_button.title'),
+          description: getTranslation('label.exo_xml.onboarding.tap_button.description'),
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '#onboarding-settings',
+        popover: {
+          title: getTranslation('label.exo_xml.onboarding.settings.title'),
+          description: getTranslation('label.exo_xml.onboarding.settings.description'),
+          side: 'bottom',
+          align: 'end',
+        },
+      },
+      {
+        popover: {
+          title: getTranslation('label.exo_xml.onboarding.complete.title'),
+          description: getTranslation('label.exo_xml.onboarding.complete.description'),
+        },
+      },
+    ];
+  }
 }

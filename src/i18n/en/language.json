@@ -40,7 +40,38 @@
                 "4": "Very good",
                 "5": "Perfect"
             },
-            "user_taps" : "Your taps"
+            "user_taps" : "Your taps",
+            "onboarding": {
+                "sheet_music": {
+                    "title": "Sheet Music",
+                    "description": "Follow the musical notation displayed here. The playback bar moves across the notes you need to tap."
+                },
+                "play_controls": {
+                    "title": "Play Controls",
+                    "description": "Start playback with the play button. Use 'Listen' mode to hear the exercise first, or 'Exercise' mode to practice tapping."
+                },
+                "tap_button": {
+                    "title": "Tap Button",
+                    "description": "Tap this button in rhythm with the music. Try to match the timing of each note! You can also use the spacebar on desktop."
+                },
+                "tap_visualizer": {
+                    "title": "Timing Feedback",
+                    "description": "Your tap results appear here in real-time: 'Good', 'Too early', or 'Too late'. Aim for 'Good' every time!"
+                },
+                "settings": {
+                    "title": "Settings",
+                    "description": "Adjust difficulty level, volume, and enable sound assistance to help you learn the rhythm."
+                },
+                "results": {
+                    "title": "Exercise Results",
+                    "description": "After completing an exercise, view your performance statistics and decide whether to restart or continue."
+                },
+                "complete": {
+                    "title": "Ready to Practice!",
+                    "description": "You're all set! Start tapping and improve your rhythm skills. You can replay this tutorial anytime from the settings menu."
+                },
+                "show_tutorial": "Show Tutorial"
+            }
 
         }
 

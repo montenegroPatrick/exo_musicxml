@@ -143,6 +143,56 @@ import { ExerciseStateService } from '@app/flat/services/exercise-state.service'
               <span class="font-bold text-gray-700">{{ missedTaps() }}</span>
             </div>
           </div>
+
+          @if(performanceMetrics()) {
+          <div class="mt-4 pt-4 border-t border-surface-200">
+            <h4 class="text-sm font-semibold mb-2">Advanced Metrics</h4>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="flex justify-between p-2 bg-emerald-50 rounded">
+                <span class="font-medium text-emerald-700">★ Perfect:</span>
+                <span class="font-bold text-emerald-700">{{ perfectTaps() }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-green-50 rounded">
+                <span class="font-medium text-green-700">✓ Great:</span>
+                <span class="font-bold text-green-700">{{ greatTaps() }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-yellow-50 rounded">
+                <span class="font-medium text-yellow-700">○ Good:</span>
+                <span class="font-bold text-yellow-700">{{ goodTapsNew() }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-orange-50 rounded">
+                <span class="font-medium text-orange-700">△ Ok:</span>
+                <span class="font-bold text-orange-700">{{ okTaps() }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-gray-50 rounded">
+                <span class="font-medium text-gray-700">✗ Missed:</span>
+                <span class="font-bold text-gray-700">{{ missedTapsNew() }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-red-50 rounded">
+                <span class="font-medium text-red-700">+ Extra:</span>
+                <span class="font-bold text-red-700">{{ extraTaps() }}</span>
+              </div>
+            </div>
+            <div class="mt-3 space-y-1 text-xs">
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span>Avg Error:</span>
+                <span class="font-mono">{{ performanceMetrics()?.averageError }}ms</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span>Consistency:</span>
+                <span class="font-mono">{{ performanceMetrics()?.standardDeviation }}ms</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span>Unstable Rate:</span>
+                <span class="font-mono">{{ performanceMetrics()?.unstableRate }}</span>
+              </div>
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span>Early/Late Bias:</span>
+                <span class="font-mono">{{ performanceMetrics()?.earlyLateBias }}ms</span>
+              </div>
+            </div>
+          </div>
+          }
         </div>
 
         }
@@ -187,6 +237,13 @@ export class ExerciseResultsComponent implements OnInit {
   tooLateTaps = computed(() => this.exerciseState.tooLateTaps());
   tooEarlyTaps = computed(() => this.exerciseState.tooEarlyTaps());
   missedTaps = computed(() => this.exerciseState.missedTaps());
+  perfectTaps = computed(() => this.exerciseState.perfectTaps());
+  greatTaps = computed(() => this.exerciseState.greatTaps());
+  goodTapsNew = computed(() => this.exerciseState.goodTapsNew());
+  okTaps = computed(() => this.exerciseState.okTaps());
+  missedTapsNew = computed(() => this.exerciseState.missedTapsNew());
+  extraTaps = computed(() => this.exerciseState.extraTaps());
+  performanceMetrics = computed(() => this.exerciseState.performanceMetrics());
   restart = output<void>();
   continue = output<void>();
   visible = false;

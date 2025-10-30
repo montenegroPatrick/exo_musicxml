@@ -126,6 +126,7 @@ export class FlatComponent implements AfterViewInit {
         this.tapEvaluationService.evaluateMissedTap(
           this.exerciseState.userTaps()
         );
+        this.exerciseState.evaluateMissedNotes(this.timer.currentTimeMs());
         this.exerciseState.setExerciseStatus('finish');
       } else {
         this.exerciseState.setExerciseStatus('not-started');
@@ -139,6 +140,9 @@ export class FlatComponent implements AfterViewInit {
   startExercice = () => {
     this.exerciseState.resetTaps();
     this.timer.reset();
+
+    const notes = this.jsonContent().notes ?? [];
+    this.exerciseState.initializeExercise(notes);
 
     this.metronome.startCountIn(() => {
       this.timer.start();

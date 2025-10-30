@@ -4,12 +4,16 @@ import { TapEvaluationService } from './tap-evaluation.service';
 import { LocalStorageService } from '../../../core/services/utils/local-storage.service';
 import { TapRythmService } from '@app/flat/services/tap-rythm.service';
 import { MetronomeService } from '../../../core/services/utils/metronome.service';
+import { PerformanceEvaluationService } from './performance-evaluation.service';
+import { EvaluatedTap, PerformanceMetrics } from '../models/performance.model';
+import { DEFAULT_DIFFICULTY } from '../models/difficulty.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ExerciseStateService {
   private tapEvaluationService = inject(TapEvaluationService);
+  private performanceEvaluationService = inject(PerformanceEvaluationService);
   private localStorageService = inject(LocalStorageService);
   private tapRythmService = inject(TapRythmService);
   private savedSettings = this.localStorageService.loadSettings();
@@ -17,6 +21,8 @@ export class ExerciseStateService {
   nbMeasures = signal<number>(0);
   exerciseStatus = signal<ExerciseStatus>('not-started');
   userTaps = signal<IUserTap[]>([]);
+  evaluatedTaps = signal<EvaluatedTap[]>([]);
+  performanceMetrics = signal<PerformanceMetrics | null>(null);
   resultPercentage = signal<number>(0);
   isPlaying = signal<boolean>(false);
   xmlIsLoaded = signal<boolean>(false);
@@ -65,6 +71,30 @@ export class ExerciseStateService {
   );
   readonly missedTaps = computed(() => this.tapEvaluationService.missedTaps());
 
+  readonly perfectTaps = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'perfect').length
+  );
+
+  readonly greatTaps = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'great').length
+  );
+
+  readonly goodTapsNew = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'good').length
+  );
+
+  readonly okTaps = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'ok').length
+  );
+
+  readonly missedTapsNew = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'miss').length
+  );
+
+  readonly extraTaps = computed(
+    () => this.evaluatedTaps().filter((tap) => tap.judgment === 'extra').length
+  );
+
   setNbMeasures(nbMeasures: number): void {
     this.nbMeasures.set(nbMeasures);
   }
@@ -88,9 +118,40 @@ export class ExerciseStateService {
     this.xmlIsLoaded.set(isLoaded);
   }
 
+  initializeExercise(notes: number[]): void {
+    this.performanceEvaluationService.initializeNotes(notes);
+    this.evaluatedTaps.set([]);
+    this.performanceMetrics.set(null);
+  }
+
   recordTap(tapMs: number, notes: number[]): void {
-    const evaluatedTap = this.tapEvaluationService.evaluateTap(tapMs, notes);
-    this.userTaps.update((taps) => [...taps, evaluatedTap]);
+    const legacyEvaluatedTap = this.tapEvaluationService.evaluateTap(tapMs, notes);
+    this.userTaps.update((taps) => [...taps, legacyEvaluatedTap]);
+
+    const evaluatedTap = this.performanceEvaluationService.evaluateTap(
+      tapMs,
+      DEFAULT_DIFFICULTY.windows
+    );
+    this.evaluatedTaps.update((taps) => [...taps, evaluatedTap]);
+
+    this.updateMetrics();
+  }
+
+  evaluateMissedNotes(currentTime: number): void {
+    const missedTaps = this.performanceEvaluationService.evaluateMissedNotes(
+      currentTime,
+      DEFAULT_DIFFICULTY.windows
+    );
+    this.evaluatedTaps.update((taps) => [...taps, ...missedTaps]);
+    this.updateMetrics();
+  }
+
+  private updateMetrics(): void {
+    const metrics = this.performanceEvaluationService.calculateMetrics(
+      this.evaluatedTaps()
+    );
+    this.performanceMetrics.set(metrics);
+    this.resultPercentage.set(Math.round(metrics.accuracy));
   }
 
   resetTaps(): void {
@@ -100,6 +161,9 @@ export class ExerciseStateService {
   reset(): void {
     this.exerciseStatus.set('not-started');
     this.userTaps.set([]);
+    this.evaluatedTaps.set([]);
+    this.performanceMetrics.set(null);
+    this.performanceEvaluationService.reset();
     this.resultPercentage.set(0);
     this.isPlaying.set(false);
   }

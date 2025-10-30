@@ -86,21 +86,14 @@ export const myTheme = definePreset(Aura, {
   components: {
     button: {
       root: {
-        paddingX: '1.5rem',
-        paddingY: '0.5rem',
-        borderRadius: '45px',
         label: {
-          fontWeight: '300',
+          fontWeight: '700',
         },
         sm: {
-          fontSize: '0.875rem',
-          paddingX: '0.75rem',
-          paddingY: '0.375rem',
+          fontSize: '15px',
         },
         lg: {
-          fontSize: '1.125rem',
-          paddingX: '1.25rem',
-          paddingY: '0.625rem',
+          fontSize: '20px',
         },
       },
       colorScheme: {

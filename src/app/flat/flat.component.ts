@@ -27,6 +27,7 @@ import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/flat/services/tap-evaluation.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import { HelpButtonComponent } from './components/help-button/help-button.component';
 
 @Component({
   standalone: true,
@@ -41,6 +42,7 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
     SettingsButtonComponent,
     ControlBarComponent,
     ButtonModule,
+    HelpButtonComponent,
     L10nTranslatePipe,
   ],
   templateUrl: './flat.component.html',

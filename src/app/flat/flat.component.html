@@ -31,7 +31,7 @@
               (playStop)="handlePlayStop()"
             />
           </div>
-          <div class="p-2" ngProjectAs="right-content">
+          <div class="p-2 flex items-center" ngProjectAs="right-content">
             @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
             <app-settings-button
               (handleLevelChange)="handleLevelChange($event)"
@@ -42,6 +42,7 @@
               "
               (handleTapVolumeChange)="handleTapVolumeChange($event)"
             />
+            <app-help-button />
             }
           </div>
           @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() ===

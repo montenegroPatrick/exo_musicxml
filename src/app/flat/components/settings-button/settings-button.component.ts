@@ -19,6 +19,7 @@ import { SliderModule } from 'primeng/slider';
 import { TapRythmService } from '@app/flat/services/tap-rythm.service';
 import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import { TooltipModule } from 'primeng/tooltip';
 @Component({
   selector: 'app-settings-button',
   imports: [
@@ -31,15 +32,21 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
     NgTemplateOutlet,
     SliderModule,
     L10nTranslatePipe,
+    TooltipModule,
   ],
 
   styles: ``,
   template: `
-    <p-button
-      icon="pi pi-cog"
-      (click)="showDialog()"
-      styleClass=" p-0! [&_.p-button-icon]:text-[25px]! "
-    />
+    <div
+      pTooltip="{{ 'label.exo_xml.settings' | translate : locale.language }}"
+      tooltipPosition="top"
+    >
+      <p-button
+        icon="pi pi-cog"
+        (click)="showDialog()"
+        styleClass=" p-0! [&_.p-button-icon]:text-[25px]! "
+      />
+    </div>
     <p-dialog
       [(visible)]="visible"
       [header]="'label.exo_xml.settings' | translate : locale.language"
@@ -142,6 +149,7 @@ export class SettingsButtonComponent implements OnInit, OnDestroy {
   // service
   private tapRythmService = inject(TapRythmService);
   locale = inject(L10N_LOCALE);
+
   private exerciseState = inject(ExerciseStateService);
   screenWidth = signal(window.innerWidth);
   screenHeight = signal(window.innerHeight);

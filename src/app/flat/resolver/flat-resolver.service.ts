@@ -1,6 +1,6 @@
 import { ResolveFn } from '@angular/router';
 import { FlatComponent } from '../flat.component';
-import { TapRythmService } from '../service/tap-rythm.service';
+import { TapRythmService } from '../services/tap-rythm.service';
 import { inject } from '@angular/core';
 import { Observable } from 'rxjs';
 

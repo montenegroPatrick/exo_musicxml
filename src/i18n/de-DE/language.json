@@ -1,0 +1,62 @@
+{
+    "label" : {
+        "root": {
+        "cancel" : "Abbrechen",
+        "save" : "Speichern"
+        },
+        "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Partitur",
+        "description": "Hier ist der Partitur-Bereich. Du kannst deine Übung sehen; wenn du auf Play klickst, läuft ein Abspielbalken und du kannst beginnen, den Rhythmus auf der gesamten Partitur und/oder auf der TAP-Taste zu tippen."
+    },
+    "play_controls": {
+        "title": "Steuerknöpfe",
+        "description": "PLAY/STOP Übung, PLAY/STOP nur Anhören"
+    },
+    "tap_button": {
+        "title": "Tap-Taste",
+        "description": "Tap-Taste – du kannst auch die Leertaste (falls vorhanden) und/oder die gesamte Partitur verwenden."
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "description": "In diesem Menü kannst du die Übungseinstellungen anpassen. Diese werden gespeichert und für die nächsten Übungen verwendet."
+    },
+    "complete": {
+        "title": "Fertig",
+        "description": ""
+    }
+},
+            "tap" : "TAP",
+            "spacebar" : "Sie können die Leertaste verwenden",
+            "good" : "Gut",
+            "settings" : "Einstellungen",
+            "master_volume" : "Lautstärke",
+            "metronome_volume" : "Metronom-Lautstärke",
+            "tap_volume" : "Tap-Lautstärke",
+            "level" : "Niveau",
+            "part_sound" : "Klangunterstützung",
+            "restart" : "Neu starten",
+            "continue" : "Fortfahren",
+            "results" : "Ergebnisse",
+            "late" : "Zu spät",
+            "early" : "Zu früh",
+            "too_late" : "Viel zu spät",
+            "too_early" : "Viel zu früh",
+            "missed" : "Verpasst",
+            "good_taps" : "Gute Taps",
+            "late_taps" : "Zu späte Taps",
+            "early_taps" : "Zu frühe Taps",
+            "too_late_taps" : "Viel zu späte Taps",
+            "too_early_taps" : "Viel zu frühe Taps",
+            "missed_taps" : "Verpasste Taps",
+            "total_notes" : "Anzahl der Noten",
+            "total_taps" : "Anzahl der Taps",
+            "listen" : "Hören",
+            "exercise" : "Übung"
+
+        }
+
+
+    }
+}

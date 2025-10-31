@@ -1,0 +1,70 @@
+{
+    "label" : {
+        "root": {
+        "cancel" : "Cancelar",
+        "save" : "Guardar"
+        },
+        "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Partitura",
+        "description": "Aqui está a parte da partitura. Você pode ver o seu exercício; quando clicar em play, uma barra de leitura irá rolar e você poderá começar a marcar o ritmo em toda a partitura e/ou no botão TAP."
+    },
+    "play_controls": {
+        "title": "Botões de controlo",
+        "description": "PLAY/STOP exercício, PLAY/STOP apenas escuta"
+    },
+    "tap_button": {
+        "title": "Botão TAP",
+        "description": "Botão TAP – também pode usar a barra de espaço (se existir) e/ou tocar em toda a partitura."
+    },
+    "settings": {
+        "title": "Configurações",
+        "description": "Neste menu, você pode ajustar as configurações do exercício. Essas configurações serão salvas e usadas para os próximos exercícios."
+    },
+    "complete": {
+        "title": "Concluído",
+        "description": ""
+    }
+},
+            "tap" : "TAP",
+            "spacebar" : "Podes usar a barra de espaço",
+            "good" : "Bom",
+            "settings" : "Configurações",
+            "master_volume" : "Volume",
+            "metronome_volume" : "Volume do metrónomo",
+            "tap_volume" : "Volume do tap",
+            "level" : "Nível",
+            "part_sound" : "Assistência sonora",
+            "restart" : "Reiniciar",
+            "continue" : "Continuar",
+            "results" : "Resultados",
+            "late" : "Atrasado",
+            "early" : "Adiantado",
+            "too_late" : "Muito atrasado",
+            "too_early" : "Muito adiantado",
+            "missed" : "Perdido",
+            "good_taps" : "Taps bons",
+            "late_taps" : "Taps atrasados",
+            "early_taps" : "Taps adiantados",
+            "too_late_taps" : "Taps muito atrasados",
+            "too_early_taps" : "Taps muito adiantados",
+            "missed_taps" : "Taps perdidos",
+            "total_notes" : "Número de notas",
+            "total_taps" : "Número de taps",
+            "listen" : "Ouvir",
+            "exercise" : "Exercício",
+            "detailed_results" : "Resultados detalhados",
+            "result_level": {
+                "1": "A refazer",
+                "2": "Passável",
+                "3": "Bom",
+                "4": "Muito bom",
+                "5": "Excelente"
+            },
+            "user_taps" : "Seus taps"
+        }
+
+
+    }
+}

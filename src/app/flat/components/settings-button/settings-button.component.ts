@@ -1,0 +1,208 @@
+import { NgTemplateOutlet } from '@angular/common';
+import {
+  Component,
+  computed,
+  inject,
+  input,
+  OnDestroy,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Level, LEVEL_OPTIONS } from '@app/flat/models/tap.model';
+import { Button, ButtonModule } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SliderModule } from 'primeng/slider';
+import { TapRythmService } from '@app/flat/services/tap-rythm.service';
+import { ExerciseStateService } from '@app/flat/services/exercise-state.service';
+import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+@Component({
+  selector: 'app-settings-button',
+  imports: [
+    ButtonModule,
+    Dialog,
+    Button,
+    SelectModule,
+    FormsModule,
+    ToggleSwitchModule,
+    NgTemplateOutlet,
+    SliderModule,
+    L10nTranslatePipe,
+  ],
+
+  styles: ``,
+  template: `
+    <p-button
+      size="large"
+      styleClass="p-1!"
+      icon="pi pi-cog"
+      (click)="showDialog()"
+    />
+    <p-dialog
+      [(visible)]="visible"
+      [header]="'label.exo_xml.settings' | translate : locale.language"
+      [modal]="true"
+      [style]="{
+        width: screenWidth() > 800 ? '500px' : '80%',
+
+      }"
+    >
+      <div class="flex flex-col justify-between items-center gap-10 md:p-8">
+        <div class="flex w-full h-full justify-between items-center gap-10">
+          <p class="text-secondary">
+            {{ 'label.exo_xml.level' | translate : locale.language }}
+          </p>
+          <p-select
+            class="z-20"
+            [options]="levelOptions"
+            [(ngModel)]="level"
+            (onChange)="handleLevelChange.emit(level)"
+            [placeholder]="
+              'label.exo_xml.select_level' | translate : locale.language
+            "
+          />
+        </div>
+        <div class="flex w-full h-full justify-between items-center gap-10">
+          <p class="text-secondary">
+            {{ 'label.exo_xml.part_sound' | translate : locale.language }}
+          </p>
+          <p-toggle-switch
+            [(ngModel)]="partSound"
+            (onChange)="handlePartSoundChange.emit(partSound)"
+          />
+        </div>
+        <ng-container
+          *ngTemplateOutlet="
+            slideSetting;
+            context: {
+              label:
+                'label.exo_xml.master_volume' | translate : locale.language,
+              value: masterVolume,
+              onChange: onMasterVolumeChange
+            }
+          "
+        ></ng-container>
+
+        <ng-container
+          *ngTemplateOutlet="
+            slideSetting;
+            context: {
+              label: 'label.exo_xml.tap_volume' | translate : locale.language,
+              value: tapVolume,
+              onChange: onTapVolumeChange
+            }
+          "
+        ></ng-container>
+        <div class="flex w-full h-full justify-center items-center">
+          <p-button
+            [label]="'label.exo_xml.onboarding.show_tutorial' | translate : locale.language"
+            [outlined]="true"
+            severity="secondary"
+            icon="pi pi-question-circle"
+            (click)="showTutorial()"
+          />
+        </div>
+      </div>
+      <ng-template #footer>
+        <p-button
+          [label]="'label.root.cancel' | translate : locale.language"
+          [text]="true"
+          severity="secondary"
+          (click)="cancelSettings()"
+        />
+        <p-button
+          [label]="'label.root.save' | translate : locale.language"
+          [outlined]="true"
+          severity="secondary"
+          (click)="saveSettings()"
+        />
+      </ng-template>
+    </p-dialog>
+
+    <ng-template
+      #slideSetting
+      let-label="label"
+      let-value="value"
+      let-onChange="onChange"
+    >
+      <div class="flex w-full h-full justify-between items-center gap-10">
+        <p class="text-secondary">{{ label }}</p>
+        <p-slider
+          class="min-w-30 md:min-w-44 lg:min-w-56"
+          [ngModel]="value"
+          (onChange)="onChange($event.value)"
+        />
+      </div>
+    </ng-template>
+  `,
+})
+export class SettingsButtonComponent implements OnInit, OnDestroy {
+  //input
+  isListening = input<boolean>(false);
+  isPlaying = input<boolean>(false);
+  // output
+  handleLevelChange = output<Level>();
+  handlePartSoundChange = output<boolean>();
+  handleMasterVolumeChange = output<number>();
+  handleMetronomeVolumeChange = output<number>();
+  handleTapVolumeChange = output<number>();
+  handleShowTutorial = output<void>();
+  // service
+  private tapRythmService = inject(TapRythmService);
+  locale = inject(L10N_LOCALE);
+  private exerciseState = inject(ExerciseStateService);
+  screenWidth = signal(window.innerWidth);
+  screenHeight = signal(window.innerHeight);
+  visible = false;
+  levelOptions = LEVEL_OPTIONS;
+  level: Level = this.exerciseState.level();
+  partSound: boolean = this.exerciseState.partSound();
+  masterVolume: number = this.exerciseState.masterVolume();
+  tapVolume: number = this.exerciseState.tapVolume();
+  metronomeVolume: number = this.exerciseState.metronomeVolume();
+
+  ngOnInit(): void {
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  private resizeListener = () => {
+    this.screenWidth.set(window.innerWidth);
+    this.screenHeight.set(window.innerHeight);
+  };
+  ngOnDestroy(): void {
+    window.removeEventListener('resize', this.resizeListener);
+  }
+  showDialog = () => {
+    this.visible = true;
+  };
+
+  onMasterVolumeChange = (value: number) => {
+    this.handleMasterVolumeChange.emit(value);
+  };
+  onMetronomeVolumeChange = (value: number) => {
+    this.handleMetronomeVolumeChange.emit(value);
+  };
+  onTapVolumeChange = (value: number) => {
+    this.handleTapVolumeChange.emit(value);
+  };
+  cancelSettings = () => {
+    // Reload current values from exerciseState
+    this.level = this.exerciseState.level();
+    this.partSound = this.exerciseState.partSound();
+    this.masterVolume = this.exerciseState.masterVolume();
+    this.tapVolume = this.exerciseState.tapVolume();
+    this.metronomeVolume = this.exerciseState.metronomeVolume();
+    this.visible = false;
+  };
+  saveSettings = () => {
+    this.exerciseState.saveSettings();
+    this.visible = false;
+  };
+  showTutorial = () => {
+    this.visible = false;
+    this.handleShowTutorial.emit();
+  };
+}

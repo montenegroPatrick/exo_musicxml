@@ -9,6 +9,8 @@
         "@schematics/angular:component": {
           "standalone": true,
           "inlineStyle": true,
+          "inlineTemplate": true,
+        
           "skipTests": true,
           "style": "scss"
         }
@@ -18,7 +20,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist/exo_musicxml",
             "index": "src/index.html",
@@ -43,7 +45,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "520kB",
                   "maximumError": "1MB"
                 },
                 {
@@ -69,7 +71,7 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "exo_musicxml:build:production"
@@ -81,10 +83,10 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n"
+          "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:karma",
           "options": {
             "polyfills": [
               "zone.js",
@@ -104,6 +106,46 @@
           }
         }
       }
+    }
+  },
+  "schematics": {
+    "@schematics/angular:component": {
+      "type": "component", 
+      "inlineTemplate": true,
+      "inlineStyle": true,
+      "skipTests": true,
+      "style": "scss"
+    },
+    "@schematics/angular:directive": {
+      "type": "directive",
+      
+      "skipTests": true
+      
+    },
+    "@schematics/angular:service": {
+      "type": "service",
+      "skipTests": true
+    
+    },
+    "@schematics/angular:guard": {
+      "typeSeparator": ".",
+      "skipTests": true
+    },
+    "@schematics/angular:interceptor": {
+      "typeSeparator": ".",
+      "skipTests": true
+    },
+    "@schematics/angular:module": {
+      "typeSeparator": ".",
+      "skipTests": true
+    },
+    "@schematics/angular:pipe": {
+      "typeSeparator": ".",
+      "skipTests": true
+    },
+    "@schematics/angular:resolver": {
+      "typeSeparator": ".",
+      "skipTests": true
     }
   }
 }

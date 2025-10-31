@@ -1,9 +1,14 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { MetronomeService } from '../../../core/services/utils/metronome.service';
+import { TapEvaluationService } from './tap-evaluation.service';
+import { ExerciseStateService } from './exercise-state.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TimerService {
+  private evaluationService = inject(TapEvaluationService);
+  private exerciseState = inject(ExerciseStateService);
   private _currentTimeMs = signal<number>(0);
   private timerStartTime: number = 0;
   private timerIntervalId: any = null;
@@ -12,7 +17,6 @@ export class TimerService {
 
   start(): void {
     if (this.timerIntervalId) {
-      console.log('Timer already running');
       return;
     }
 

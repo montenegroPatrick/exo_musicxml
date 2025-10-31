@@ -13,11 +13,7 @@ export const routes: Routes = [
   {
     path: '',
 
-<<<<<<< HEAD
     canActivate: [],
-=======
-    // canActivate: [authGuard],
->>>>>>> 1a47ec4 (pas mal)
     loadChildren: () => import('./flat/flat.routes'),
     resolve: { flat: flatResolver },
   },

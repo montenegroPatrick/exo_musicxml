@@ -33,6 +33,7 @@ import {
 } from 'angular-l10n';
 import { OnboardingService } from '../../core/services/utils/onboarding.service';
 import { DriveStep } from 'driver.js';
+import { HelpbuttonComponent } from './components/help-button/help-button.component';
 
 @Component({
   standalone: true,
@@ -48,6 +49,7 @@ import { DriveStep } from 'driver.js';
     ControlBarComponent,
     ButtonModule,
     L10nTranslatePipe,
+    HelpbuttonComponent,
   ],
 
   templateUrl: './flat.component.html',
@@ -244,80 +246,8 @@ export class FlatComponent implements AfterViewInit {
   };
 
   startOnboardingTour(): void {
-    const steps = this.buildTourSteps();
-    this.onboardingService.startTour(steps);
-  }
-
-  private buildTourSteps(): DriveStep[] {
-    const lang = this.locale.language;
-
-    return [
-      {
-        element: '#onboarding-sheet-music',
-
-        popover: {
-          title: this.translationService.translate(
-            'label.exo_xml.onboarding.sheet_music.title'
-          ),
-          description: this.translationService.translate(
-            'label.exo_xml.onboarding.sheet_music.description'
-          ),
-
-          side: 'bottom',
-          align: 'center',
-        },
-      },
-      {
-        element: '#onboarding-play-controls',
-        popover: {
-          title: this.translationService.translate(
-            'label.exo_xml.onboarding.play_controls.title'
-          ),
-          description: this.translationService.translate(
-            'label.exo_xml.onboarding.play_controls.description'
-          ),
-
-          side: 'bottom',
-          align: 'start',
-        },
-      },
-      {
-        element: '#onboarding-tap-button',
-        popover: {
-          title: this.translationService.translate(
-            'label.exo_xml.onboarding.tap_button.title'
-          ),
-          description: this.translationService.translate(
-            'label.exo_xml.onboarding.tap_button.description'
-          ),
-
-          side: 'top',
-          align: 'center',
-        },
-      },
-      {
-        element: '#onboarding-settings',
-        popover: {
-          title: this.translationService.translate(
-            'label.exo_xml.onboarding.settings.title'
-          ),
-          description: this.translationService.translate(
-            'label.exo_xml.onboarding.settings.description'
-          ),
-          side: 'bottom',
-          align: 'end',
-        },
-      },
-      {
-        popover: {
-          title: this.translationService.translate(
-            'label.exo_xml.onboarding.complete.title'
-          ),
-          description: this.translationService.translate(
-            'label.exo_xml.onboarding.complete.description'
-          ),
-        },
-      },
-    ];
+    this.onboardingService.startTour(
+      this.onboardingService.defaultExoxmlTourSteps()
+    );
   }
 }

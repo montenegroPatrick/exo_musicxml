@@ -36,18 +36,23 @@
               (playStop)="handlePlayStop()"
             />
           </div>
-          <div id="onboarding-settings" class="p-2" ngProjectAs="right-content">
+          <div class="p-2" ngProjectAs="right-content">
             @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
-            <app-settings-button
-              (handleLevelChange)="handleLevelChange($event)"
-              (handlePartSoundChange)="handlePartSoundChange($event)"
-              (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
-              (handleMetronomeVolumeChange)="
-                handleMetronomeVolumeChange($event)
-              "
-              (handleTapVolumeChange)="handleTapVolumeChange($event)"
-              (handleShowTutorial)="startOnboardingTour()"
-            />
+            <div class="flex items-center gap-2">
+              <div id="onboarding-settings">
+                <app-settings-button
+                  (handleLevelChange)="handleLevelChange($event)"
+                  (handlePartSoundChange)="handlePartSoundChange($event)"
+                  (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
+                  (handleMetronomeVolumeChange)="
+                    handleMetronomeVolumeChange($event)
+                  "
+                  (handleTapVolumeChange)="handleTapVolumeChange($event)"
+                  (handleShowTutorial)="startOnboardingTour()"
+                />
+              </div>
+              <app-help-button />
+            </div>
             }
           </div>
           @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() ===

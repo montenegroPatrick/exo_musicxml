@@ -23,10 +23,29 @@ const SETTINGS_KEY = 'exercise-settings';
   providedIn: 'root',
 })
 export class LocalStorageService {
+  set(key: string, value: object) {
+    try {
+      const json = JSON.stringify(value);
+      localStorage.setItem(key, json);
+    } catch (err) {
+      console.error('Error saving settings to localStorage:', err);
+    }
+  }
+  get(key: string) {
+    try {
+      const json = localStorage.getItem(key);
+      if (!json) {
+        return null;
+      }
+      return JSON.parse(json);
+    } catch (err) {
+      console.error('Error loading settings from localStorage:', err);
+      return null;
+    }
+  }
   saveSettings(settings: ExerciseSettings): void {
     try {
-      const json = JSON.stringify(settings);
-      localStorage.setItem(SETTINGS_KEY, json);
+      this.set(SETTINGS_KEY, settings);
     } catch (error) {
       console.error('Error saving settings to localStorage:', error);
     }
@@ -34,11 +53,10 @@ export class LocalStorageService {
 
   loadSettings(): ExerciseSettings {
     try {
-      const json = localStorage.getItem(SETTINGS_KEY);
-      if (!json) {
+      const settings = this.get(SETTINGS_KEY);
+      if (!settings) {
         return { ...DEFAULT_SETTINGS };
       }
-      const settings = JSON.parse(json) as ExerciseSettings;
       return { ...DEFAULT_SETTINGS, ...settings };
     } catch (error) {
       console.error('Error loading settings from localStorage:', error);

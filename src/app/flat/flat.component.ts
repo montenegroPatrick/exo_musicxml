@@ -26,7 +26,11 @@ import { ControlBarComponent } from './components/control-bar/control-bar.compon
 import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/flat/services/tap-evaluation.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
-import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import {
+  L10N_LOCALE,
+  L10nTranslatePipe,
+  L10nTranslationService,
+} from 'angular-l10n';
 import { OnboardingService } from '../../core/services/utils/onboarding.service';
 import { DriveStep } from 'driver.js';
 
@@ -45,11 +49,13 @@ import { DriveStep } from 'driver.js';
     ButtonModule,
     L10nTranslatePipe,
   ],
+
   templateUrl: './flat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlatComponent implements AfterViewInit {
   locale = inject(L10N_LOCALE);
+  translationService = inject(L10nTranslationService);
   @ViewChild('flatContainer') flatContainer!: ElementRef<HTMLDivElement>;
   // injects
   private tapRythmService = inject(TapRythmService);
@@ -245,31 +251,18 @@ export class FlatComponent implements AfterViewInit {
   private buildTourSteps(): DriveStep[] {
     const lang = this.locale.language;
 
-    const getTranslation = (key: string): string => {
-      const keys = key.split('.');
-      let result: any = this.locale;
-
-      try {
-        const translations = (window as any).__L10N_TRANSLATIONS__;
-        if (translations && translations[lang]) {
-          let value = translations[lang];
-          for (const k of keys) {
-            value = value[k];
-          }
-          return value || key;
-        }
-      } catch (e) {
-        console.warn('Translation not found:', key);
-      }
-      return key;
-    };
-
     return [
       {
         element: '#onboarding-sheet-music',
+
         popover: {
-          title: getTranslation('label.exo_xml.onboarding.sheet_music.title'),
-          description: getTranslation('label.exo_xml.onboarding.sheet_music.description'),
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.sheet_music.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.sheet_music.description'
+          ),
+
           side: 'bottom',
           align: 'center',
         },
@@ -277,8 +270,13 @@ export class FlatComponent implements AfterViewInit {
       {
         element: '#onboarding-play-controls',
         popover: {
-          title: getTranslation('label.exo_xml.onboarding.play_controls.title'),
-          description: getTranslation('label.exo_xml.onboarding.play_controls.description'),
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.play_controls.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.play_controls.description'
+          ),
+
           side: 'bottom',
           align: 'start',
         },
@@ -286,8 +284,13 @@ export class FlatComponent implements AfterViewInit {
       {
         element: '#onboarding-tap-button',
         popover: {
-          title: getTranslation('label.exo_xml.onboarding.tap_button.title'),
-          description: getTranslation('label.exo_xml.onboarding.tap_button.description'),
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.tap_button.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.tap_button.description'
+          ),
+
           side: 'top',
           align: 'center',
         },
@@ -295,16 +298,24 @@ export class FlatComponent implements AfterViewInit {
       {
         element: '#onboarding-settings',
         popover: {
-          title: getTranslation('label.exo_xml.onboarding.settings.title'),
-          description: getTranslation('label.exo_xml.onboarding.settings.description'),
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.settings.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.settings.description'
+          ),
           side: 'bottom',
           align: 'end',
         },
       },
       {
         popover: {
-          title: getTranslation('label.exo_xml.onboarding.complete.title'),
-          description: getTranslation('label.exo_xml.onboarding.complete.description'),
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.complete.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.complete.description'
+          ),
         },
       },
     ];

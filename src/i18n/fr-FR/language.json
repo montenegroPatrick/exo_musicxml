@@ -5,6 +5,28 @@
         "save" : "Enregistrer"
         },
         "exo_xml": {
+            "onboarding": {
+                "sheet_music": {
+                    "title": "Partition",
+                    "description": "Voici le partie partition, ici vous pouvez voir votre exercice, lorsque play sera cliqué, Une barre de lecture défilera et vous pourrez commencer à taper le rythme sur toute la partition et/ou sur le bouton intitulé TAP."
+                },
+                "play_controls": {
+                    "title": "Bouton de contrôles",
+                    "description": "PLAY/STOP exercice, PLAY/STOP écoute seule"
+                },
+                "tap_button": {
+                    "title": "Tap button",
+                    "description": "Bouton de tap, vous pouvez également taper sur la barre espace (si existante) et/ou sur la partition entière"
+                },
+                "settings": {
+                    "title": "Paramètres",
+                    "description": "Dans ce menu vous pouvez ajuster les paramètres de l'exercice, ces paramètres seront sauvegardés et seront utilisés pour les exercices suivants"
+                },
+                "complete": {
+                    "title": "Terminé",
+                    "description": ""
+                }
+            },
             "tap" : "TAP",
             "spacebar" : "Vous pouvez utiliser la barre espace",
             "good" : "Bon",

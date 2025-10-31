@@ -5,6 +5,28 @@
         "save" : "Salva"
         },
         "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Spartito",
+        "description": "Ecco la sezione spartito. Qui puoi vedere il tuo esercizio; quando premi play, una barra di lettura scorrerà e potrai iniziare a battere il ritmo su tutto lo spartito e/o sul pulsante TAP."
+    },
+    "play_controls": {
+        "title": "Pulsanti di controllo",
+        "description": "PLAY/STOP esercizio, PLAY/STOP solo ascolto"
+    },
+    "tap_button": {
+        "title": "Pulsante TAP",
+        "description": "Pulsante TAP – puoi anche usare la barra spaziatrice (se presente) e/o toccare tutto lo spartito."
+    },
+    "settings": {
+        "title": "Impostazioni",
+        "description": "In questo menu puoi regolare le impostazioni dell’esercizio. Verranno salvate e usate per gli esercizi successivi."
+    },
+    "complete": {
+        "title": "Completato",
+        "description": ""
+    }
+},
             "tap" : "TAP",
             "spacebar" : "Puoi usare la barra spaziatrice",
             "good" : "Bene",

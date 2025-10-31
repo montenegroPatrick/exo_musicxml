@@ -5,6 +5,28 @@
         "save" : "Speichern"
         },
         "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Partitur",
+        "description": "Hier ist der Partitur-Bereich. Du kannst deine Übung sehen; wenn du auf Play klickst, läuft ein Abspielbalken und du kannst beginnen, den Rhythmus auf der gesamten Partitur und/oder auf der TAP-Taste zu tippen."
+    },
+    "play_controls": {
+        "title": "Steuerknöpfe",
+        "description": "PLAY/STOP Übung, PLAY/STOP nur Anhören"
+    },
+    "tap_button": {
+        "title": "Tap-Taste",
+        "description": "Tap-Taste – du kannst auch die Leertaste (falls vorhanden) und/oder die gesamte Partitur verwenden."
+    },
+    "settings": {
+        "title": "Einstellungen",
+        "description": "In diesem Menü kannst du die Übungseinstellungen anpassen. Diese werden gespeichert und für die nächsten Übungen verwendet."
+    },
+    "complete": {
+        "title": "Fertig",
+        "description": ""
+    }
+},
             "tap" : "TAP",
             "spacebar" : "Sie können die Leertaste verwenden",
             "good" : "Gut",

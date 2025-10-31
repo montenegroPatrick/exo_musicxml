@@ -5,6 +5,28 @@
         "save" : "Save"
         },
         "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Sheet Music",
+        "description": "Here is the sheet music section. You can see your exercise; when play is clicked, a progress bar will scroll, and you can start tapping the rhythm on the entire sheet and/or on the TAP button."
+    },
+    "play_controls": {
+        "title": "Control Buttons",
+        "description": "PLAY/STOP exercise, PLAY/STOP listen only"
+    },
+    "tap_button": {
+        "title": "Tap Button",
+        "description": "Tap button – you can also tap using the space bar (if available) and/or on the entire sheet music."
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "In this menu, you can adjust the exercise settings. These settings will be saved and used for the next exercises."
+    },
+    "complete": {
+        "title": "Completed",
+        "description": ""
+    }
+},
             "tap" : "TAP",
             "spacebar" : "You can use the spacebar",
             "good" : "Good",

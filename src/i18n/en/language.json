@@ -5,6 +5,28 @@
         "save" : "Save"
         },
         "exo_xml": {
+            "onboarding": {
+    "sheet_music": {
+        "title": "Sheet Music",
+        "description": "Here is the sheet music section. You can see your exercise; when play is clicked, a progress bar will scroll, and you can start tapping the rhythm on the entire sheet and/or on the TAP button."
+    },
+    "play_controls": {
+        "title": "Control Buttons",
+        "description": "PLAY/STOP exercise, PLAY/STOP listen only"
+    },
+    "tap_button": {
+        "title": "Tap Button",
+        "description": "Tap button – you can also tap using the space bar (if available) and/or on the entire sheet music."
+    },
+    "settings": {
+        "title": "Settings",
+        "description": "In this menu, you can adjust the exercise settings. These settings will be saved and used for the next exercises."
+    },
+    "complete": {
+        "title": "Completed",
+        "description": ""
+    }
+},
             "tap" : "TAP",
             "spacebar" : "You can use the spacebar",
             "good" : "Good",
@@ -40,7 +62,38 @@
                 "4": "Very good",
                 "5": "Perfect"
             },
-            "user_taps" : "Your taps"
+            "user_taps" : "Your taps",
+            "onboarding": {
+                "sheet_music": {
+                    "title": "Sheet Music",
+                    "description": "Follow the musical notation displayed here. The playback bar moves across the notes you need to tap."
+                },
+                "play_controls": {
+                    "title": "Play Controls",
+                    "description": "Start playback with the play button. Use 'Listen' mode to hear the exercise first, or 'Exercise' mode to practice tapping."
+                },
+                "tap_button": {
+                    "title": "Tap Button",
+                    "description": "Tap this button in rhythm with the music. Try to match the timing of each note! You can also use the spacebar on desktop."
+                },
+                "tap_visualizer": {
+                    "title": "Timing Feedback",
+                    "description": "Your tap results appear here in real-time: 'Good', 'Too early', or 'Too late'. Aim for 'Good' every time!"
+                },
+                "settings": {
+                    "title": "Settings",
+                    "description": "Adjust difficulty level, volume, and enable sound assistance to help you learn the rhythm."
+                },
+                "results": {
+                    "title": "Exercise Results",
+                    "description": "After completing an exercise, view your performance statistics and decide whether to restart or continue."
+                },
+                "complete": {
+                    "title": "Ready to Practice!",
+                    "description": "You're all set! Start tapping and improve your rhythm skills. You can replay this tutorial anytime from the settings menu."
+                },
+                "show_tutorial": "Show Tutorial"
+            }
 
         }
 

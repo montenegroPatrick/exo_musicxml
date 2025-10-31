@@ -8,6 +8,7 @@
     <!-- Flat.io Editor Container -->
 
     <div
+      id="onboarding-sheet-music"
       class="md:w-full h-[calc(100vh-160px)] pt-20 pl-5 md:pl-10 md:pt-25 rounded-sm flex-grow no-scrollbar border border-[#CCC] relative"
       #flatContainer
     >
@@ -22,7 +23,11 @@
       <!-- Settings button absolute right-0 bottom-0 -->
       <div class="absolute h-15 top-0 right-0 rounded-sm w-full left-0">
         <app-control-bar>
-          <div class="p-2 flex items-center gap-4" ngProjectAs="left-content">
+          <div
+            id="onboarding-play-controls"
+            class="p-2 flex items-center gap-4"
+            ngProjectAs="left-content"
+          >
             <app-control-buttons
               [isPlaying]="exerciseState.isPlaying()"
               [isListening]="exerciseState.isListening()"
@@ -31,7 +36,7 @@
               (playStop)="handlePlayStop()"
             />
           </div>
-          <div class="p-2" ngProjectAs="right-content">
+          <div id="onboarding-settings" class="p-2" ngProjectAs="right-content">
             @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
             <app-settings-button
               (handleLevelChange)="handleLevelChange($event)"
@@ -41,12 +46,17 @@
                 handleMetronomeVolumeChange($event)
               "
               (handleTapVolumeChange)="handleTapVolumeChange($event)"
+              (handleShowTutorial)="startOnboardingTour()"
             />
             }
           </div>
           @if(exerciseState.isPlaying() || exerciseState.exerciseStatus() ===
           'finish') {
-          <div ngProjectAs="center-content" class="w-full h-15">
+          <div
+            id="onboarding-tap-visualizer"
+            ngProjectAs="center-content"
+            class="w-full h-15"
+          >
             <app-tap-visualizer />
           </div>
           }
@@ -65,10 +75,11 @@
     </div>
     <!-- tap button down page -->
     <p-button
+      id="onboarding-tap-button"
       [disabled]="!exerciseState.canTap()"
       (onClick)="handleUserTap($event)"
       (touchend)="handleUserTap($event)"
-      styleClass="w-full!  p-5 rounded-sm! bg-white! text-secondary! h-24 shadow-xl  "
+      styleClass="w-full! p-5! rounded-sm! bg-white! text-secondary! h-24! shadow-xl"
     >
       <div
         class="flex flex-col gap-2 items-center font-semibold justify-center"

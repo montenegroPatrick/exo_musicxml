@@ -3,7 +3,6 @@ body {
     margin:0;
     color: var(--color-text-primary);
     background-color: var(--color-background);
-}
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -13,3 +12,5 @@ body {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
 }
+
+  }

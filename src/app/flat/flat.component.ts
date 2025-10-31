@@ -26,7 +26,13 @@ import { ControlBarComponent } from './components/control-bar/control-bar.compon
 import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/flat/services/tap-evaluation.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
-import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
+import {
+  L10N_LOCALE,
+  L10nTranslatePipe,
+  L10nTranslationService,
+} from 'angular-l10n';
+import { OnboardingService } from '../../core/services/utils/onboarding.service';
+import { DriveStep } from 'driver.js';
 
 @Component({
   standalone: true,
@@ -43,11 +49,13 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
     ButtonModule,
     L10nTranslatePipe,
   ],
+
   templateUrl: './flat.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FlatComponent implements AfterViewInit {
   locale = inject(L10N_LOCALE);
+  translationService = inject(L10nTranslationService);
   @ViewChild('flatContainer') flatContainer!: ElementRef<HTMLDivElement>;
   // injects
   private tapRythmService = inject(TapRythmService);
@@ -56,6 +64,7 @@ export class FlatComponent implements AfterViewInit {
   protected metronome = inject(MetronomeService);
   protected tapEvaluationService = inject(TapEvaluationService);
   protected soundService = inject(SoundService);
+  private onboardingService = inject(OnboardingService);
   private embed: Embed | undefined;
   // computed
   hasFinePointer = window.matchMedia('(pointer: fine)').matches;
@@ -105,6 +114,11 @@ export class FlatComponent implements AfterViewInit {
     await this.embed?.setPlaybackSpeed(this.exerciseState.level());
 
     this.initEmbedEvents();
+
+    // Start onboarding tour if not completed
+    if (!this.onboardingService.isCompleted()) {
+      setTimeout(() => this.startOnboardingTour(), 500);
+    }
   }
 
   private initEmbedEvents = async () => {
@@ -228,4 +242,82 @@ export class FlatComponent implements AfterViewInit {
       });
     }
   };
+
+  startOnboardingTour(): void {
+    const steps = this.buildTourSteps();
+    this.onboardingService.startTour(steps);
+  }
+
+  private buildTourSteps(): DriveStep[] {
+    const lang = this.locale.language;
+
+    return [
+      {
+        element: '#onboarding-sheet-music',
+
+        popover: {
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.sheet_music.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.sheet_music.description'
+          ),
+
+          side: 'bottom',
+          align: 'center',
+        },
+      },
+      {
+        element: '#onboarding-play-controls',
+        popover: {
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.play_controls.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.play_controls.description'
+          ),
+
+          side: 'bottom',
+          align: 'start',
+        },
+      },
+      {
+        element: '#onboarding-tap-button',
+        popover: {
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.tap_button.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.tap_button.description'
+          ),
+
+          side: 'top',
+          align: 'center',
+        },
+      },
+      {
+        element: '#onboarding-settings',
+        popover: {
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.settings.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.settings.description'
+          ),
+          side: 'bottom',
+          align: 'end',
+        },
+      },
+      {
+        popover: {
+          title: this.translationService.translate(
+            'label.exo_xml.onboarding.complete.title'
+          ),
+          description: this.translationService.translate(
+            'label.exo_xml.onboarding.complete.description'
+          ),
+        },
+      },
+    ];
+  }
 }

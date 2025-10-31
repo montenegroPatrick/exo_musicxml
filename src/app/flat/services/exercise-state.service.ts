@@ -113,6 +113,8 @@ export class ExerciseStateService {
     this.metronomeVolume.set(volume);
   }
   calculateResult(): void {
+    // On veut avoir un résultats le plus précis possible
+
     const taps = this.userTaps();
     const goodTaps = taps.filter((tap) => tap.result === 'Good').length;
     const lateTaps = taps.filter((tap) => tap.result === 'Late').length;
@@ -125,17 +127,24 @@ export class ExerciseStateService {
     const totalTaps = taps.length;
     const notes = this.tapRythmService.jsonXml().notes ?? [];
     const totalNotes = notes.length;
-    const percentageGood = (goodTaps / totalNotes) * 100;
-    const percentageLate = (lateTaps / totalNotes) * 100;
-    const percentageEarly = (earlyTaps / totalNotes) * 100;
-    const percentageTooLate = (tooLateTaps / totalNotes) * 100;
-    const percentageTooEarly = (tooEarlyTaps / totalNotes) * 100;
-    let averageResult =
-      percentageGood -
-      percentageLate -
-      percentageEarly -
-      percentageTooLate -
-      percentageTooEarly;
+    const averageGood = goodTaps;
+    const averageLate = lateTaps;
+    const averageEarly = earlyTaps;
+    const averageTooLate = tooLateTaps;
+    const averageTooEarly = tooEarlyTaps;
+    const averageMissed = this.missedTaps();
+
+    let averageResultUserTaps =
+      (averageGood -
+        averageLate -
+        averageEarly -
+        averageTooLate -
+        averageTooEarly -
+        averageMissed) /
+      totalTaps;
+    console.log(averageResultUserTaps);
+
+    let averageResult = averageResultUserTaps * 100;
     if (averageResult < 0) {
       averageResult = 0;
     }

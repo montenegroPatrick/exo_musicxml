@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { driver, Driver, DriveStep, Config } from 'driver.js';
+import { LocalStorageService } from './local-storage.service';
 
 export interface OnboardingState {
   completed: boolean;
@@ -18,26 +19,30 @@ const ONBOARDING_KEY = 'onboarding-state';
 })
 export class OnboardingService {
   private driverInstance?: Driver;
+  private localStorageService = inject(LocalStorageService);
 
   readonly isCompleted = signal<boolean>(this.loadState().completed);
 
   startTour(steps: DriveStep[], config?: Partial<Config>): void {
     const defaultConfig: Config = {
       showProgress: true,
-      showButtons: ['next', 'previous', 'close'],
+      showButtons: ['next', 'previous'],
       progressText: '{{current}} of {{total}}',
       nextBtnText: 'Next',
       prevBtnText: 'Back',
-      doneBtnText: 'Done',
-      ...config,
+      allowClose: true,
       steps,
+
+      ...config,
       onDestroyStarted: (element, step, options) => {
         this.markCompleted();
+        this.driverInstance?.destroy();
         config?.onDestroyStarted?.(element, step, options);
       },
     };
 
     this.driverInstance = driver(defaultConfig);
+
     this.driverInstance.drive();
   }
 
@@ -60,8 +65,7 @@ export class OnboardingService {
 
   private saveState(state: OnboardingState): void {
     try {
-      const json = JSON.stringify(state);
-      localStorage.setItem(ONBOARDING_KEY, json);
+      this.localStorageService.set(ONBOARDING_KEY, state);
     } catch (error) {
       console.error('Error saving onboarding state to localStorage:', error);
     }
@@ -69,11 +73,10 @@ export class OnboardingService {
 
   private loadState(): OnboardingState {
     try {
-      const json = localStorage.getItem(ONBOARDING_KEY);
-      if (!json) {
+      const state = this.localStorageService.get(ONBOARDING_KEY);
+      if (!state) {
         return { ...DEFAULT_STATE };
       }
-      const state = JSON.parse(json) as OnboardingState;
       return { ...DEFAULT_STATE, ...state };
     } catch (error) {
       console.error('Error loading onboarding state from localStorage:', error);

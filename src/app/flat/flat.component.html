@@ -8,13 +8,13 @@
     <!-- Flat.io Editor Container -->
 
     <div
-      class="md:w-full h-[calc(100vh-160px)] pt-20 pl-5 md:pl-10 md:pt-25 rounded-sm flex-grow no-scrollbar border border-[#CCC] relative"
+      class="md:w-full h-[calc(100vh-100px)] pt-20 pl-5 md:pl-10 md:pt-25 rounded-sm flex-grow no-scrollbar border border-[#CCC] relative"
       #flatContainer
     >
       <!-- invisible tap button -->
       <app-tap-button
         #tapButton
-        [class]="'absolute bottom-0 right-0 left-0 top-15 '"
+        [class]="'absolute bottom-0 right-0 left-0 top-15'"
         [disabled]="!exerciseState.canTap()"
         (tap)="handleUserTap($event)"
       ></app-tap-button>

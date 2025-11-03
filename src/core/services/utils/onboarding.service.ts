@@ -1,5 +1,13 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { driver, Driver, DriveStep, Config } from 'driver.js';
+import {
+  driver,
+  Driver,
+  DriveStep,
+  Config,
+  Popover,
+  State,
+  PopoverDOM,
+} from 'driver.js';
 import { LocalStorageService } from './local-storage.service';
 import { L10nTranslationService } from 'angular-l10n';
 
@@ -33,6 +41,7 @@ export class OnboardingService {
       prevBtnText: 'Back',
       allowClose: true,
       steps,
+      onPopoverRender: this.popoverRender,
 
       ...config,
       onDestroyStarted: (element, step, options) => {
@@ -43,7 +52,6 @@ export class OnboardingService {
     };
 
     this.driverInstance = driver(defaultConfig);
-
     this.driverInstance.drive();
   }
 
@@ -53,7 +61,22 @@ export class OnboardingService {
       this.driverInstance = undefined;
     }
   }
+  popoverRender(
+    popover: PopoverDOM,
+    opts: { config: Config; state: State; driver: Driver }
+  ) {
+    const ignoreButton = document.createElement('button');
+    ignoreButton.innerText = 'Ignore';
+    ignoreButton.classList.add('ignore-button');
+    ignoreButton.addEventListener('click', () => {
+      opts.driver.destroy();
+    });
 
+    popover.footerButtons.insertBefore(
+      ignoreButton,
+      popover.footerButtons.firstChild
+    );
+  }
   markCompleted(): void {
     this.saveState({ completed: true });
     this.isCompleted.set(true);

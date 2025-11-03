@@ -45,17 +45,7 @@
   line-height: 1.6;
 }
 
-.driver-popover button {
- flex: 0;
-  text-align: center;
-  background-color: var(--color-primary);
-  color: #ffffff;
-  border: none !important;
-  text-shadow: none;
-  font-size: 14px;
-  box-shadow: none;
-  border-radius: 4px;
-}
+
 .driver-popover button {
  flex: 0;
   text-align: center;
@@ -81,6 +71,15 @@
 .driver-popover button:hover {
   background-color: var(--color-primary);
   color: #ffffff;
+}
+.driver-popover .ignore-button{
+  font-style: underline;
+  border : none;
+  background-color: transparent;
+  color: var(--color-primary);
+}
+.driver-popover .ignore-button:hover {
+  background-color: transparent !important;
 }
 .driver-popover .driver-popover-navigation-btns {
   display: flex;

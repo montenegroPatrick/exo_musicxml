@@ -9,18 +9,20 @@ import { ButtonModule } from 'primeng/button';
     <div class="flex flex-row items-center flex-grow gap-4 justify-center">
       <p-button
         styleClass="flex-grow! w-full "
-        icon="pi pi-headphones"
+        [icon]="iconButtonListen()"
         [label]="labelButtonListen()"
+        variant="outlined"
+        severity="secondary"
         (onClick)="handleListen()"
-        raised="true"
       ></p-button>
       @if(!isListening()) {
       <p-button
         styleClass="flex-grow! w-full "
         icon="pi pi-play"
         label="Commencer"
+        severity="secondary"
+        variant="outlined"
         (onClick)="handlePlayStop()"
-        raised="true"
       ></p-button>
       }
     </div>
@@ -33,6 +35,9 @@ export class BottomButtonsComponent {
   playStop = output();
   labelButtonListen = computed(() =>
     this.exerciceState.isListening() ? 'Arrêter' : 'Écouter'
+  );
+  iconButtonListen = computed(() =>
+    this.exerciceState.isListening() ? 'pi pi-stop' : 'pi pi-headphones'
   );
   isListening = computed(() => this.exerciceState.isListening());
   handleListen() {

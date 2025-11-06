@@ -111,6 +111,7 @@ export class TapEvaluationService {
     // }
   }
   evaluateMissedTap(userTaps: IUserTap[]): void {
+    this.missedTaps.set(0);
     const notes = this.tapRythmService.jsonXml().notes ?? [];
 
     for (let i = 0; i < notes.length; i++) {

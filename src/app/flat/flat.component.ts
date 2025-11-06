@@ -9,6 +9,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import Embed from 'flat-embed';
 import { TapRythmService } from './services/tap-rythm.service';
 import { ExerciseStateService } from './services/exercise-state.service';
@@ -34,6 +35,7 @@ import {
 import { OnboardingService } from '../../core/services/utils/onboarding.service';
 import { DriveStep } from 'driver.js';
 import { HelpbuttonComponent } from './components/help-button/help-button.component';
+import { PostMessageService } from './services/post-message.service';
 
 @Component({
   standalone: true,
@@ -67,7 +69,10 @@ export class FlatComponent implements AfterViewInit {
   protected tapEvaluationService = inject(TapEvaluationService);
   protected soundService = inject(SoundService);
   private onboardingService = inject(OnboardingService);
+  private postMessageService = inject(PostMessageService);
+  private route = inject(ActivatedRoute);
   private embed: Embed | undefined;
+  private currentSequence = signal<string>('7');
   // computed
   hasFinePointer = window.matchMedia('(pointer: fine)').matches;
   xmlContent = computed(() => this.tapRythmService.musicXml());
@@ -77,6 +82,10 @@ export class FlatComponent implements AfterViewInit {
   partsSignal = signal<any[]>([]);
 
   async ngAfterViewInit() {
+    // Récupérer l'ID de séquence depuis les paramètres de route
+    const seq = this.route.snapshot.params['seq'] || '7';
+    this.currentSequence.set(seq);
+
     const width = window.innerWidth;
 
     this.embed = new Embed(this.flatContainer.nativeElement, {
@@ -151,16 +160,16 @@ export class FlatComponent implements AfterViewInit {
       this.exerciseState.setIsPlaying(false);
     });
   };
-  startListening = () => {};
+
   startExercice = () => {
     this.exerciseState.resetTaps();
     this.timer.reset();
 
+    this.exerciseState.setExerciseStatus('playing');
+    this.exerciseState.setIsPlaying(true);
     this.metronome.startCountIn(() => {
       this.timer.start();
     });
-    this.exerciseState.setIsPlaying(true);
-    this.exerciseState.setExerciseStatus('playing');
   };
   handleUserTap = (e: Event) => {
     e.preventDefault();
@@ -216,7 +225,25 @@ export class FlatComponent implements AfterViewInit {
   };
 
   handleContinue = () => {
-    // To be implemented: navigate to next exercise
+    const currentSeq = this.currentSequence();
+    const nextSeq = (parseInt(currentSeq) + 1).toString();
+
+    // Préparer les résultats de l'exercice
+    const results = {
+      percentage: this.exerciseState.resultPercentage(),
+      totalNotes: this.exerciseState.totalNotes(),
+      totalTaps: this.exerciseState.totalTaps(),
+      goodTaps: this.exerciseState.goodTaps(),
+      lateTaps: this.exerciseState.lateTaps(),
+      earlyTaps: this.exerciseState.earlyTaps(),
+      tooLateTaps: this.exerciseState.tooLateTaps(),
+      tooEarlyTaps: this.exerciseState.tooEarlyTaps(),
+      missedTaps: this.exerciseState.missedTaps(),
+      level: this.exerciseState.level(),
+    };
+
+    // Envoyer l'événement au parent AngularJS
+    this.postMessageService.emitSequenceChange();
   };
 
   handleMasterVolumeChange = async (value: number) => {

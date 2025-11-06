@@ -96,7 +96,7 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
             }
           "
         ></ng-container>
-        <div class="flex w-full h-full justify-center items-center">
+        <!-- <div class="flex w-full h-full justify-center items-center">
           <p-button
             [label]="'label.exo_xml.onboarding.show_tutorial' | translate : locale.language"
             [outlined]="true"
@@ -104,7 +104,7 @@ import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
             icon="pi pi-question-circle"
             (click)="showTutorial()"
           />
-        </div>
+        </div> -->
       </div>
       <ng-template #footer>
         <p-button

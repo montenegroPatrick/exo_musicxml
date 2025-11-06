@@ -62,6 +62,8 @@
                 "4": "Muito bom",
                 "5": "Excelente"
             },
+            "start" : "Iniciar",
+            "stop" : "Parar",
             "user_taps" : "Seus taps"
         }
 

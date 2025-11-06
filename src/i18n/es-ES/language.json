@@ -53,6 +53,8 @@
             "total_notes" : "Número de notas",
             "total_taps" : "Número de taps",
             "listen" : "Escuchar",
+            "start" : "Comenzar",
+            "stop" : "Detener",
             "exercise" : "Ejercicio",
             "detailed_results" : "Resultados detallados",
             "result_level": {

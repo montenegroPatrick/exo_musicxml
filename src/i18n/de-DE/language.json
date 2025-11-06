@@ -53,8 +53,9 @@
             "total_notes" : "Anzahl der Noten",
             "total_taps" : "Anzahl der Taps",
             "listen" : "Hören",
-            "exercise" : "Übung"
-
+            "exercise" : "Übung",
+            "start" : "Starten",
+            "stop" : "Stoppen"
         }
 
 

@@ -26,6 +26,8 @@ export class ExerciseStateService {
   masterVolume = signal<number>(this.savedSettings.masterVolume);
   metronomeVolume = signal<number>(this.savedSettings.metronomeVolume);
   level = signal<Level>(this.savedSettings.level);
+  exerciseMode = signal<boolean>(false);
+
   readonly canTap = computed(
     () =>
       this.isPlaying() &&
@@ -73,6 +75,9 @@ export class ExerciseStateService {
   }
   setIsListening(isListening: boolean): void {
     this.isListening.set(isListening);
+  }
+  setExerciseMode(exerciseMode: boolean): void {
+    this.exerciseMode.set(exerciseMode);
   }
   setPartSound(partSound: boolean): void {
     this.partSound.set(partSound);

@@ -36,7 +36,9 @@ import { OnboardingService } from '../../core/services/utils/onboarding.service'
 import { DriveStep } from 'driver.js';
 import { HelpbuttonComponent } from './components/help-button/help-button.component';
 import { PostMessageService } from './services/post-message.service';
-
+import { ToggleSwitch } from 'primeng/toggleswitch';
+import { FormsModule } from '@angular/forms';
+import { BottomButtonsComponent } from './components/bottom-buttons/bottom-buttons.component';
 @Component({
   standalone: true,
   selector: 'app-flat',
@@ -52,6 +54,9 @@ import { PostMessageService } from './services/post-message.service';
     ButtonModule,
     L10nTranslatePipe,
     HelpbuttonComponent,
+    ToggleSwitch,
+    BottomButtonsComponent,
+    FormsModule,
   ],
 
   templateUrl: './flat.component.html',
@@ -80,6 +85,7 @@ export class FlatComponent implements AfterViewInit {
   isXmlError = computed(() => this.tapRythmService.isError());
   totalDurationMs = computed(() => this.jsonContent().duration ?? 100000);
   partsSignal = signal<any[]>([]);
+  exoMode = false;
 
   async ngAfterViewInit() {
     // Récupérer l'ID de séquence depuis les paramètres de route
@@ -126,10 +132,10 @@ export class FlatComponent implements AfterViewInit {
 
     this.initEmbedEvents();
 
-    // Start onboarding tour if not completed
-    if (!this.onboardingService.isCompleted()) {
-      setTimeout(() => this.startOnboardingTour(), 500);
-    }
+    // No Start on init for the moment  onboarding tour if not completed
+    // if (!this.onboardingService.isCompleted()) {
+    //   setTimeout(() => this.startOnboardingTour(), 500);
+    // }
   }
 
   private initEmbedEvents = async () => {
@@ -174,6 +180,7 @@ export class FlatComponent implements AfterViewInit {
   handleUserTap = (e: Event) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!this.exerciseState.canTap()) return;
     const tapMs = this.timer.currentTimeMs();
     this.soundService.playTapSound();
     const notes = this.jsonContent().notes ?? [];

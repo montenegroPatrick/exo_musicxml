@@ -70,6 +70,7 @@ export class OnboardingService {
     ignoreButton.classList.add('ignore-button');
     ignoreButton.addEventListener('click', () => {
       opts.driver.destroy();
+      this.markCompleted();
     });
 
     popover.footerButtons.insertBefore(

@@ -40,6 +40,7 @@ import { TooltipModule } from 'primeng/tooltip';
   template: `
     <div class="flex items-center gap-2">
       <!-- <p-button [icon]="icon()" (onClick)="startStop()" size="large"></p-button> -->
+      @if(isPlaying() ) {
       <div class="flex items-center gap-2  ">
         <p-button
           [icon]="icon()"
@@ -53,20 +54,20 @@ import { TooltipModule } from 'primeng/tooltip';
           size="large"
           [disabled]="isListening()"
         ></p-button>
-
-        <p-button
-          [icon]="dropDownIcon()"
-          [tooltipDisabled]="isListening() || isPlaying()"
-          pTooltip="Écoute"
-          rounded="false"
-          [raised]="isListening()"
-          styleClass="p-1!"
-          tooltipPosition="top"
-          (onClick)="startStop(0)"
-          size="large"
-          [disabled]="isPlaying()"
-        ></p-button>
+        <!-- <p-button
+        [icon]="dropDownIcon()"
+        [tooltipDisabled]="isListening() || isPlaying()"
+        pTooltip="Écoute"
+        rounded="false"
+        [raised]="isListening()"
+        styleClass="p-1!"
+        tooltipPosition="top"
+        (onClick)="startStop(0)"
+        size="large"
+        [disabled]="isPlaying()"
+        ></p-button> -->
       </div>
+      }
     </div>
     <!-- <p-split-button
       [icon]="icon()"
@@ -92,9 +93,7 @@ export class ControlButtonsComponent {
   startMode: WritableSignal<number> = signal(1);
 
   icon = computed(() =>
-    this.startMode() === 1 && this.isPlaying()
-      ? 'pi pi-stop-circle'
-      : 'pi pi-play-circle'
+    this.startMode() === 1 && this.isPlaying() ? 'pi pi-stop' : 'pi pi-play'
   );
   dropDownIcon = computed(() => 'pi pi-headphones');
   options = computed<{ label: string; value: number }[]>(() => [

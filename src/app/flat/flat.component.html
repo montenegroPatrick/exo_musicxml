@@ -67,8 +67,9 @@
           }
         </app-control-bar>
       </div>
+
       @if(metronome.countInStatus() == 'play') {
-      <div class="absolute bottom-15 right-0 left-0 top-0">
+      <div class="absolute bottom-15 right-0 left-0 top-20">
         <app-countdown-display
           [status]="metronome.countInStatus()"
           [tick]="metronome.metronomeTick()"
@@ -79,6 +80,7 @@
       }
     </div>
     <!-- tap button down page -->
+    @if(exerciseState.isPlaying()) {
     <p-button
       id="onboarding-tap-button"
       [disabled]="!exerciseState.canTap()"
@@ -99,6 +101,14 @@
         }
       </div>
     </p-button>
+    } @if( exerciseState.exerciseStatus() == 'not-started') {
+    <div class="w-full flex flex-row items-center justify-center p-2">
+      <app-bottom-buttons
+        (toggleListen)="handleToggleListen()"
+        (playStop)="handlePlayStop()"
+      />
+    </div>
+    }
 
     <!-- Main Content -->
     @if(exerciseState.exerciseStatus() === 'finish') {

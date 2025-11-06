@@ -25,128 +25,141 @@ import { ExerciseStateService } from '@app/flat/services/exercise-state.service'
       [modal]="true"
       [closable]="true"
       [draggable]="false"
-      [style]="{ width: '600px', zIndex: '1000' }"
+      [style]="{ width: '600px', height: '600px', zIndex: '1000' }"
     >
-      <div class="w-full p-4 text-center  flex flex-col items-center gap-4">
-        <h2 class="text-2xl font-bold">
-          @if (percentage() < 30) {
-          <span>{{
-            'label.exo_xml.result_level.1' | translate : locale.language
-          }}</span>
-          } @else if (percentage() < 50) {
-          <span>{{
-            'label.exo_xml.result_level.2' | translate : locale.language
-          }}</span>
-          } @else if (percentage() < 70) {
-          <span>{{
-            'label.exo_xml.result_level.3' | translate : locale.language
-          }}</span>
-          } @else if (percentage() < 90) {
-          <span>{{
-            'label.exo_xml.result_level.4' | translate : locale.language
-          }}</span>
-          } @else {
-          <span>{{
-            'label.exo_xml.result_level.5' | translate : locale.language
-          }}</span>
-          }
-        </h2>
-        @if(!showDetailedResults()) {
-        <div class="h-62 flex flex-col  justify-center items-center">
+      <div
+        class="w-full p-4 text-center h-full relative  flex flex-col items-center gap-4"
+      >
+        <div
+          class="overflow-y-auto w-full flex items-center flex-grow  flex-col "
+        >
+          <h2 class="text-2xl font-bold">
+            @if (percentage() < 30) {
+            <span>{{
+              'label.exo_xml.result_level.1' | translate : locale.language
+            }}</span>
+            } @else if (percentage() < 50) {
+            <span>{{
+              'label.exo_xml.result_level.2' | translate : locale.language
+            }}</span>
+            } @else if (percentage() < 70) {
+            <span>{{
+              'label.exo_xml.result_level.3' | translate : locale.language
+            }}</span>
+            } @else if (percentage() < 90) {
+            <span>{{
+              'label.exo_xml.result_level.4' | translate : locale.language
+            }}</span>
+            } @else {
+            <span>{{
+              'label.exo_xml.result_level.5' | translate : locale.language
+            }}</span>
+            }
+          </h2>
+          @if(!showDetailedResults()) {
+
           <p-knob
             [ngModel]="percentage()"
             [size]="150"
             [strokeWidth]="2"
             [readonly]="true"
             [showValue]="true"
+            class="flex-0"
             valueTemplate="{{ percentage() }}%"
           />
-        </div>
-        } @else {
-        <!-- Statistiques détaillées -->
-        <div class="w-full bg-surface-50 rounded-lg p-4 space-y-3">
-          <h3 class="text-lg font-semibold mb-3">
-            {{ 'label.exo_xml.detailed_results' | translate : locale.language }}
-          </h3>
 
-          <div class="grid grid-cols-2 gap-3 text-sm">
-            <div class="flex justify-between p-2 bg-white rounded">
-              <span class="font-medium"
-                >{{
-                  'label.exo_xml.total_notes' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold">{{ totalNotes() }}</span>
-            </div>
+          } @else {
+          <!-- Statistiques détaillées -->
+          <div class="w-full bg-surface-50 rounded-lg p-4 space-y-3">
+            <h3 class="text-lg font-semibold mb-3">
+              {{
+                'label.exo_xml.detailed_results' | translate : locale.language
+              }}
+            </h3>
 
-            <div class="flex justify-between p-2 bg-white rounded">
-              <span class="font-medium"
-                >{{
-                  'label.exo_xml.user_taps' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold">{{ totalTaps() }}</span>
-            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span class="font-medium"
+                  >{{
+                    'label.exo_xml.total_notes' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold">{{ totalNotes() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-green-100 rounded">
-              <span class="font-medium text-green-800"
-                >✓
-                {{
-                  'label.exo_xml.good_taps' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold text-green-800">{{ goodTaps() }}</span>
-            </div>
+              <div class="flex justify-between p-2 bg-white rounded">
+                <span class="font-medium"
+                  >{{
+                    'label.exo_xml.user_taps' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold">{{ totalTaps() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-orange-100 rounded">
-              <span class="font-medium text-orange-700"
-                >↗
-                {{ 'label.exo_xml.early' | translate : locale.language }}:</span
-              >
-              <span class="font-bold text-orange-700">{{ earlyTaps() }}</span>
-            </div>
+              <div class="flex justify-between p-2 bg-green-100 rounded">
+                <span class="font-medium text-green-800"
+                  >✓
+                  {{
+                    'label.exo_xml.good_taps' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-green-800">{{ goodTaps() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-blue-100 rounded">
-              <span class="font-medium text-blue-700"
-                >↘
-                {{ 'label.exo_xml.late' | translate : locale.language }}:</span
-              >
-              <span class="font-bold text-blue-700">{{ lateTaps() }}</span>
-            </div>
+              <div class="flex justify-between p-2 bg-orange-100 rounded">
+                <span class="font-medium text-orange-700"
+                  >↗
+                  {{
+                    'label.exo_xml.early' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-orange-700">{{ earlyTaps() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-red-100 rounded">
-              <span class="font-medium text-red-700"
-                >✗
-                {{
-                  'label.exo_xml.too_early' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold text-red-700">{{ tooEarlyTaps() }}</span>
-            </div>
+              <div class="flex justify-between p-2 bg-blue-100 rounded">
+                <span class="font-medium text-blue-700"
+                  >↘
+                  {{
+                    'label.exo_xml.late' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-blue-700">{{ lateTaps() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-red-100 rounded">
-              <span class="font-medium text-red-700"
-                >✗
-                {{
-                  'label.exo_xml.too_late' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold text-red-700">{{ tooLateTaps() }}</span>
-            </div>
+              <div class="flex justify-between p-2 bg-red-100 rounded">
+                <span class="font-medium text-red-700"
+                  >✗
+                  {{
+                    'label.exo_xml.too_early' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-red-700">{{ tooEarlyTaps() }}</span>
+              </div>
 
-            <div class="flex justify-between p-2 bg-gray-100 rounded">
-              <span class="font-medium text-gray-700"
-                >{{
-                  'label.exo_xml.missed' | translate : locale.language
-                }}:</span
-              >
-              <span class="font-bold text-gray-700">{{ missedTaps() }}</span>
+              <div class="flex justify-between p-2 bg-red-100 rounded">
+                <span class="font-medium text-red-700"
+                  >✗
+                  {{
+                    'label.exo_xml.too_late' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-red-700">{{ tooLateTaps() }}</span>
+              </div>
+
+              <div class="flex justify-between p-2 bg-gray-100 rounded">
+                <span class="font-medium text-gray-700"
+                  >{{
+                    'label.exo_xml.missed' | translate : locale.language
+                  }}:</span
+                >
+                <span class="font-bold text-gray-700">{{ missedTaps() }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        }
-        <div class="flex flex-col gap-3 items-stretch w-full">
+          }
+        </div>
+        <div class=" flex flex-col gap-3 items-stretch w-full">
           <p-button
             link
             severity="secondary"

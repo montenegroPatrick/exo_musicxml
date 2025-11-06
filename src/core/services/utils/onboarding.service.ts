@@ -127,7 +127,7 @@ export class OnboardingService {
         },
       },
       {
-        element: '#onboarding-play-controls',
+        element: '#onboarding-bottom-buttons',
         popover: {
           title: this.translationService.translate(
             'label.exo_xml.onboarding.play_controls.title'

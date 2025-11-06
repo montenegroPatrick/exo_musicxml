@@ -55,6 +55,8 @@
             "total_taps" : "Nombre de taps",
             "listen" : "Écoute",
             "exercise" : "Exercice",
+            "start" : "Commencer",
+            "stop" : "Arrêter",
             "detailed_results" : "Résultats détaillés",
             "result_level": {
                 "1": "À refaire",

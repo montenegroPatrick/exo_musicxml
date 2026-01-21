@@ -15,20 +15,20 @@ export const routes: Routes = [
     canActivate: [],
     children: [
       {
-        path: '/tap-rythm',
+        path: 'tap-rythm',
         component: TapRythmPage,
         resolve: { flat: flatResolver },
       },
       {
-        path: '/video',
+        path: 'video',
         loadChildren: () => import('./modules/video/video.routes'),
       },
       {
-        path: '/img',
+        path: 'img',
         loadChildren: () => import('./modules/img/img.routes'),
       },
       {
-        path: '/video-img',
+        path: 'video-img',
         loadChildren: () => import('./modules/video-img/video-img.routes'),
       },
     ],

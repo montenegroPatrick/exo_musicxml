@@ -9,7 +9,7 @@ import {
   output,
   viewChild,
 } from '@angular/core';
-import { IUserTap } from '../../models/tap.model';
+import { IUserTap } from '../../interface/flat.interface';
 
 @Component({
   selector: 'app-tap-button',

@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { CountInStatus } from '../../models/tap.model';
+import { CountInStatus } from '../../interface/flat.interface';
 
 @Component({
   selector: 'app-countdown-display',
@@ -10,11 +10,17 @@ import { CountInStatus } from '../../models/tap.model';
       <div
         class="flex w-full  h-full flex-col gap-2 items-center justify-center"
       >
-        @switch(status()) { @case('play') {
-        <p class="text-lg text-center">
-          <span class="text-7xl text-secondary font-bold">{{ tick() }}</span>
-        </p>
-        } @case('finish') { } @case('not-started') { } }
+        @switch (status()) {
+          @case ('play') {
+            <p class="text-lg text-center">
+              <span class="text-7xl text-secondary font-bold">{{
+                tick()
+              }}</span>
+            </p>
+          }
+          @case ('finish') {}
+          @case ('not-started') {}
+        }
         <ng-content></ng-content>
       </div>
     </div>
@@ -28,6 +34,6 @@ export class CountdownDisplayComponent {
   readonly homeSentence = computed(() =>
     this.isListening()
       ? 'En écoute.'
-      : 'Appuyer sur le bouton pour "Commencer" quand vous êtes prêt.'
+      : 'Appuyer sur le bouton pour "Commencer" quand vous êtes prêt.',
   );
 }

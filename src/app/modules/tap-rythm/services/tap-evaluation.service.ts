@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { IUserTap } from '../models/tap.model';
+import { IUserTap } from '../interface/flat.interface';
 import { TapRythmService } from '@app/modules/tap-rythm/services/tap-rythm.service';
 import { ExerciseStateService } from './exercise-state.service';
 

@@ -10,7 +10,10 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Level, LEVEL_OPTIONS } from '@app/modules/tap-rythm/models/tap.model';
+import {
+  Level,
+  LEVEL_OPTIONS,
+} from '@app/modules/tap-rythm/interface/flat.interface';
 import { Button, ButtonModule } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';

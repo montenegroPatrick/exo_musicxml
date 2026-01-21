@@ -6,7 +6,6 @@ import {
   input,
   viewChild,
 } from '@angular/core';
-import { IUserTap } from '../../models/tap.model';
 import { TapRythmService } from '@app/modules/tap-rythm/services/tap-rythm.service';
 import { ExerciseStateService } from '@app/modules/tap-rythm/services/exercise-state.service';
 import { TimerService } from '@app/modules/tap-rythm/services/timer.service';

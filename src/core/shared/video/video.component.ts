@@ -19,7 +19,7 @@ const JW_PLAYER_LIBRARY_URL = `https://cdn.jwplayer.com/libraries/7cZe2fzm.js`;
 @Component({
   selector: 'app-video',
   imports: [],
-  template: ` <div class="h-full  w-full" [id]="playerId"></div> `,
+  template: ` <div class="" [id]="playerId"></div> `,
 })
 export class VideoComponent implements AfterViewInit, OnDestroy {
   /** ID de la vidéo ou playlist JWPlayer */
@@ -118,7 +118,7 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
     const defaultOptions: IJWPlayerOptions = {
       abouttext: 'imusic-school',
       key: environment.JW_PLAYER_USER_KEY,
-      height: '40%',
+      height: 360,
       width: '90%',
       allowFullscreen: true,
       aspectratio: '16:9',
@@ -131,26 +131,21 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
       playbackRates: [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2],
       preload: 'metadata',
       repeat: false,
-      stretching: 'exactfit',
-    };
+      stretching: 'none',
 
-    const mergedOptions = { ...defaultOptions, ...this.options() };
-
-    const setupConfig: IJWPlayerOptions = {
-      ...mergedOptions,
-      abouttext: 'imusic-school',
-      key: environment.JW_PLAYER_USER_KEY,
       logo: {
         file: 'https://assets-jpcust.jwpsrv.com/watermarks/gxTrgdrk.png',
         hide: false,
         link: 'https://www.imusic-school.com',
-        margin: '10',
+
         position: 'top-left',
       },
       playlist: this.getPlaylistUrl(this.mediaId()),
     };
 
-    this.playerInstance = window.jwplayer(this.playerId).setup(setupConfig);
+    const mergedOptions = { ...defaultOptions, ...this.options() };
+
+    this.playerInstance = window.jwplayer(this.playerId).setup(mergedOptions);
     this.isInitialized = true;
 
     this.playerInstance.on('ready', () => {

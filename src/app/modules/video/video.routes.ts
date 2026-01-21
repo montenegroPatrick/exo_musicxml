@@ -4,7 +4,7 @@ import { videoResolver } from './resolvers/video.resolver';
 
 export default [
   {
-    path: '',
+    path: ':lessonId/:seq',
     component: VideoPage,
     resolve: {
       video: videoResolver,

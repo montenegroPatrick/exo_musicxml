@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Level } from '../../../app/flat/models/tap.model';
+import { Level } from '../../../app/modules/tap-rythm/interface/flat.interface';
 
 export interface ExerciseSettings {
   level: Level;

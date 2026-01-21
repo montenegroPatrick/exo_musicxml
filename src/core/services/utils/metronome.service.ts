@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { CountInStatus } from '../../../app/flat/models/tap.model';
+import { CountInStatus } from '../../../app/modules/tap-rythm/interface/flat.interface';
 
 @Injectable({
   providedIn: 'root',

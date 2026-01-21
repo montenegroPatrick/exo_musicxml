@@ -22,6 +22,16 @@ This is an Angular 19 application that integrates the Flat.io music notation edi
 
 ### Code Generation
 - `ng generate component component-name` - Generate new component (configured: standalone, inline styles, SCSS, skip tests by default)
+- `npm run g:module <module-name>` - Generate a new module with complete structure:
+  ```
+  src/app/modules/{module-name}/
+  ├── components/
+  ├── interfaces/{module-name}.interface.ts
+  ├── resolvers/{module-name}.resolver.ts
+  ├── services/
+  ├── {module-name}.component.ts
+  └── {module-name}.routes.ts
+  ```
 
 ## Architecture
 

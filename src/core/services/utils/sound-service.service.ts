@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ExerciseStateService } from '../../../app/flat/services/exercise-state.service';
+import { ExerciseStateService } from '../../../app/modules/tap-rythm/services/exercise-state.service';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +19,7 @@ export class SoundService {
     this.noiseBuffer = this.audioContext.createBuffer(
       1,
       bufferSize,
-      this.audioContext.sampleRate
+      this.audioContext.sampleRate,
     );
     const output = this.noiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
@@ -62,7 +62,7 @@ export class SoundService {
     gainNode.gain.linearRampToValueAtTime(volume * 1.5, currentTime + 0.001); // 1ms attack (very sharp)
     gainNode.gain.exponentialRampToValueAtTime(
       volume * 0.3,
-      currentTime + 0.02
+      currentTime + 0.02,
     ); // First decay
     gainNode.gain.exponentialRampToValueAtTime(0.001, currentTime + 0.1); // Final decay (100ms total)
 

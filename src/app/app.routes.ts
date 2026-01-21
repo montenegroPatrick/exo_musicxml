@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { FlatComponent } from './flat/flat.component';
+import { TapRythmPage } from './modules/tap-rythm/tap-rythm.component';
 import { authGuard } from 'src/core/guard/auth.guard';
 import { UnauthorizedComponent } from './unauthorized/unauthorized.component';
 import { NotfoundComponent } from './not-found/notfound.component';
-import { flatResolver } from './flat/resolver/flat-resolver.service';
+import { flatResolver } from './modules/tap-rythm/resolver/flat-resolver.service';
 
 export const routes: Routes = [
   {
@@ -12,10 +12,26 @@ export const routes: Routes = [
   },
   {
     path: '',
-
     canActivate: [],
-    loadChildren: () => import('./flat/flat.routes'),
-    resolve: { flat: flatResolver },
+    children: [
+      {
+        path: '/tap-rythm',
+        component: TapRythmPage,
+        resolve: { flat: flatResolver },
+      },
+      {
+        path: '/video',
+        loadChildren: () => import('./modules/video/video.routes'),
+      },
+      {
+        path: '/img',
+        loadChildren: () => import('./modules/img/img.routes'),
+      },
+      {
+        path: '/video-img',
+        loadChildren: () => import('./modules/video-img/video-img.routes'),
+      },
+    ],
   },
   {
     path: '**',

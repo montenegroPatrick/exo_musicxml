@@ -60,7 +60,19 @@ export class ImgStateService {
       }),
     );
   }
-
+  initVariables(data: IJSONImgXML | IJsonImgEps | IJsonImgPdf) {
+    switch (this.type()) {
+      case 'xml':
+        this._handleJsonXml(data as IJSONImgXML);
+        break;
+      case 'eps':
+        this._handleJsonEps(data as IJsonImgEps);
+        break;
+      case 'pdf':
+        this._handleJsonPdf(data as IJsonImgPdf);
+        break;
+    }
+  }
   _handleJsonXml(xml: IJSONImgXML) {
     this.currentJsonXml.set(xml);
     this.currentXmlUrl.set(xml.url ?? '');

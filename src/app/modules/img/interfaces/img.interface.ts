@@ -40,7 +40,6 @@ export interface IJsonImgPdf {
   pos?: number;
   url?: string;
   audioUrl?: string;
-  imageList?: ImageItem[];
 }
 export interface IJSONImgXML {
   folder?: string;

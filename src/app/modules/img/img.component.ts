@@ -40,6 +40,7 @@ export class ImgComponent {
   );
   jsonXml = computed(() => this._imgService.currentJsonXml());
   imageListPos = computed(() => this._imgService.currentImageListPos());
+  currentImgEps = computed(() => this._imgService.currentImgEps());
   jsonEps = computed(() => this._imgService.jsonImgEps());
   jsonPdf = computed(() => this._imgService.jsonImgPdf());
   pdfTotalPages = computed(() => this._imgService.currentPdfTotalPages());
@@ -53,5 +54,15 @@ export class ImgComponent {
     this._imgService.currentImageListPos.set(
       this._imgService.currentImageListPos() - 1,
     );
+  }
+  printPdf() {
+    if (this.type() === 'xml') {
+      return;
+    }
+    const url =
+      this.type() === 'pdf'
+        ? this._imgService.currentPdfUrl()!
+        : this.currentImgEps()?.url;
+    window.open(url)?.print();
   }
 }

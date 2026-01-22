@@ -75,7 +75,15 @@ export class ImgStateService {
   }
   _handleJsonXml(xml: IJSONImgXML) {
     this.currentJsonXml.set(xml);
-    this.currentXmlUrl.set(xml.url ?? '');
+
+    this.xmlFetch(xml.url ?? '')
+      .pipe(
+        map((xml: string) => {
+          this.currentXmlUrl.set(xml);
+          return xml;
+        }),
+      )
+      .subscribe();
   }
   _handleJsonEps(eps: IJsonImgEps) {
     this.jsonImgEps.set(eps);
@@ -109,6 +117,14 @@ export class ImgStateService {
       }),
     );
   }
+  xmlFetch(xmlUrl: string) {
+    return this._imgApiService.getXml(xmlUrl).pipe(
+      map((xml: string) => {
+        this.currentXmlUrl.set(xmlUrl);
+        return xml;
+      }),
+    );
+  }
 }
 @Injectable({
   providedIn: 'root',
@@ -122,5 +138,8 @@ export class ImgApiService {
 
   getPdfBlob(url: string): Observable<Blob> {
     return this._http.get(url, { responseType: 'blob' });
+  }
+  getXml(url: string): Observable<string> {
+    return this._http.get(url, { responseType: 'text' });
   }
 }

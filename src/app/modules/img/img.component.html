@@ -1,0 +1,62 @@
+<div class="flex w-full h-screen">
+  @if (printable()) {
+    <div class="h-full flex-0 gap-2 flex flex-col items-center bg-card p-4">
+      <p-button
+        (onClick)="printPdf()"
+        severity="secondary"
+        raised="true"
+        icon="pi pi-print"
+      ></p-button>
+      @if (canNavigate()) {
+        <p-button
+          [disabled]="(imageList()?.length ?? 0) === 1 || imageListPos() === 1"
+          (onClick)="previousPage()"
+          severity="secondary"
+          raised="true"
+          icon="pi pi-arrow-up"
+        ></p-button>
+        <p>{{ imageListPos() }} / {{ pdfTotalPages() }}</p>
+        <p-button
+          [disabled]="
+            (imageList()?.length ?? 0) === (imageList()?.length ?? 0) - 1 ||
+            imageListPos() === pdfTotalPages()
+          "
+          (onClick)="nextPage()"
+          severity="secondary"
+          raised="true"
+          icon="pi pi-arrow-down"
+        ></p-button>
+      }
+    </div>
+  }
+
+  <div class="flex-grow h-full w-full bg-white">
+    @switch (type()) {
+      @case ("xml") {
+        @if (!jsonXml() || jsonXml() == null) {
+          <div>no xml</div>
+        }
+        @if (jsonXml() && jsonXml() != null) {
+          <app-xml [xml]="jsonXml()!"></app-xml>
+        }
+      }
+      @case ("eps") {
+        @if (!jsonEps() || jsonEps() == null) {
+          <div>no eps</div>
+        } @else {
+          <app-eps [eps]="jsonEps()!"></app-eps>
+        }
+      }
+      @case ("pdf") {
+        @if (!jsonPdf() || jsonPdf() == null) {
+          <div>no pdf</div>
+        } @else {
+          <app-pdf [pdf]="jsonPdf()!"></app-pdf>
+        }
+      }
+      @default {
+        <p>error on type image {{ type() }}</p>
+      }
+    }
+  </div>
+</div>

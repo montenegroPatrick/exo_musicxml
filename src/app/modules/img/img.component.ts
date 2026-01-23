@@ -38,7 +38,7 @@ export class ImgComponent {
   canNavigate = computed(
     () => (this.imageList()?.length ?? 0 > 1) || this.type() == 'pdf',
   );
-  jsonXml = computed(() => this._imgService.currentJsonXml());
+  xml = computed(() => this._imgService.currentXmlUrl());
   imageListPos = computed(() => this._imgService.currentImageListPos());
   currentImgEps = computed(() => this._imgService.currentImgEps());
   jsonEps = computed(() => this._imgService.jsonImgEps());

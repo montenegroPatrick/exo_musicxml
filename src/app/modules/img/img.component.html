@@ -33,11 +33,11 @@
   <div class="flex-grow h-full w-full bg-white">
     @switch (type()) {
       @case ("xml") {
-        @if (!jsonXml() || jsonXml() == null) {
+        @if (!xml() || xml() == null) {
           <div>no xml</div>
         }
-        @if (jsonXml() && jsonXml() != null) {
-          <app-xml [xml]="jsonXml()!"></app-xml>
+        @if (xml() && xml() != null) {
+          <app-xml [xml]="xml()!"></app-xml>
         }
       }
       @case ("eps") {
@@ -49,7 +49,7 @@
       }
       @case ("pdf") {
         @if (!jsonPdf() || jsonPdf() == null) {
-          <div>no pdf</div>
+          <div>no pdff</div>
         } @else {
           <app-pdf [pdf]="jsonPdf()!"></app-pdf>
         }

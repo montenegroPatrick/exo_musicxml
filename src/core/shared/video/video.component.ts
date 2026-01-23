@@ -29,10 +29,10 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
   options = input<IJWPlayerOptions>({});
 
   /** Démarrage automatique */
-  autostart = input<boolean>(false);
+  autostart = input<boolean>(true);
 
   /** Afficher les contrôles */
-  controls = input<boolean>(true);
+  controls = input<boolean>(false);
 
   /** Muet par défaut */
   muted = input<boolean>(false);
@@ -119,8 +119,9 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
       abouttext: 'imusic-school',
       key: environment.JW_PLAYER_USER_KEY,
       height: 360,
-      width: '90%',
+      width: '100%',
       allowFullscreen: true,
+
       aspectratio: '16:9',
       autostart: this.autostart(),
       controls: this.controls(),
@@ -131,7 +132,7 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
       playbackRates: [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2],
       preload: 'metadata',
       repeat: false,
-      stretching: 'none',
+      stretching: 'uniform',
 
       logo: {
         file: 'https://assets-jpcust.jwpsrv.com/watermarks/gxTrgdrk.png',

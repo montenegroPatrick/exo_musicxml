@@ -1,3 +1,5 @@
+import { ImageItem } from '@app/modules/img/interfaces/img.interface';
+
 export interface IVideoImg {
   loadVideo?: boolean;
   extM3U8?: string;
@@ -10,6 +12,7 @@ export interface IVideoImg {
   typeImg?: string;
   loadImg?: boolean;
   url?: string;
+  imageList?: ImageItem[];
   pos?: number;
   printable?: boolean;
 }

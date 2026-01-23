@@ -4,6 +4,8 @@ import {
   computed,
   ElementRef,
   input,
+  signal,
+  viewChild,
   ViewChild,
 } from '@angular/core';
 import { IJSONImgXML } from '@app/modules/img/interfaces/img.interface';
@@ -14,17 +16,17 @@ import Embed from 'flat-embed';
 @Component({
   selector: 'app-xml',
   imports: [],
-  template: ` <div #xmlContainer></div> `,
+  template: ` <div class="w-full h-full" #xmlContainer></div> `,
   styles: ``,
 })
 export class XmlComponent implements AfterViewInit {
-  xml = input.required<IJSONImgXML>();
-  xmlUrl = computed(() => this.xml().url!);
-  @ViewChild('xmlContainer') xmlContainer!: ElementRef<HTMLDivElement>;
+  xml = input.required<string>();
+  xmlContainer = viewChild.required<ElementRef<HTMLDivElement>>('xmlContainer');
+  isXmlReady = signal(false);
   private embed: Embed | undefined;
   async ngAfterViewInit(): Promise<void> {
     const width = window.innerWidth;
-    this.embed = new Embed(this.xmlContainer.nativeElement, {
+    this.embed = new Embed(this.xmlContainer().nativeElement, {
       embedParams: {
         appId: environment.FLAT_APP_ID,
         controlsDisplay: false,
@@ -35,6 +37,9 @@ export class XmlComponent implements AfterViewInit {
         hideTempo: true,
       },
     });
-    await this.embed.loadMusicXML(this.xmlUrl());
+    await this.embed.loadMusicXML(this.xml()).then(() => {
+      this.isXmlReady.set(true);
+    });
+    this.embed?.play();
   }
 }

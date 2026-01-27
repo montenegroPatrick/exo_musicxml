@@ -53,13 +53,13 @@ export interface IJSONImgXML {
 }
 
 export interface Sync {
-  type?: string;
-  time?: number;
-  location?: Location;
+  type: 'measure' | 'end';
+  time: number;
+  location: Location;
 }
 
 export interface Location {
-  measureIdx?: number;
+  measureIdx: number;
 }
 
 export interface TrackList {

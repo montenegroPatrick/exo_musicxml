@@ -5,8 +5,9 @@ import {
   input,
   output,
   effect,
+  inject,
 } from '@angular/core';
-import { environment } from '@environments/environment';
+import { JwpService } from '@core/services/jwp.service';
 import {
   JWPlayerInstance,
   IJWPlayerOptions,
@@ -14,14 +15,17 @@ import {
   JWPlayerEventCallback,
 } from '@core/interfaces/jwplayer.interface';
 
-const JW_PLAYER_LIBRARY_URL = `https://cdn.jwplayer.com/libraries/7cZe2fzm.js`;
-
 @Component({
   selector: 'app-video',
   imports: [],
   template: ` <div class="" [id]="playerId"></div> `,
 })
 export class VideoComponent implements AfterViewInit, OnDestroy {
+  private jwpService = inject(JwpService);
+
+  /** Type de la vidéo (video, xml) */
+  typeImg = input.required<string>();
+
   /** ID de la vidéo ou playlist JWPlayer */
   mediaId = input.required<string>();
 
@@ -29,7 +33,7 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
   options = input<IJWPlayerOptions>({});
 
   /** Démarrage automatique */
-  autostart = input<boolean>(true);
+  autostart = input<boolean>(false);
 
   /** Afficher les contrôles */
   controls = input<boolean>(false);
@@ -45,183 +49,98 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
 
   readonly playerId = `jwplayer-${Math.random().toString(36).substring(2, 9)}`;
 
-  private playerInstance: JWPlayerInstance | null = null;
   private isInitialized = false;
-  private static scriptLoaded = false;
-  private static scriptLoading: Promise<void> | null = null;
 
   constructor() {
     effect(() => {
       const id = this.mediaId();
       if (this.isInitialized && id) {
-        this.loadMedia(id);
+        this.jwpService.loadMedia(id);
       }
     });
   }
 
-  ngAfterViewInit(): void {
-    this.loadScriptAndInitPlayer();
-  }
-
-  ngOnDestroy(): void {
-    this.destroyPlayer();
-  }
-
-  private async loadScriptAndInitPlayer(): Promise<void> {
+  async ngAfterViewInit(): Promise<void> {
     try {
-      await this.loadJWPlayerScript();
-      this.initPlayer();
+      const mergedOptions: IJWPlayerOptions = {
+        autostart: this.typeImg() !== 'xml' ? true : this.autostart(),
+        controls: this.controls(),
+        mute: this.muted(),
+        ...this.options(),
+      };
+
+      await this.jwpService.initPlayer(
+        this.playerId,
+        this.mediaId(),
+        mergedOptions,
+      );
+      this.isInitialized = true;
+
+      const player = this.jwpService.getPlayer();
+      if (player) {
+        this.playerReady.emit(player);
+      }
     } catch (error) {
       console.error('Failed to load JWPlayer:', error);
       this.playerError.emit(error as Error);
     }
   }
 
-  private loadJWPlayerScript(): Promise<void> {
-    if (VideoComponent.scriptLoaded) {
-      return Promise.resolve();
-    }
-
-    if (VideoComponent.scriptLoading) {
-      return VideoComponent.scriptLoading;
-    }
-
-    VideoComponent.scriptLoading = new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = JW_PLAYER_LIBRARY_URL;
-      script.async = true;
-
-      script.onload = () => {
-        VideoComponent.scriptLoaded = true;
-        VideoComponent.scriptLoading = null;
-        resolve();
-      };
-
-      script.onerror = () => {
-        VideoComponent.scriptLoading = null;
-        reject(new Error('Failed to load JWPlayer script'));
-      };
-
-      document.head.appendChild(script);
-    });
-
-    return VideoComponent.scriptLoading;
+  ngOnDestroy(): void {
+    this.jwpService.destroyPlayer();
+    this.isInitialized = false;
   }
 
-  private initPlayer(): void {
-    if (typeof window.jwplayer === 'undefined') {
-      console.error('JWPlayer not available');
-      this.playerError.emit(new Error('JWPlayer not available'));
-      return;
-    }
-
-    const defaultOptions: IJWPlayerOptions = {
-      abouttext: 'imusic-school',
-      key: environment.JW_PLAYER_USER_KEY,
-      height: 360,
-      width: '100%',
-      allowFullscreen: true,
-
-      aspectratio: '16:9',
-      autostart: this.autostart(),
-      controls: this.controls(),
-      displaydescription: false,
-      displaytitle: false,
-      mute: this.muted(),
-      playbackRateControls: true,
-      playbackRates: [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2],
-      preload: 'metadata',
-      repeat: false,
-      stretching: 'uniform',
-
-      logo: {
-        file: 'https://assets-jpcust.jwpsrv.com/watermarks/gxTrgdrk.png',
-        hide: false,
-        link: 'https://www.imusic-school.com',
-
-        position: 'top-left',
-      },
-      playlist: this.getPlaylistUrl(this.mediaId()),
-    };
-
-    const mergedOptions = { ...defaultOptions, ...this.options() };
-
-    this.playerInstance = window.jwplayer(this.playerId).setup(mergedOptions);
-    this.isInitialized = true;
-
-    this.playerInstance.on('ready', () => {
-      this.playerReady.emit(this.playerInstance!);
-    });
-  }
-
-  private loadMedia(mediaId: string): void {
-    if (this.playerInstance) {
-      this.playerInstance.load(this.getPlaylistUrl(mediaId));
-    }
-  }
-
-  private getPlaylistUrl(mediaId: string): string {
-    return `//content.jwplatform.com/v2/media/${mediaId}`;
-  }
-
-  private destroyPlayer(): void {
-    if (this.playerInstance) {
-      this.playerInstance.remove();
-      this.playerInstance = null;
-      this.isInitialized = false;
-    }
-  }
-
-  // Public API methods
+  // Public API methods - delegate to service
   play(): void {
-    this.playerInstance?.play();
+    this.jwpService.play();
   }
 
   pause(): void {
-    this.playerInstance?.pause();
+    this.jwpService.pause();
   }
 
   stop(): void {
-    this.playerInstance?.stop();
+    this.jwpService.stop();
   }
 
   seek(position: number): void {
-    this.playerInstance?.seek(position);
+    this.jwpService.seek(position); // Convert to ms
   }
 
   setVolume(volume: number): void {
-    this.playerInstance?.setVolume(volume);
+    this.jwpService.setVolume(volume);
   }
 
   setMute(mute: boolean): void {
-    this.playerInstance?.setMute(mute);
+    this.jwpService.setMute(mute);
   }
 
   setPlaybackRate(rate: number): void {
-    this.playerInstance?.setPlaybackRate(rate);
+    this.jwpService.setPlaybackRate(rate);
   }
 
   getPosition(): number {
-    return this.playerInstance?.getPosition() ?? 0;
+    return this.jwpService.positionMs() / 1000; // Convert to seconds
   }
 
   getDuration(): number {
-    return this.playerInstance?.getDuration() ?? 0;
+    return this.jwpService.duration() / 1000; // Convert to seconds
   }
 
   getState(): string {
-    return this.playerInstance?.getState() ?? 'idle';
+    return this.jwpService.state();
   }
 
   on(event: JWPlayerEvent, callback: JWPlayerEventCallback): void {
-    this.playerInstance?.on(event, callback);
+    this.jwpService.on(event, callback);
   }
 
   off(event: JWPlayerEvent): void {
-    this.playerInstance?.off(event);
+    this.jwpService.off(event);
   }
 
   getPlayer(): JWPlayerInstance | null {
-    return this.playerInstance;
+    return this.jwpService.getPlayer();
   }
 }

@@ -1,4 +1,4 @@
-import { ImageItem } from '@app/modules/img/interfaces/img.interface';
+import { ImageItem, Sync } from '@app/modules/img/interfaces/img.interface';
 
 export interface IVideoImg {
   loadVideo?: boolean;
@@ -7,7 +7,7 @@ export interface IVideoImg {
   jw?: string;
   videoName?: string;
   subtitles?: any[];
-  videoSync?: VideoSync[];
+  videoSync?: Sync[];
   loadAudio?: boolean;
   typeImg?: string;
   loadImg?: boolean;
@@ -15,12 +15,6 @@ export interface IVideoImg {
   imageList?: ImageItem[];
   pos?: number;
   printable?: boolean;
-}
-
-export interface VideoSync {
-  type?: string;
-  time?: number;
-  location?: Location;
 }
 
 export interface Location {

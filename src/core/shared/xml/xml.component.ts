@@ -1,17 +1,13 @@
 import {
   AfterViewInit,
   Component,
-  computed,
   ElementRef,
+  inject,
   input,
-  signal,
+  OnDestroy,
   viewChild,
-  ViewChild,
 } from '@angular/core';
-import { IJSONImgXML } from '@app/modules/img/interfaces/img.interface';
-import { IJsonXml } from '@app/modules/tap-rythm/interface/flat.interface';
-import { environment } from '@environments/environment';
-import Embed from 'flat-embed';
+import { FlatService } from '@core/services/flat.service';
 
 @Component({
   selector: 'app-xml',
@@ -19,27 +15,26 @@ import Embed from 'flat-embed';
   template: ` <div class="w-full h-full" #xmlContainer></div> `,
   styles: ``,
 })
-export class XmlComponent implements AfterViewInit {
+export class XmlComponent implements AfterViewInit, OnDestroy {
+  private flatService = inject(FlatService);
+
   xml = input.required<string>();
   xmlContainer = viewChild.required<ElementRef<HTMLDivElement>>('xmlContainer');
-  isXmlReady = signal(false);
-  private embed: Embed | undefined;
+
+  // Expose service signals
+  isXmlReady = this.flatService.isReady;
+
   async ngAfterViewInit(): Promise<void> {
-    const width = window.innerWidth;
-    this.embed = new Embed(this.xmlContainer().nativeElement, {
-      embedParams: {
-        appId: environment.FLAT_APP_ID,
-        controlsDisplay: false,
-        playbackMetronome: 'inactive',
-        layout: 'responsive',
-        zoom: width > 800 ? 'auto' : 1,
-        displayFirstLinePartsNames: false,
-        hideTempo: true,
-      },
-    });
-    await this.embed.loadMusicXML(this.xml()).then(() => {
-      this.isXmlReady.set(true);
-    });
-    this.embed?.play();
+    this.flatService.initEmbed(this.xmlContainer().nativeElement);
+
+    await this.flatService.loadMusicXML(this.xml());
+    await this.flatService.setTrack();
+    await this.flatService.useTrack();
+    this.flatService.setupEventListeners();
+    await this.flatService.initializeMeasureData();
+  }
+
+  ngOnDestroy(): void {
+    this.flatService.destroyEmbed();
   }
 }

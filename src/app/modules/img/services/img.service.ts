@@ -41,6 +41,9 @@ export class ImgStateService {
   //IMAGE XML VARIABLE
   currentJsonXml = signal<IJSONImgXML | null>(null);
   currentXmlUrl = signal<string | null>(null);
+
+  imageIsReady = signal<boolean>(false);
+
   getJsonImg({ lessonId, seq }: { lessonId: string; seq: string }) {
     const url = `${this._imgUrl}/${lessonId}/seq/${seq}.json`;
     return this._imgApiService.getJsonImg(url).pipe(
@@ -83,7 +86,9 @@ export class ImgStateService {
           return xml;
         }),
       )
-      .subscribe();
+      .subscribe({
+        next: () => {},
+      });
   }
   _handleJsonEps(eps: IJsonImgEps) {
     this.jsonImgEps.set(eps);

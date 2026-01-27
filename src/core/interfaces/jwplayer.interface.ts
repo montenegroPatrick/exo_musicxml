@@ -166,6 +166,10 @@ export interface JWPlayerInstance {
   getPlaylistIndex(): number;
   setCaptions(options: Partial<JWPlayerCaptions>): void;
   remove(): void;
+  getCaptionsList(): any[];
+  setCurrentCaptions(index: number): void;
+  getFullscreen(): boolean;
+  setFullscreen(fullscreen: boolean): void;
   resize(width: number | string, height: number | string): void;
   on(event: JWPlayerEvent, callback: JWPlayerEventCallback): JWPlayerInstance;
   off(event: JWPlayerEvent): JWPlayerInstance;

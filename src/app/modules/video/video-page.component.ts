@@ -8,7 +8,7 @@ import { VideoService } from './services/video.service';
   imports: [VideoComponent],
   template: `
     <div class="h-screen w-full bg-black  ">
-      <app-video [mediaId]="jwPlayerId()"></app-video>
+      <app-video typeImg="eps" [mediaId]="jwPlayerId()"></app-video>
     </div>
   `,
   styles: ``,

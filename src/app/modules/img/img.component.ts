@@ -1,17 +1,31 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, OnInit } from '@angular/core';
 import { EpsComponent } from '@core/shared/eps/eps.component';
 import { PdfComponent } from '@core/shared/pdf/pdf.component';
 import { XmlComponent } from '@core/shared/xml/xml.component';
 import { ImgStateService } from './services/img.service';
 import { ButtonModule } from 'primeng/button';
+import { LessonService } from '../lesson/services/lesson.service';
 
 @Component({
   selector: 'app-img',
   imports: [XmlComponent, EpsComponent, PdfComponent, ButtonModule],
   templateUrl: './img.component.html',
 })
-export class ImgComponent {
+export class ImgComponent implements OnInit {
   private _imgService = inject(ImgStateService);
+  private _lessonService = inject(LessonService);
+
+  ngOnInit(): void {
+    // Initialize ImgStateService with lesson data if not already initialized
+    // (VideoImgComponent may have already initialized it)
+    const lesson = this._lessonService.lessonJson();
+    const imgType = this._lessonService.imgType();
+
+    if (lesson && imgType && !this._imgService.type()) {
+      this._imgService.type.set(imgType);
+      this._imgService.initVariables(lesson);
+    }
+  }
   type = computed(() => this._imgService.type());
   printable = computed(() => {
     switch (this.type()) {

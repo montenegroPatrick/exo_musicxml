@@ -1,74 +1,78 @@
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ImgStateService } from '@app/modules/img/services/img.service';
-import { VideoImgStateService } from '@app/modules/video-img/services/video-img.service';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
-export type IControlBar = 'audio-mixer' | 'video' | 'video-xml';
+import { LessonService } from '@app/modules/lesson/services/lesson.service';
+import { ControlBarType } from '@core/interfaces/lesson.interface';
+
+export type IControlBar = ControlBarType;
+
 @Injectable({
   providedIn: 'root',
 })
 export class ControlBarService {
-  private activatedRoute = inject(ActivatedRoute);
   private _jwpService = inject(JwpService);
   private _flatService = inject(FlatService);
-  private imageStateService = inject(ImgStateService);
-  private _router = inject(Router);
+  private _lessonService = inject(LessonService);
+
   isPlaying = signal<boolean>(false);
   controlBar = signal<IControlBar | null>(null);
   time = signal<number>(0);
 
-  constructor() {
-    const urlSegments: string[] = this._router.url.split('/');
-    const firstSegment = urlSegments[1];
-    const secondSegment = urlSegments[2];
+  private _isInitialized = false;
 
-    switch (firstSegment) {
-      case 'video-img':
-        console.log('video-img init videoImg');
-        this._initVideoImg();
-        this.controlBar.set('video-xml');
-        break;
-      case 'img':
-        console.log('img init img');
-        const imgService = inject(ImgStateService);
-        const imageType = computed(() => imgService.type());
-        if (imageType() != 'xml') {
-          this.controlBar.set('video');
-          return;
-        }
-        this.controlBar.set('video-xml');
+  /**
+   * Initialize control bar with type from LessonService
+   * Called by LessonContainerComponent after lesson is loaded
+   */
+  initFromLesson(): void {
+    if (this._isInitialized) return;
 
-        break;
-      case 'video':
-        this.controlBar.set('video');
-        break;
-      default:
-        break;
+    const controlBarType = this._lessonService.controlBarType();
+    this.controlBar.set(controlBarType);
+
+    console.log('[ControlBarService]:initFromLesson =>', controlBarType);
+
+    // Setup synchronization based on control bar type
+    if (controlBarType === 'video-xml') {
+      this._initVideoXmlSync();
+    } else if (controlBarType === 'video') {
+      this._initVideoSync();
+    } else if (controlBarType === 'audio-mixer') {
+      // Audio mixer initialization if needed
     }
+
+    this._isInitialized = true;
   }
-  protected _initVideoImg(): void {
-    const videoService = inject(VideoImgStateService);
-    const json = computed(() => videoService.jsonVideo());
-    const { typeImg, loadVideo, loadImg, loadAudio } = json() || {};
 
-    if (typeImg === 'xml' && loadVideo) {
-      console.log('video-img init videoImg xml');
-      this.syncJWPtoFlat();
-      this.syncFlatToJWP();
-      return;
-    }
-    if (loadVideo) {
-      this.controlBar.set('video');
-      this._jwpService.onTimeUpdate((ms) => {
-        this.time.set(ms / 1000);
-      });
-      // this._jwpService.onStateChange((state) => {
-      //   this.isPlaying.set(state === 'playing');
-      // });
-    } else if (loadAudio) {
-      this.controlBar.set('audio-mixer');
-    }
+  /**
+   * Reset the service state
+   */
+  reset(): void {
+    this._isInitialized = false;
+    this.controlBar.set(null);
+    this.isPlaying.set(false);
+    this.time.set(0);
+  }
+
+  /**
+   * Initialize video-xml synchronization (video + xml)
+   */
+  private _initVideoXmlSync(): void {
+    console.log('[ControlBarService]:_initVideoXmlSync => init');
+    this.syncJWPtoFlat();
+    this.syncFlatToJWP();
+  }
+
+  /**
+   * Initialize video-only sync
+   */
+  private _initVideoSync(): void {
+    this._jwpService.onTimeUpdate((ms) => {
+      this.time.set(ms / 1000);
+    });
+    this._jwpService.onStateChange((state) => {
+      this.isPlaying.set(state === 'playing');
+    });
   }
   syncJWPtoFlat() {
     this._jwpService.onTimeUpdate((ms) => {

@@ -20,16 +20,8 @@ export const routes: Routes = [
         resolve: { flat: flatResolver },
       },
       {
-        path: 'video',
-        loadChildren: () => import('./modules/video/video.routes'),
-      },
-      {
-        path: 'img',
-        loadChildren: () => import('./modules/img/img.routes'),
-      },
-      {
-        path: 'video-img',
-        loadChildren: () => import('./modules/video-img/video-img.routes'),
+        path: 'lesson',
+        loadChildren: () => import('./modules/lesson/lesson.routes'),
       },
     ],
   },

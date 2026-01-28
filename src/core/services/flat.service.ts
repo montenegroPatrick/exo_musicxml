@@ -6,9 +6,8 @@ import {
   MeasureDetails,
   Part,
 } from '@core/interfaces/playback.interface';
-import { Sync } from '@app/modules/img/interfaces/img.interface';
-import { ImgStateService } from '@app/modules/img/services/img.service';
-import { VideoImgStateService } from '@app/modules/video-img/services/video-img.service';
+import { Sync } from '@core/interfaces/lesson.interface';
+import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { NoteCursorPosition } from 'node_modules/flat-embed/dist/types/cursorPosition';
 import { NoteDetails } from 'node_modules/flat-embed/dist/types/note';
 
@@ -24,8 +23,7 @@ export interface LoopBounds {
 
 @Injectable({ providedIn: 'root' })
 export class FlatService {
-  private _imageStateService = inject(ImgStateService);
-  private _videoImgStateService = inject(VideoImgStateService);
+  private _lessonService = inject(LessonService);
   private embed: Embed | undefined;
 
   // Event callbacks
@@ -49,11 +47,9 @@ export class FlatService {
   readonly currentMeasureIdx = this._currentMeasureIdx.asReadonly();
   readonly isPlaying = this._isPlaying.asReadonly();
 
-  readonly xml = computed(() => this._imageStateService.currentJsonXml());
-  readonly videoImgJson = computed(() =>
-    this._videoImgStateService.jsonVideo(),
-  );
-  readonly originalSyncPoints = computed(() => this.videoImgJson()?.videoSync);
+  readonly lessonJson = computed(() => this._lessonService.lessonJson());
+  readonly imgType = computed(() => this._lessonService.imgType());
+  readonly originalSyncPoints = computed(() => this._lessonService.syncPoints());
   syncPoints = signal<Sync[]>([]);
   totalTime = signal<number>(0);
 
@@ -107,23 +103,16 @@ export class FlatService {
         controlsPrint: true,
       },
     });
-    console.log(
-      '[FlatService]:initEmbed => init',
-      this._imageStateService.type(),
-    );
-    if (this._imageStateService.type() !== 'xml') return;
-    console.log(
-      '[FlatService]:initEmbed => init',
-      this._imageStateService.type(),
-    );
+    console.log('[FlatService]:initEmbed => init', this.imgType());
+    if (this.imgType() !== 'xml') return;
+    console.log('[FlatService]:initEmbed => init xml', this.imgType());
     this.initSyncPoints();
   }
   initSyncPoints() {
-    if (!this.originalSyncPoints()) return;
-    this.syncPoints.set(this.originalSyncPoints()!);
-    this.totalTime.set(
-      this.originalSyncPoints()![this.originalSyncPoints()!.length - 1].time,
-    );
+    const syncPts = this.originalSyncPoints();
+    if (!syncPts || syncPts.length === 0) return;
+    this.syncPoints.set(syncPts);
+    this.totalTime.set(syncPts[syncPts.length - 1].time);
   }
   async setTrack(): Promise<void> {
     console.log('[FlatService]:setTrack => init', this.syncPoints());

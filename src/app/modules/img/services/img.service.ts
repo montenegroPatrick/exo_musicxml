@@ -1,5 +1,4 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { environment } from '@environments/environment';
 import {
   IImg,
   ImageItem,
@@ -8,10 +7,11 @@ import {
   IJSONImgXML,
   IJsonImgPdf,
 } from '../interfaces/img.interface';
+import { ILesson } from '@core/interfaces/lesson.interface';
 import { api_url } from '@core/constant/api_url';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Injectable({
   providedIn: 'root',
@@ -63,7 +63,7 @@ export class ImgStateService {
       }),
     );
   }
-  initVariables(data: IJSONImgXML | IJsonImgEps | IJsonImgPdf) {
+  initVariables(data: IJSONImgXML | IJsonImgEps | IJsonImgPdf | ILesson) {
     switch (this.type()) {
       case 'xml':
         this._handleJsonXml(data as IJSONImgXML);

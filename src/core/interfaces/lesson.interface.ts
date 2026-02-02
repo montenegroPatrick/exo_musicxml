@@ -125,7 +125,7 @@ export function determineControlBarType(
 
   // img with xml -> video-xml for playback controls
   if (moduleType === 'img' && imgType === 'xml') {
-    return 'video-xml';
+    return 'audio-mixer';
   }
 
   // video or video-img with eps/pdf -> video control bar

@@ -1,0 +1,24 @@
+<div class="flex flex-row gap-4 justify-between px-4 items-center h-full">
+  <!-- Play Controls: Step backward, Play/Pause, Step forward -->
+  <app-play-controls
+    (togglePlay)="handleTogglePlay()"
+    (stepBackward)="handleStepBackward()"
+    (stepForward)="handleStepForward()"
+  />
+
+  <!-- Timeline: Progress slider with time display -->
+  <div class="flex-grow h-full hidden md:block">
+    <app-timeline-slider [duration]="duration()" (seek)="seekTo($event)" />
+  </div>
+
+  <!-- Right side controls -->
+  <section class="flex items-center gap-2">
+    <!-- Volume Control -->
+    <app-volume-control (volumeChange)="handleVolumeChange($event)" />
+
+    <!-- Playback Speed -->
+    <app-speed-control (speedChange)="handleSpeedChange($event)" />
+
+    <app-track-mixer></app-track-mixer>
+  </section>
+</div>

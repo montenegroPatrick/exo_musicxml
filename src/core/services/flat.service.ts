@@ -49,7 +49,9 @@ export class FlatService {
 
   readonly lessonJson = computed(() => this._lessonService.lessonJson());
   readonly imgType = computed(() => this._lessonService.imgType());
-  readonly originalSyncPoints = computed(() => this._lessonService.syncPoints());
+  readonly originalSyncPoints = computed(() =>
+    this._lessonService.syncPoints(),
+  );
   syncPoints = signal<Sync[]>([]);
   totalTime = signal<number>(0);
 
@@ -89,7 +91,6 @@ export class FlatService {
         appId: environment.FLAT_APP_ID,
         controlsDisplay: false,
         playbackMetronome: 'inactive',
-
         themeControlsBackground: '#afc638',
         themeSelection: 'transparent',
         controlsPlay: false,
@@ -217,9 +218,14 @@ export class FlatService {
     await this.embed?.setMetronomeMode(mode);
   }
   async seekTrackTo(time: number) {
+    if (!this._isPlaying()) {
+      await this.play();
+    }
     await this.embed?.seekTrackTo({ time }).catch((error) => {
       console.error('[FlatService]:seekTrackTo => catch error', error);
     });
+
+    this.pause();
   }
 
   // Score information
@@ -279,15 +285,11 @@ export class FlatService {
   }
 
   // Private methods
+
   setupEventListeners(): void {
     if (!this.embed) return;
 
     this.embed.on('play', () => {
-      console.log(
-        '[FlatService]:event play playing and ready ',
-        this._isPlaying(),
-        this.isReady(),
-      );
       if (this._isPlaying()) return;
       if (!this.isReady()) return;
       if (this.loopMode()) {
@@ -344,6 +346,9 @@ export class FlatService {
       this.loopStart.set(startTime!);
       this.loopEnd.set(endTime!);
       this.rangeSelectionCallbacks.forEach((cb) => cb(selection));
+      if (this.isPlaying()) {
+        this.embed?.pause();
+      }
     }) as any);
   }
 

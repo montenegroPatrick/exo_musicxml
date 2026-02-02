@@ -17,7 +17,7 @@ import { ControlBarService } from '../control-bar/services/control-bar.service';
   standalone: true,
   imports: [CommonModule, RouterOutlet, ControlBarComponent],
   template: `
-    <div class="relative h-screen w-full">
+    <div class="relative h-full w-full">
       @if (isLoading()) {
         <div
           class="flex items-center justify-center h-full w-full bg-black text-white"
@@ -99,12 +99,10 @@ export class LessonContainerComponent implements OnInit {
     );
 
     // Navigate to the child route
-    this._router
-      .navigate(['/lesson', lessonId, seq, targetRoute])
-      .then(() => {
-        this._hasNavigated.set(true);
-        // Initialize control bar after navigation
-        this._controlBarService.initFromLesson();
-      });
+    this._router.navigate(['/lesson', lessonId, seq, targetRoute]).then(() => {
+      this._hasNavigated.set(true);
+      // Initialize control bar after navigation
+      this._controlBarService.initFromLesson();
+    });
   }
 }

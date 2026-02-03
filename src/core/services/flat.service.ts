@@ -185,7 +185,9 @@ export class FlatService {
 
   // Playback controls
   async play(): Promise<void> {
-    await this.embed?.pause();
+    if (this.isPlaying()) {
+      await this.embed?.pause();
+    }
     await this.embed?.play();
   }
 

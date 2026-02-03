@@ -15,7 +15,6 @@ import { AudioService } from '@core/services/audio.service';
     PlayControlsComponent,
     SpeedControlComponent,
     VolumeControlComponent,
-
     TrackMixerComponent,
     TimelineSliderComponent,
   ],
@@ -72,7 +71,14 @@ export class AudioMixerBarComponent {
     this._audioService.setVolume(volume);
   }
 
-  handleSpeedChange(speed: number) {
+  async handleSpeedChange(speed: number) {
+    this._audioService.seek(0);
+    this._controlBarService.time.set(0);
+    this._audioService.pause();
+    this._flatService.seekTrackTo(0);
+
+    this._controlBarService.isPlaying.set(false);
     this._audioService.setPlaybackRate(speed);
+    await this._flatService.reinitializeTrackWithSpeed(speed);
   }
 }

@@ -28,7 +28,6 @@ export class ControlBarService {
       (oncleanup) => {
         this.time.set(this._audioService.currentTime());
         if (!this._flatService.loopMode()) return;
-
         const endLoop = this._flatService.loopEnd();
         const startLoop = this._flatService.loopStart();
         const timeBetweenLoop = endLoop! - startLoop!;

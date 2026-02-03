@@ -239,13 +239,12 @@ export class AudioService {
   }
 
   setPlaybackRate(rate: number): void {
-    const clampedRate = Math.max(0.25, Math.min(2, rate));
-    this._playbackRate.set(clampedRate);
+    this._playbackRate.set(rate);
 
     const tracks = this._audioTracks();
     tracks.forEach((track) => {
       if (track.sourceNode) {
-        track.sourceNode.playbackRate.value = clampedRate;
+        track.sourceNode.playbackRate.value = rate;
       }
     });
   }

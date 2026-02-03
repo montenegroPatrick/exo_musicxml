@@ -3,6 +3,7 @@ import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { ControlBarType } from '@core/interfaces/lesson.interface';
+import { AudioService } from '@core/services/audio.service';
 
 export type IControlBar = ControlBarType;
 
@@ -12,18 +13,37 @@ export type IControlBar = ControlBarType;
 export class ControlBarService {
   private _jwpService = inject(JwpService);
   private _flatService = inject(FlatService);
+  private _audioService = inject(AudioService);
   private _lessonService = inject(LessonService);
 
   isPlaying = signal<boolean>(false);
   controlBar = signal<IControlBar | null>(null);
   time = signal<number>(0);
+  flag = signal<boolean>(false);
 
   private _isInitialized = false;
 
-  /**
-   * Initialize control bar with type from LessonService
-   * Called by LessonContainerComponent after lesson is loaded
-   */
+  constructor() {
+    effect(
+      (oncleanup) => {
+        this.time.set(this._audioService.currentTime());
+        if (!this._flatService.loopMode()) return;
+        const endLoop = this._flatService.loopEnd();
+        const startLoop = this._flatService.loopStart();
+        const timeBetweenLoop = endLoop! - startLoop!;
+        if (this.time() >= endLoop! && endLoop && startLoop) {
+          console.log('[ControlBarService]:effect this.time() =>', this.time());
+          this._audioService.seek(startLoop!);
+        }
+        oncleanup(() => {});
+      },
+      {
+        allowSignalWrites: true,
+        manualCleanup: true,
+      },
+    );
+  }
+
   initFromLesson(): void {
     if (this._isInitialized) return;
 
@@ -38,7 +58,7 @@ export class ControlBarService {
     } else if (controlBarType === 'video') {
       this._initVideoSync();
     } else if (controlBarType === 'audio-mixer') {
-      // Audio mixer initialization if needed
+      this._initAudioMixerSync();
     }
 
     this._isInitialized = true;
@@ -54,9 +74,29 @@ export class ControlBarService {
     this.time.set(0);
   }
 
-  /**
-   * Initialize video-xml synchronization (video + xml)
-   */
+  private _initAudioMixerSync(): void {
+    this._flatService.onCursorPosition(async (position) => {
+      const time = await this._flatService.findTimeByMeasure(position);
+      this._flatService.seekTrackTo(time!);
+      this.isPlaying.set(false);
+      this._audioService.seek(time!);
+      this._audioService.pause();
+    });
+    this._flatService.onRangeSelection(async (selection) => {
+      if (!selection) return;
+      if (this.flag()) return;
+      this.flag.set(true);
+      const startTime = this._flatService.loopStart();
+      const endTime = this._flatService.loopEnd();
+      const timeBetweenLoop = endTime! - startTime!;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log('[ControlBarService]:loopMode pause + seek =>', startTime);
+      this._audioService.pause();
+      this._audioService.seek(startTime!);
+      this.isPlaying.set(false);
+      this.flag.set(false);
+    });
+  }
   private _initVideoXmlSync(): void {
     console.log('[ControlBarService]:_initVideoXmlSync => init');
     this.syncJWPtoFlat();

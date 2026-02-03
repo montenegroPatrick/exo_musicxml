@@ -62,9 +62,7 @@ export class LessonContainerComponent implements OnInit {
   showControlBar = computed(() => {
     const type = this.moduleType();
     // video-img has control bar in its own component
-    if (type === 'video-img') {
-      return false;
-    }
+
     // Show for video and img
     return true;
   });

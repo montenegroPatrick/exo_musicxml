@@ -15,16 +15,19 @@ import { ControlBarService } from '../../services/control-bar.service';
   selector: 'app-timeline-slider',
   imports: [],
   template: `
-    <span
-      class=" absolute bottom-15 text-black left-0 text-xs w-full  min-w-[40px] "
-      >{{ formatTime(currentTime()) }}</span
-    >
-    <span class=" absolute bottom-15 right-0 text-xs text-black min-w-[40px]">{{
-      formatTime(duration())
-    }}</span>
+    @if (onHover()) {
+      <span
+        class=" absolute bottom-12 text-white left-0 text-xs w-fit mx-2  p-2 bg-black/75 backdrop-blur-3xl rounded-lg min-w-[40px] duration-500 transition-shadow "
+        >{{ formatTime(currentTime()) }}</span
+      >
+      <span
+        class=" absolute bottom-12 right-0 text-xs text-white w-fit mx-2  p-2 bg-black/75 backdrop-blur-3xl rounded-lg min-w-[40px] duration-500 transition-shadow "
+        >{{ formatTime(duration()) }}</span
+      >
+    }
     <div
       #track
-      class="h-1  cursor-pointer absolute w-full bottom-15 left-0 right-0"
+      class="h-1  cursor-pointer absolute w-full bottom-10 left-0 right-0"
       (mouseover)="onMouseHover($event)"
       (mouseleave)="onMouseLeave($event)"
       (mousedown)="onMouseDown($event)"
@@ -100,7 +103,9 @@ export class TimelineSliderComponent {
   }
 
   onMouseLeave(event: MouseEvent) {
-    this.onHover.set(false);
+    setTimeout(() => {
+      this.onHover.set(false);
+    }, 6000);
   }
 
   onMouseDown(event: MouseEvent) {

@@ -11,12 +11,13 @@ import { FaderComponent } from '../fader/fader.component';
       icon="pi pi-sliders-v"
       [text]="true"
       styleClass="text-white!"
+      size="small"
       (onClick)="toggleMixer()"
       pTooltip="Mixer"
     />
     @if (isOpen()) {
       <div
-        class="absolute bottom-15 left-0 right-0 bg-black/35 backdrop-blur-xl rounded- p-6"
+        class="absolute bottom-8 left-0  w-full bg-black/35 backdrop-blur-xl  p-6 rounded-lg"
       >
         <div class="flex gap-8 justify-start">
           @for (track of tracks(); track track.name; let i = $index) {

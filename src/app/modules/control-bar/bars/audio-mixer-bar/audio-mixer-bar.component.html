@@ -7,12 +7,12 @@
   />
 
   <!-- Timeline: Progress slider with time display -->
-  <div class="flex-grow h-full hidden md:block">
+  <div class="flex-grow h-full">
     <app-timeline-slider [duration]="duration()" (seek)="seekTo($event)" />
   </div>
 
   <!-- Right side controls -->
-  <section class="flex items-center gap-2">
+  <section class="flex items-center gap-2 rounded-lg">
     <!-- Volume Control -->
     <app-volume-control (volumeChange)="handleVolumeChange($event)" />
 

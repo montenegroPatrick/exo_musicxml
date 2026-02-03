@@ -12,6 +12,7 @@ import { FaderComponent } from '../../components/fader/fader.component';
       <p-button
         [icon]="volumeIcon()"
         [text]="true"
+        size="small"
         styleClass="text-white!"
         (onClick)="handleToggleVolumeSliderView()"
       />

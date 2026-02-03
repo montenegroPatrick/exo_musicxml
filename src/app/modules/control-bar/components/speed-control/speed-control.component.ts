@@ -11,6 +11,7 @@ import { MenuItem } from 'primeng/api';
       <p-button
         [label]="currentSpeed() + 'x'"
         [text]="true"
+        size="small"
         styleClass="text-white!"
         size="small"
         (onClick)="menu.toggle($event)"

@@ -19,6 +19,7 @@ export class ControlBarService {
   isPlaying = signal<boolean>(false);
   controlBar = signal<IControlBar | null>(null);
   time = signal<number>(0);
+  flag = signal<boolean>(false);
 
   private _isInitialized = false;
 
@@ -28,12 +29,11 @@ export class ControlBarService {
         this.time.set(this._audioService.currentTime());
         if (!this._flatService.loopMode()) return;
 
-        const audioTime = this._audioService.currentTime();
-
         const endLoop = this._flatService.loopEnd();
         const startLoop = this._flatService.loopStart();
         const timeBetweenLoop = endLoop! - startLoop!;
-        if (audioTime >= endLoop!) {
+        if (this.time() >= endLoop! && endLoop && startLoop) {
+          console.log('[ControlBarService]:effect this.time() =>', this.time());
           this._audioService.seek(startLoop!);
         }
         oncleanup(() => {});
@@ -85,15 +85,17 @@ export class ControlBarService {
     });
     this._flatService.onRangeSelection(async (selection) => {
       if (!selection) return;
-
+      if (this.flag()) return;
+      this.flag.set(true);
       const startTime = this._flatService.loopStart();
       const endTime = this._flatService.loopEnd();
       const timeBetweenLoop = endTime! - startTime!;
-      console.log('[controlBarService]:initAudioMixer =>', timeBetweenLoop);
-      if (timeBetweenLoop < 5) return;
-      this._audioService.seek(startTime!);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      console.log('[ControlBarService]:loopMode pause + seek =>', startTime);
       this._audioService.pause();
+      this._audioService.seek(startTime!);
       this.isPlaying.set(false);
+      this.flag.set(false);
     });
   }
   private _initVideoXmlSync(): void {

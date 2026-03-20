@@ -20,3 +20,9 @@ export interface IVideoImg {
 export interface Location {
   measureIdx?: number;
 }
+export type Iposition = 'top' | 'bottom' | 'left' | 'right';
+export type Iratio = '1/4' | '1/3' | '1/2' | 'full';
+export interface IVideoImgLayout {
+  imageRatio?: Iratio;
+  imgPosition?: Iposition;
+}

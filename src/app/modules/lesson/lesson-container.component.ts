@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import {
   Component,
   computed,
@@ -7,10 +8,10 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { LessonService } from './services/lesson.service';
+import { FlutterBridgeService } from '@core/services/flutter-bridge.service';
 import { ControlBarComponent } from '../control-bar/control-bar.component';
 import { ControlBarService } from '../control-bar/services/control-bar.service';
+import { LessonService } from './services/lesson.service';
 
 @Component({
   selector: 'app-lesson-container',
@@ -51,26 +52,23 @@ export class LessonContainerComponent implements OnInit {
   private _router = inject(Router);
   private _lessonService = inject(LessonService);
   private _controlBarService = inject(ControlBarService);
-
+  private _flutterBridgeService = inject(FlutterBridgeService);
   isLoading = computed(() => this._lessonService.isLoading());
   error = computed(() => this._lessonService.error());
   lessonJson = computed(() => this._lessonService.lessonJson());
   moduleType = computed(() => this._lessonService.moduleType());
   controlBarType = computed(() => this._lessonService.controlBarType());
 
-  // Show control bar for video, video-img, and img with xml
   showControlBar = computed(() => {
     const type = this.moduleType();
-    // video-img has control bar in its own component
 
-    // Show for video and img
     return true;
   });
 
   private _hasNavigated = signal(false);
 
   constructor() {
-    // Effect to navigate to child route when lesson is loaded
+    this._lessonService.initFlutterEventsListeners();
     effect(() => {
       const lesson = this.lessonJson();
       const hasNavigated = this._hasNavigated();
@@ -82,7 +80,6 @@ export class LessonContainerComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Reset control bar service for new lesson
     this._controlBarService.reset();
   }
 
@@ -91,15 +88,8 @@ export class LessonContainerComponent implements OnInit {
     const lessonId = this._lessonService.lessonId();
     const seq = this._lessonService.seq();
 
-    console.log(
-      '[LessonContainerComponent]:_navigateToChildRoute =>',
-      targetRoute,
-    );
-
-    // Navigate to the child route
     this._router.navigate(['/lesson', lessonId, seq, targetRoute]).then(() => {
       this._hasNavigated.set(true);
-      // Initialize control bar after navigation
       this._controlBarService.initFromLesson();
     });
   }

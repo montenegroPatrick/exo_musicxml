@@ -1,20 +1,21 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { api_url } from '@core/constant/api_url';
 import {
+  hasSyncPoints as checkHasSyncPoints,
+  ControlBarType,
+  determineControlBarType,
+  determineImgType,
+  determineModuleType,
   ILesson,
+  ImageItem,
   ImgType,
   LessonModuleType,
-  ControlBarType,
   Sync,
-  ImageItem,
   TrackList,
-  determineModuleType,
-  determineImgType,
-  determineControlBarType,
-  hasSyncPoints as checkHasSyncPoints,
 } from '@core/interfaces/lesson.interface';
-import { map, Observable, tap, catchError, of } from 'rxjs';
+import { FlutterBridgeService } from '@core/services/flutter-bridge.service';
+import { catchError, Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -22,6 +23,7 @@ import { map, Observable, tap, catchError, of } from 'rxjs';
 export class LessonService {
   private readonly _lessonUrl = api_url.lesson;
   private _http = inject(HttpClient);
+  private _flutterBridgeService = inject(FlutterBridgeService);
 
   // Core signals
   readonly lessonJson = signal<ILesson | null>(null);
@@ -160,11 +162,15 @@ export class LessonService {
    * Get full target route including lesson params
    */
   getFullTargetRoute(): string[] {
-    return [
-      '/lesson',
-      this.lessonId(),
-      this.seq(),
-      this.getTargetRoute(),
-    ];
+    return ['/lesson', this.lessonId(), this.seq(), this.getTargetRoute()];
+  }
+
+  initFlutterEventsListeners(): void {
+    this._flutterBridgeService.on('init', (data) => {
+      console.log(
+        '[LessonContainerComponent]:_initFlutterEventsListeners =>',
+        data,
+      );
+    });
   }
 }

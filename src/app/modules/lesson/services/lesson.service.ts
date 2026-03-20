@@ -166,7 +166,7 @@ export class LessonService {
   }
 
   initFlutterEventsListeners(): void {
-    this._flutterBridgeService.on('init', (data) => {
+    this._flutterBridgeService.on('flutter-event', (data) => {
       console.log(
         '[LessonContainerComponent]:_initFlutterEventsListeners =>',
         data,

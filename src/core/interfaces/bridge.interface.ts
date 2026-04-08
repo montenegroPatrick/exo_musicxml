@@ -1,12 +1,12 @@
 export type BridgeMessageType = 'init' | 'lesson' | 'playback';
 
-export type BridgeSubType = 
-  | 'none' 
-  | 'video' 
-  | 'videoImg' 
-  | 'qcm' 
-  | 'tapRythm' 
-  | 'midiFile' 
+export type BridgeSubType =
+  | 'none'
+  | 'video'
+  | 'videoImg'
+  | 'qcm'
+  | 'tapRythm'
+  | 'midiFile'
   | string;
 
 export interface FlutterToAngularMessage {
@@ -16,7 +16,13 @@ export interface FlutterToAngularMessage {
   token: string;
 }
 
-export type BridgeAction = 'next' | 'prev' | 'goTo' | 'finished' | 'progress';
+export type BridgeAction =
+  | 'next'
+  | 'prev'
+  | 'goTo'
+  | 'finished'
+  | 'progress'
+  | 'init';
 
 export interface AngularToFlutterMessage {
   action: BridgeAction;

@@ -1,21 +1,21 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { api_url } from '@core/constant/api_url';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { BridgeAction } from '@core/interfaces/bridge.interface';
 import {
+  hasSyncPoints as checkHasSyncPoints,
+  ControlBarType,
+  determineControlBarType,
+  determineImgType,
+  determineModuleType,
   ILesson,
+  ImageItem,
   ImgType,
   LessonModuleType,
-  ControlBarType,
   Sync,
-  ImageItem,
   TrackList,
-  determineModuleType,
-  determineImgType,
-  determineControlBarType,
-  hasSyncPoints as checkHasSyncPoints,
 } from '@core/interfaces/lesson.interface';
-import { map, Observable, tap, catchError, of, Subscription } from 'rxjs';
 import { BridgeService } from '@core/services/bridge.service';
+import { catchError, Observable, Subscription, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -127,7 +127,10 @@ export class LessonService {
   constructor() {
     this._bridgeSub = this._bridgeService.message$.subscribe((msg) => {
       if (msg.type === 'lesson' || msg.type === 'init') {
-        console.log('[LessonService]: Received lesson data via Bridge =>', msg.data);
+        console.log(
+          '[LessonService]: Received lesson data via Bridge =>',
+          msg.data,
+        );
         this.lessonJson.set(msg.data);
         // Extract lessonId and seq if available in data or pass them separately
         if (msg.data.lesson) this.lessonId.set(msg.data.lesson);
@@ -140,15 +143,44 @@ export class LessonService {
     this._bridgeSub?.unsubscribe();
   }
 
-  /**
-   * Load test data from local assets/test-data folder
-   */
+  loadData(handlerName: BridgeAction, moduleName: string): Observable<ILesson> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const response = this._bridgeService.getFromFlutter<ILesson>(handlerName);
+      console.log(`[LessonService]:loadData(${handlerName}) =>`, response);
+      this.lessonJson.set(response);
+      this.isLoading.set(false);
+    } catch (err) {
+      console.error(`[LessonService]:loadData(${handlerName}) => error`, err);
+
+      const url = `assets/test-data/${moduleName}.json`;
+
+      return this._http.get<ILesson>(url).pipe(
+        tap((lesson) => {
+          console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
+          this.lessonJson.set(lesson);
+          this.isLoading.set(false);
+        }),
+        catchError((err) => {
+          console.error(
+            `[LessonService]:loadTestData(${moduleName}) => error`,
+            err,
+          );
+          this.error.set(err);
+          this.isLoading.set(false);
+          throw err;
+        }),
+      );
+    }
+  }
   loadTestData(moduleName: string): Observable<ILesson> {
     this.isLoading.set(true);
     this.error.set(null);
-    
+
     const url = `assets/test-data/${moduleName}.json`;
-    
+
     return this._http.get<ILesson>(url).pipe(
       tap((lesson) => {
         console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
@@ -156,11 +188,14 @@ export class LessonService {
         this.isLoading.set(false);
       }),
       catchError((err) => {
-        console.error(`[LessonService]:loadTestData(${moduleName}) => error`, err);
+        console.error(
+          `[LessonService]:loadTestData(${moduleName}) => error`,
+          err,
+        );
         this.error.set(err);
         this.isLoading.set(false);
         throw err;
-      })
+      }),
     );
   }
 

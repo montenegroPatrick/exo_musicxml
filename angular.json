@@ -147,5 +147,8 @@
       "typeSeparator": ".",
       "skipTests": true
     }
+  },
+  "cli": {
+    "analytics": "c8f4a404-cbf2-49b5-b0bd-8d455759cfca"
   }
 }

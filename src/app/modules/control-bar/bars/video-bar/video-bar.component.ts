@@ -1,7 +1,8 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { ControlBarService } from '../../services/control-bar.service';
 import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
+import { BridgeService } from '@core/services/bridge.service';
 import { PlayControlsComponent } from '../../components/play-controls/play-controls.component';
 import { TimelineSliderComponent } from '../../components/timeline-slider/timeline-slider.component';
 import { VolumeControlComponent } from '../volume-control/volume-control.component';
@@ -25,6 +26,9 @@ export class VideoBarComponent {
   private _controlBarService = inject(ControlBarService);
   private _flatService = inject(FlatService);
   private _jwpService = inject(JwpService);
+  private _bridgeService = inject(BridgeService);
+
+  showNavigation = input<boolean>(true);
 
   typeControlBar = computed(() => this._controlBarService.controlBar());
   duration = computed(() => this._jwpService.duration() / 1000);
@@ -43,6 +47,14 @@ export class VideoBarComponent {
     } else {
       this._jwpService.play();
     }
+  }
+
+  handlePrevious() {
+    this._bridgeService.sendAction('prev');
+  }
+
+  handleNext() {
+    this._bridgeService.sendAction('next');
   }
 
   handleStepBackward() {

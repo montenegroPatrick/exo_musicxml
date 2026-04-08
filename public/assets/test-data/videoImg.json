@@ -1,0 +1,24 @@
+{
+  "Chapter": 1,
+  "SubChapter": 1,
+  "Sequence": 1,
+  "ChapterTitle": "TEST",
+  "SubChapterTitle": "TEST",
+  "SequenceTitle": "TEST",
+  "jw": "SVBJXSuL",
+  "videoName": "sl_0516_p02_02c",
+  "subtitles": [],
+  "videoSync": null,
+  "typeImg": null,
+  "printable": true,
+  "printExt": "ubGVzc29uL3NsL3BkZi85OQ==",
+  "loadImg": true,
+  "pos": 1,
+  "imageList": [
+    {
+      "pos": 1,
+      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/sl\/score\/41846\/",
+      "ext": ".gif"
+    }
+  ]
+}

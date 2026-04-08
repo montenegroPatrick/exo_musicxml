@@ -1,4 +1,5 @@
-import { Component, computed, effect, inject } from '@angular/core';
+import { Component, computed, effect, inject, input } from '@angular/core';
+import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { PlayControlsComponent } from '../../components/play-controls/play-controls.component';
 import { SpeedControlComponent } from '../../components/speed-control/speed-control.component';
@@ -25,6 +26,9 @@ export class AudioMixerBarComponent {
   private _controlBarService = inject(ControlBarService);
   private _flatService = inject(FlatService);
   private _audioService = inject(AudioService);
+  private _bridgeService = inject(BridgeService);
+
+  showNavigation = input<boolean>(true);
   typeControlBar = computed(() => this._controlBarService.controlBar());
   duration = computed(() => this._audioService.duration());
   track = computed(() => this._audioService.tracks());
@@ -39,6 +43,14 @@ export class AudioMixerBarComponent {
     this._controlBarService.isPlaying.set(false);
     this._audioService.pause();
     this._flatService.seekTrackTo(time);
+  }
+
+  handlePrevious() {
+    this._bridgeService.sendAction('prev');
+  }
+
+  handleNext() {
+    this._bridgeService.sendAction('next');
   }
 
   handleTogglePlay() {

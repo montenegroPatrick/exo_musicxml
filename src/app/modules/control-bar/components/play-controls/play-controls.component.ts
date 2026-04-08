@@ -1,4 +1,4 @@
-import { Component, computed, inject, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ControlBarService } from '../../services/control-bar.service';
 
@@ -7,6 +7,16 @@ import { ControlBarService } from '../../services/control-bar.service';
   imports: [ButtonModule],
   template: `
     <section class="flex gap-1 text-white  rounded-lg">
+      @if (showNavigation()) {
+        <p-button
+          icon="pi pi-angle-left"
+          size="small"
+          [text]="true"
+          variant="text"
+          styleClass="text-white!"
+          (onClick)="previous.emit()"
+        />
+      }
       <p-button
         icon="pi pi-step-backward"
         size="small"
@@ -29,6 +39,16 @@ import { ControlBarService } from '../../services/control-bar.service';
         styleClass="text-white!"
         (onClick)="stepForward.emit()"
       />
+      @if (showNavigation()) {
+        <p-button
+          icon="pi pi-angle-right"
+          size="small"
+          [text]="true"
+          variant="text"
+          styleClass="text-white!"
+          (onClick)="next.emit()"
+        />
+      }
     </section>
   `,
 })
@@ -37,7 +57,11 @@ export class PlayControlsComponent {
 
   isPlaying = computed(() => this._controlBarService.isPlaying());
 
+  showNavigation = input<boolean>(true);
+
   togglePlay = output<void>();
   stepBackward = output<void>();
   stepForward = output<void>();
+  previous = output<void>();
+  next = output<void>();
 }

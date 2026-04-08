@@ -25,6 +25,14 @@ export interface TrackList {
 }
 
 export interface ILesson {
+  // Navigation Metadata
+  Chapter?: number;
+  SubChapter?: number;
+  Sequence?: number;
+  ChapterTitle?: string;
+  SubChapterTitle?: string;
+  SequenceTitle?: string;
+
   // Media Loading Flags
   loadVideo?: boolean;
   loadAudio?: boolean;

@@ -14,14 +14,16 @@ import {
   determineControlBarType,
   hasSyncPoints as checkHasSyncPoints,
 } from '@core/interfaces/lesson.interface';
-import { map, Observable, tap, catchError, of } from 'rxjs';
+import { map, Observable, tap, catchError, of, Subscription } from 'rxjs';
+import { BridgeService } from '@core/services/bridge.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LessonService {
-  private readonly _lessonUrl = api_url.lesson;
   private _http = inject(HttpClient);
+  private _bridgeService = inject(BridgeService);
+  private _bridgeSub?: Subscription;
 
   // Core signals
   readonly lessonJson = signal<ILesson | null>(null);
@@ -29,6 +31,14 @@ export class LessonService {
   readonly seq = signal<string>('');
   readonly isLoading = signal<boolean>(false);
   readonly error = signal<Error | null>(null);
+
+  // New metadata signals
+  readonly chapter = computed(() => this.lessonJson()?.Chapter);
+  readonly subChapter = computed(() => this.lessonJson()?.SubChapter);
+  readonly sequence = computed(() => this.lessonJson()?.Sequence);
+  readonly chapterTitle = computed(() => this.lessonJson()?.ChapterTitle);
+  readonly subChapterTitle = computed(() => this.lessonJson()?.SubChapterTitle);
+  readonly sequenceTitle = computed(() => this.lessonJson()?.SequenceTitle);
 
   // Computed: Module type detection
   readonly moduleType = computed<LessonModuleType>(() => {
@@ -112,29 +122,56 @@ export class LessonService {
   readonly audioUrl = computed(() => this.lessonJson()?.audioUrl);
 
   /**
-   * Fetch lesson data from API
+   * Initialize bridge listener
    */
-  fetchLesson(lessonId: string, seq: string): Observable<ILesson> {
+  constructor() {
+    this._bridgeSub = this._bridgeService.message$.subscribe((msg) => {
+      if (msg.type === 'lesson' || msg.type === 'init') {
+        console.log('[LessonService]: Received lesson data via Bridge =>', msg.data);
+        this.lessonJson.set(msg.data);
+        // Extract lessonId and seq if available in data or pass them separately
+        if (msg.data.lesson) this.lessonId.set(msg.data.lesson);
+        if (msg.data.seq) this.seq.set(msg.data.seq);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this._bridgeSub?.unsubscribe();
+  }
+
+  /**
+   * Load test data from local assets/test-data folder
+   */
+  loadTestData(moduleName: string): Observable<ILesson> {
     this.isLoading.set(true);
     this.error.set(null);
-    this.lessonId.set(lessonId);
-    this.seq.set(seq);
-
-    const url = `${this._lessonUrl}/${lessonId}/seq/${seq}.json`;
-
+    
+    const url = `assets/test-data/${moduleName}.json`;
+    
     return this._http.get<ILesson>(url).pipe(
       tap((lesson) => {
-        console.log('[LessonService]:fetchLesson =>', lesson);
+        console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
         this.lessonJson.set(lesson);
         this.isLoading.set(false);
       }),
       catchError((err) => {
-        console.error('[LessonService]:fetchLesson => error', err);
+        console.error(`[LessonService]:loadTestData(${moduleName}) => error`, err);
         this.error.set(err);
         this.isLoading.set(false);
         throw err;
-      }),
+      })
     );
+  }
+
+  /**
+   * Directly inject lesson data (useful for Bridge)
+   */
+  setLessonData(data: ILesson): void {
+    console.log('[LessonService]:setLessonData =>', data);
+    this.lessonJson.set(data);
+    if (data.Chapter !== undefined) this.lessonId.set(data.Chapter.toString());
+    if (data.Sequence !== undefined) this.seq.set(data.Sequence.toString());
   }
 
   /**
@@ -154,17 +191,5 @@ export class LessonService {
    */
   getTargetRoute(): string {
     return this.moduleType();
-  }
-
-  /**
-   * Get full target route including lesson params
-   */
-  getFullTargetRoute(): string[] {
-    return [
-      '/lesson',
-      this.lessonId(),
-      this.seq(),
-      this.getTargetRoute(),
-    ];
   }
 }

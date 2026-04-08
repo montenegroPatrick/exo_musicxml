@@ -15,7 +15,7 @@ import {
   TrackList,
 } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, Observable, Subscription, tap } from 'rxjs';
+import { catchError, Observable, Subscription, tap, switchMap, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -147,33 +147,17 @@ export class LessonService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    try {
-      const response = this._bridgeService.getFromFlutter<ILesson>(handlerName);
-      console.log(`[LessonService]:loadData(${handlerName}) =>`, response);
-      this.lessonJson.set(response);
-      this.isLoading.set(false);
-    } catch (err) {
-      console.error(`[LessonService]:loadData(${handlerName}) => error`, err);
-
-      const url = `assets/test-data/${moduleName}.json`;
-
-      return this._http.get<ILesson>(url).pipe(
-        tap((lesson) => {
-          console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
-          this.lessonJson.set(lesson);
-          this.isLoading.set(false);
-        }),
-        catchError((err) => {
-          console.error(
-            `[LessonService]:loadTestData(${moduleName}) => error`,
-            err,
-          );
-          this.error.set(err);
-          this.isLoading.set(false);
-          throw err;
-        }),
-      );
-    }
+    return this._bridgeService.getFromFlutter<ILesson>(handlerName).pipe(
+      tap((lesson) => {
+        console.log(`[LessonService]:loadData(${handlerName}) =>`, lesson);
+        this.lessonJson.set(lesson);
+        this.isLoading.set(false);
+      }),
+      catchError((err) => {
+        console.warn(`[LessonService]:loadData flutter failed, fallback to mock(${moduleName}) =>`, err);
+        return this.loadTestData(moduleName);
+      }),
+    );
   }
   loadTestData(moduleName: string): Observable<ILesson> {
     this.isLoading.set(true);

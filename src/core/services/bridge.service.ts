@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { map, Observable, of, Subject } from 'rxjs';
+import { from, Observable, Subject } from 'rxjs';
 import {
   AngularToFlutterMessage,
   BridgeAction,
@@ -79,11 +79,8 @@ export class BridgeService {
   }
 
   getFromFlutter<T>(handlerName: BridgeAction): Observable<T> {
-    return of((window as any).flutter_inappwebview.callHandler(handlerName))
-      .pipe(map((res) => res as T))
-      .subscribe((res) => {
-        console.log('[BridgeService]: Incoming data via callHandler =>', res);
-      });
+    const promise = (window as any).flutter_inappwebview.callHandler(handlerName) as Promise<T>;
+    return from(promise);
   }
 
   sendAction(action: BridgeAction, data?: any): void {

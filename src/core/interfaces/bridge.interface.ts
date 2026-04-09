@@ -1,3 +1,5 @@
+import { ILesson } from './lesson.interface';
+
 export type BridgeMessageType = 'init' | 'lesson' | 'playback';
 
 export type BridgeSubType =
@@ -9,11 +11,19 @@ export type BridgeSubType =
   | 'midiFile'
   | string;
 
+/**
+ * Navigation flags added by Flutter to the lesson data.
+ * Mirror of LessonBridgePayload in webview_bridge_models.dart.
+ */
+export interface LessonBridgeData {
+  isStart?: boolean;
+  isEnd?: boolean;
+}
+
 export interface FlutterToAngularMessage {
   type: BridgeMessageType;
   subType: BridgeSubType;
-  data: any;
-  token: string;
+  data: ILesson & LessonBridgeData;
 }
 
 export type BridgeAction =

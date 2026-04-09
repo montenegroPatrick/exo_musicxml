@@ -5,8 +5,8 @@
     "ng": "ng",
     "start:prod": "ng serve --configuration production ",
     "start:dev": "ng serve --configuration development ",
-    "build": "ng build --base-href /app/mobileApps/external/exo_musicXml/",
-    "build:prod": "ng build --configuration production --output-path dist/exo_musicxml/",
+    "build": "ng build  --base-href /app/mobileApps/external/modules/",
+    "build:prod": "ng build --configuration production --output-path dist/modules/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "g:module": "node scripts/generate-module.js"

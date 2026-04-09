@@ -15,7 +15,7 @@ import {
   TrackList,
 } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, Observable, Subscription, tap, switchMap, of } from 'rxjs';
+import { catchError, from, Observable, Subscription, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -125,17 +125,8 @@ export class LessonService {
    * Initialize bridge listener
    */
   constructor() {
-    this._bridgeSub = this._bridgeService.message$.subscribe((msg) => {
-      if (msg.type === 'lesson' || msg.type === 'init') {
-        console.log(
-          '[LessonService]: Received lesson data via Bridge =>',
-          msg.data,
-        );
-        this.lessonJson.set(msg.data);
-        // Extract lessonId and seq if available in data or pass them separately
-        if (msg.data.lesson) this.lessonId.set(msg.data.lesson);
-        if (msg.data.seq) this.seq.set(msg.data.seq);
-      }
+    this._bridgeSub = this._bridgeService.message$.subscribe((data) => {
+      this.lessonJson.set(data as unknown as ILesson);
     });
   }
 
@@ -146,15 +137,24 @@ export class LessonService {
   loadData(handlerName: BridgeAction, moduleName: string): Observable<ILesson> {
     this.isLoading.set(true);
     this.error.set(null);
-
-    return this._bridgeService.getFromFlutter<ILesson>(handlerName).pipe(
+    if (
+      !this._bridgeService.isMobile() &&
+      !this._bridgeService.isFlutterWeb()
+    ) {
+      return this.loadTestData(moduleName);
+    }
+    console.log(`[LessonService]:loadData(${handlerName}) =>`);
+    return from(this._bridgeService.getFromFlutter<ILesson>(handlerName)).pipe(
       tap((lesson) => {
         console.log(`[LessonService]:loadData(${handlerName}) =>`, lesson);
         this.lessonJson.set(lesson);
         this.isLoading.set(false);
       }),
       catchError((err) => {
-        console.warn(`[LessonService]:loadData flutter failed, fallback to mock(${moduleName}) =>`, err);
+        console.warn(
+          `[LessonService]:loadData flutter failed, fallback to mock(${moduleName}) =>`,
+          err,
+        );
         return this.loadTestData(moduleName);
       }),
     );

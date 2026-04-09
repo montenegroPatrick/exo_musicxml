@@ -1,133 +1,167 @@
-import { Injectable, signal } from '@angular/core';
-import { from, Observable, Subject } from 'rxjs';
+import {
+  Injectable,
+  signal,
+  computed,
+  inject,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { filter, first, tap } from 'rxjs';
 import {
   AngularToFlutterMessage,
   BridgeAction,
-  FlutterToAngularMessage,
 } from '../interfaces/bridge.interface';
+
+const HANDLER_MAP: Partial<Record<BridgeAction, string>> = {
+  next: 'next',
+  prev: 'previous',
+  goTo: 'onNavigation',
+  init: 'getInitialData',
+};
 
 @Injectable({
   providedIn: 'root',
 })
 export class BridgeService {
-  /**
-   * Signal to track if we're in the mobile app (Flutter WebView)
-   */
-  readonly isMobile = signal<boolean>(false);
+  private readonly _destroyRef = inject(DestroyRef);
 
-  /**
-   * Observable stream of incoming messages from the native side
-   */
-  private _messageSubject = new Subject<FlutterToAngularMessage>();
-  readonly message$ = this._messageSubject.asObservable();
+  // --- Platform detection (readonly, set once at init) ---
+  readonly isMobile = signal<boolean>(false);
+  readonly isFlutterWeb = signal<boolean>(false);
+  readonly platform = computed<'mobile' | 'flutter-web' | 'standalone'>(() => {
+    if (this.isMobile()) return 'mobile';
+    if (this.isFlutterWeb()) return 'flutter-web';
+    return 'standalone';
+  });
+
+  // --- Incoming messages ---
+  readonly lastMessage = signal<Record<string, unknown> | null>(null);
+  readonly message$ = toObservable(this.lastMessage).pipe(
+    filter((msg): msg is Record<string, unknown> => msg !== null),
+  );
 
   constructor() {
     this._detectPlatform();
     this._setupEventListener();
   }
 
-  /**
-   * Detects if the current environment is a Flutter InAppWebView
-   */
+  // ---------------------------------------------------------------------------
+
   private _detectPlatform(): void {
-    // Check if the flutter_inappwebview object exists (injected by the bridge)
     const isMobile = !!(window as any).flutter_inappwebview;
     this.isMobile.set(isMobile);
 
     if (isMobile) {
       console.log('[BridgeService]: Mobile platform detected (InAppWebView)');
-    } else {
-      console.log('[BridgeService]: Web platform detected (Standard Browser)');
+      return;
     }
+
+    const isFlutterWeb =
+      window.parent !== window &&
+      new URLSearchParams(window.location.search).get('platform') === 'web';
+    this.isFlutterWeb.set(isFlutterWeb);
+
+    console.log(
+      `[BridgeService]: ${isFlutterWeb ? 'Flutter Web' : 'Standalone'} platform detected`,
+    );
   }
 
-  /**
-   * Sets up the listener for incoming messages based on the platform
-   */
   private _setupEventListener(): void {
-    // Standard approach for Web (and also common fallback for some WebView implementations)
-    window.addEventListener('message', (event: MessageEvent) => {
-      if (this._isBridgeMessage(event.data)) {
-        console.log(
-          '[BridgeService]: Incoming data via postMessage =>',
-          event.data,
-        );
-        this._messageSubject.next(event.data as FlutterToAngularMessage);
+    const fromPostMessage = (event: MessageEvent) => {
+      let data = event.data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {
+          return;
+        }
       }
-    });
+      if (this._isBridgeMessage(data)) {
+        console.log('[BridgeService]: postMessage =>', data);
+        this._push(data as Record<string, unknown>);
+      }
+    };
 
-    // InAppWebView specific handlers are typically registered by name.
-    // We expect Flutter to call a global JS function for push notifications.
+    window.addEventListener('message', fromPostMessage);
+    this._destroyRef.onDestroy(() =>
+      window.removeEventListener('message', fromPostMessage),
+    );
+
     (window as any).onFlutterMessage = (data: any) => {
       if (this._isBridgeMessage(data)) {
-        console.log(
-          '[BridgeService]: Incoming data via onFlutterMessage =>',
-          data,
-        );
-        this._messageSubject.next(data as FlutterToAngularMessage);
+        console.log('[BridgeService]: onFlutterMessage =>', data);
+        this._push(data as Record<string, unknown>);
       }
     };
   }
 
-  /**
-   * Validates if the data received matches our bridge interface
-   */
-  private _isBridgeMessage(data: any): boolean {
-    return (
-      data && typeof data === 'object' && 'type' in data && 'subType' in data
-    );
+  private _push(data: Record<string, unknown>): void {
+    this.lastMessage.set(data);
   }
 
-  getFromFlutter<T>(handlerName: BridgeAction): Observable<T> {
-    const promise = (window as any).flutter_inappwebview.callHandler(handlerName) as Promise<T>;
-    return from(promise);
+  private _isBridgeMessage(data: any): boolean {
+    return data !== null && typeof data === 'object';
+  }
+
+  // ---------------------------------------------------------------------------
+
+  getFromFlutter<T>(handlerName: BridgeAction): Promise<T> {
+    if (this.isMobile()) {
+      return (window as any).flutter_inappwebview.callHandler(
+        handlerName,
+      ) as Promise<T>;
+    }
+
+    // Flutter Web: trigger a request then wait for the response
+    window.parent.postMessage(
+      JSON.stringify({ type: 'init', subType: 'none' }),
+      '*',
+    );
+    console.log(`[BridgeService]: Flutter Web - requested [${handlerName}]`);
+
+    return new Promise<T>((resolve) => {
+      this.message$
+        .pipe(
+          first(),
+          tap((data) =>
+            console.log(
+              `[BridgeService]: Flutter Web - response [${handlerName}] =>`,
+              data,
+            ),
+          ),
+          takeUntilDestroyed(this._destroyRef),
+        )
+        .subscribe((data) => resolve(data as T));
+    });
   }
 
   sendAction(action: BridgeAction, data?: any): void {
     const message: AngularToFlutterMessage = { action, data };
 
-    if (this.isMobile()) {
-      // Use InAppWebView JavaScript Handler
-      // We assume Flutter has registered a handler named 'onNavigation' or 'onPlayback'
-      let handlerName;
-      switch (action) {
-        case 'next':
-          handlerName = 'next';
-          break;
-        case 'prev':
-          handlerName = 'previous';
-          break;
-        case 'goTo':
-          handlerName = 'onNavigation';
-          break;
-        case 'init':
-          handlerName = 'getInitialData';
-          break;
-        default:
-          handlerName = 'onPlaybackEvent';
-          break;
+    switch (this.platform()) {
+      case 'mobile': {
+        const handlerName = HANDLER_MAP[action] ?? 'onPlaybackEvent';
+        if ((window as any).flutter_inappwebview?.callHandler) {
+          (window as any).flutter_inappwebview.callHandler(
+            handlerName,
+            message,
+          );
+          console.log(`[BridgeService]: Mobile => [${handlerName}]`, message);
+        } else {
+          console.warn('[BridgeService]: callHandler not available yet');
+        }
+        break;
       }
-
-      if ((window as any).flutter_inappwebview?.callHandler) {
-        (window as any).flutter_inappwebview.callHandler(handlerName, message);
-        console.log(
-          `[BridgeService]: Sent to Flutter [${handlerName}] =>`,
-          message,
-        );
-      } else {
-        console.warn(
-          '[BridgeService]: flutter_inappwebview.callHandler is not available yet',
-        );
-      }
-    } else if (window.parent !== window) {
-      // Standard postMessage for Web (if we are inside an iframe)
-      window.parent.postMessage(message, '*');
-      console.log('[BridgeService]: Sent to Parent [postMessage] =>', message);
-    } else {
-      console.log(
-        '[BridgeService]: Standalone mode - Action logged =>',
-        message,
-      );
+      case 'flutter-web':
+        window.parent.postMessage(JSON.stringify(message), '*');
+        console.log('[BridgeService]: Flutter Web => postMessage', message);
+        break;
+      default:
+        if (window.parent !== window) {
+          window.parent.postMessage(JSON.stringify(message), '*');
+        } else {
+          console.log('[BridgeService]: Standalone => action logged', message);
+        }
     }
   }
 }

@@ -1,0 +1,42 @@
+{
+  "Chapter": 11,
+  "SubChapter": 5,
+  "Sequence": 10,
+  "ChapterTitle": "Jouez avec les croches",
+  "SubChapterTitle": "I Want You Back : Violon 1",
+  "SequenceTitle": "À vous de jouer !",
+  "folder": "https:\/\/www.imusic-school.tv\/app\/datas\/playback\/I_want\/",
+  "trackList": [
+    {
+      "pos": 1,
+      "label": "Clic ",
+      "name": "piste1.mp3"
+    },
+    {
+      "pos": 2,
+      "label": " Violon1 ",
+      "name": "piste2.mp3"
+    },
+    {
+      "pos": 3,
+      "label": " Violon2 ",
+      "name": "piste3.mp3"
+    },
+    {
+      "pos": 4,
+      "label": " Violon3 ",
+      "name": "piste4.mp3"
+    },
+    {
+      "pos": 5,
+      "label": " Violon4",
+      "name": "piste5.mp3"
+    }
+  ],
+  "timeline": [],
+  "sync": null,
+  "typeImg": "xml",
+  "loadImg": true,
+  "url": "https:\/\/www.imusic-school.tv\/app\/datas\/\/partitions\/68339.xml",
+  "pos": 1
+}

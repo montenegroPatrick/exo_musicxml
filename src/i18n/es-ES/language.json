@@ -65,8 +65,12 @@
                 "5": "Excelente"
             },
             "user_taps" : "Tus taps"
+        },
+        "metronome": {
+            "accent": "MARCAR EL PRIMER TIEMPO",
+            "timer": "CRONOMETRO",
+            "tap": "TAP",
+            "bpm": "BPM"
         }
-
-
     }
 }

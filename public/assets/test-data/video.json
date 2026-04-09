@@ -1,15 +1,16 @@
 {
   "Chapter": 1,
-  "SubChapter": 1,
-  "Sequence": 1,
-  "ChapterTitle": "TEST",
-  "SubChapterTitle": "TEST",
-  "SequenceTitle": "TEST",
+  "SubChapter": 2,
+  "Sequence": 4,
+  "ChapterTitle": "Vos premiers pas",
+  "SubChapterTitle": "La guitare et ses accessoires",
+  "SequenceTitle": "Le métronome",
   "jw": "86UvE7hP",
-  "videoName": "sl_0516_p10_01d",
   "subtitles": [],
   "videoSync": null,
   "loadAudio": false,
   "typeImg": null,
-  "loadImg": false
+  "loadImg": false,
+  "videoLang": "fr",
+  "userLang": "fr"
 }

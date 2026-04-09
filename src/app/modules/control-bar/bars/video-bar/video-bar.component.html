@@ -1,32 +1,135 @@
-<div class="flex flex-row gap-4 justify-between px-4 items-center h-full">
-  <!-- Play Controls: Step backward, Play/Pause, Step forward -->
-  <app-play-controls
-    (togglePlay)="handleTogglePlay()"
-    (stepBackward)="handleStepBackward()"
-    (stepForward)="handleStepForward()"
-    (previous)="handlePrevious()"
-    (next)="handleNext()"
-    [showNavigation]="showNavigation()"
-  />
+<div class="control-bar relative flex flex-col w-full text-white overflow-visible transition-all duration-300 h-20">
+  
+  <!-- Info Popin (XS only) -->
+  @if (showInfoPopin()) {
+    <div class="info-popin absolute bottom-[calc(100%+8px)] left-4 right-4 bg-black/95 backdrop-blur-md border border-white/20 p-4 rounded-xl z-50 shadow-2xl">
+      <div class="flex flex-col gap-1">
+        <span class="chapitre uppercase text-[10px] tracking-widest text-white/50 font-semibold mb-1">
+          {{ chapterTitle() }}
+        </span>
+        <span class="sequence text-base font-bold text-white leading-tight">
+          {{ sequenceTitle() }}
+        </span>
+        <span class="sous-chapitre text-[12px] text-white/70 italic mt-0.5">
+          {{ subChapterTitle() }}
+        </span>
+      </div>
+    </div>
+  }
+  
+  <!-- Progress Bar Container -->
+  <div class="progress-bar-container group relative w-full h-1 bg-white/20 cursor-pointer overflow-visible">
+    <input type="range"
+           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+           [min]="0"
+           [max]="duration()"
+           [ngModel]="currentTime()"
+           (input)="handleSeek($event)">
+    <!-- Progress Fill -->
+    <div class="progress-fill absolute top-0 left-0 h-full bg-white/90 transition-all duration-100 ease-linear"
+         [style.width.%]="(currentTime() / duration()) * 100">
+    </div>
+    <!-- Progress Handle (Hover only) -->
+    <div class="progress-handle absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+         [style.left.%]="(currentTime() / duration()) * 100">
+    </div>
+  </div>
 
-  <!-- Timeline: Progress slider with time display -->
+  <!-- Content Container (Always Row, Fixed Height) -->
+  <div class="flex flex-row items-center justify-between px-4 h-full gap-4">
+    
+    <!-- NEW SECTION: Navigation & Metadata (Matching Reference Image) -->
+    <div class="flex items-center flex-1 min-w-0">
+      <!-- Navigation Buttons Group -->
+      <div class="nav-group" *ngIf="showNavigation()">
+        <button class="hover:scale-110 active:scale-90 transition-all text-white" (click)="handlePrevious()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="hover:scale-110 active:scale-90 transition-all text-white" (click)="handleNext()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+        </button>
+      </div>
 
-  <app-timeline-slider [duration]="duration()" (seek)="seekTo($event)" />
+      <!-- Vertical Separator -->
+      <div class="nav-separator mx-4 hidden sm:block" *ngIf="showNavigation()"></div>
 
-  <!-- Right side controls -->
-  <section class="flex items-center gap-2 bg-black/40 px-4 h-10 rounded-lg">
-    <!-- Volume Control -->
-    <app-volume-control (volumeChange)="handleVolumeChange($event)" />
+      <!-- Metadata Block -->
+      <div class="lesson-info min-w-0">
+        <span class="chapitre uppercase truncate">
+           {{ _lessonService.chapter() }}. {{ chapterTitle() }}
+        </span>
+        <span class="sous-chapitre truncate">
+             {{ _lessonService.subChapter() }}. {{ subChapterTitle() }}
+        </span>
+        <span class="sequence truncate">
+          {{ _lessonService.sequence() }}. {{ sequenceTitle() }}
+        </span>
+      </div>
+    </div>
 
-    <!-- Playback Speed -->
-    <app-speed-control (speedChange)="handleSpeedChange($event)" />
+    <!-- SECTION CENTER: Playback Controls (Compact) -->
+    <div class="controls-center flex items-center gap-4 flex-shrink-0">
+      <!-- Step Backward (-10s) -->
+      <button id="btn-step-backward" class="icon-button text-white/70 hover:text-white" (click)="handleStepBackward()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
+      </button>
 
-    <!-- Subtitles -->
-    <app-subtitle-settings (subtitleChange)="handleSubtitleChange($event)" />
+      <!-- Play / Pause -->
+      <button id="btn-toggle-play" class="play-button bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center rounded-full transition-all backdrop-blur-md" 
+              (click)="handleTogglePlay()">
+        @if (isPlaying()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        }
+      </button>
 
-    <!-- Fullscreen -->
-    <app-fullscreen-toggle
-      (fullscreenChange)="handleFullscreenChange($event)"
-    />
-  </section>
+      <!-- Step Forward (+10s) -->
+      <button id="btn-step-forward" class="icon-button text-white/70 hover:text-white" (click)="handleStepForward()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+      </button>
+
+      <!-- Time Display -->
+      <div class="time-display hidden md:flex items-center gap-1 text-sm font-medium text-white/80 tabular-nums">
+        <span>{{ formatTime(currentTime()) }}</span>
+        <span class="text-white/40">/</span>
+        <span class="text-white/60">{{ formatTime(duration()) }}</span>
+      </div>
+    </div>
+
+    <!-- SECTION RIGHT: Switches & Settings (Selective Hide on XS) -->
+    <div class="controls-right flex items-center gap-2 sm:gap-4 flex-shrink-0 justify-end">
+      <!-- Tab Switcher (Desktop only) -->
+      <div class="hidden sm:flex">
+        <div class="tab-switcher flex items-center gap-1 bg-white/10 p-1 rounded-lg">
+          <button [class.active]="activeTab() === 'video'" 
+                  (click)="setTab('video')"
+                  class="p-1.5 rounded-md transition-all hover:bg-white/10"
+                  [style.background]="activeTab() === 'video' ? 'rgba(255,255,255,0.15)' : 'transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </button>
+          <button [class.active]="activeTab() === 'metronome'" 
+                  (click)="setTab('metronome')"
+                  class="p-1.5 rounded-md transition-all hover:bg-white/10"
+                  [style.background]="activeTab() === 'metronome' ? 'rgba(255,255,255,0.15)' : 'transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="m14.5 10.5 8-8"/><path d="m6.62 19.38 2.13-2.13"/><circle cx="12" cy="14" r="2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings (Hidden on XS) -->
+      <div class="flex">
+        <button class="icon-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.64 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+        </button>
+      </div>
+
+      <!-- Fullscreen (Hidden on XS) -->
+      <div class="hidden sm:flex">
+        <button class="icon-button" (click)="toggleFullscreen()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

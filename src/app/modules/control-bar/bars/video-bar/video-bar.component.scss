@@ -1,0 +1,185 @@
+// Colors
+$primary-red: #FA5E46; 
+$primary-red-dark: #FA5E46; 
+$white-overlay-10: rgba(255, 255, 255, 0.1);
+$white-overlay-20: rgba(255, 255, 255, 0.2);
+
+.control-bar {
+  background: $primary-red;
+  position: relative;
+  z-index: 50;
+  animation: slideUp 0.4s ease-out;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  height: 85px !important; // Slightly taller to accommodate 3 lines
+}
+
+// Info Popin (XS)
+.info-popin {
+  width: calc(100% - 32px);
+  max-width: 400px;
+  animation: popinSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+@keyframes popinSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Keyframes for entry animation
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Progress Bar
+.progress-bar-container {
+  &:hover {
+    height: 6px;
+    .progress-handle {
+      opacity: 1;
+    }
+  }
+}
+
+// Progress Fill
+.progress-fill {
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+// Handle
+.progress-handle {
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+// Buttons
+.play-button {
+  width: 48px;
+  height: 48px;
+  @media (max-width: 639px) { // XS / Mobile
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.xs-info-button {
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transition: all 0.2s;
+
+  &:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.9);
+  }
+}
+
+.icon-button {
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  display: inline-flex !important;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s;
+
+  &:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.time-skip-button {
+  opacity: 0.8;
+  transition: all 0.2s;
+  &:hover {
+    opacity: 1;
+  }
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+// Metadata
+.lesson-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 12px;
+  
+  .chapitre {
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+  
+  .sous-chapitre {
+    font-size: 13px;
+    color: white;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  
+  .sequence {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
+  }
+}
+
+.nav-separator {
+  width: 1px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+}
+
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 24px; // Spacing identical to photo
+    padding-right: 8px;
+}
+
+// Tab Switcher
+.tab-switcher {
+  .active {
+    color: white;
+  }
+}
+
+// Volume Slider
+.volume-slider {
+  input[type="range"] {
+    accent-color: white;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+  }
+}

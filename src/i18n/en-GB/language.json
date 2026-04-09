@@ -65,9 +65,12 @@
                 "5": "Perfect"
             },
             "user_taps" : "Your taps"
-
+        },
+        "metronome": {
+            "accent": "STRESS FIRST BEAT",
+            "timer": "TIMER",
+            "tap": "TAP",
+            "bpm": "BPM"
         }
-
-
     }
 }

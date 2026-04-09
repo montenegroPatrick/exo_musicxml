@@ -1,5 +1,5 @@
-export type LessonModuleType = 'video' | 'video-img' | 'img';
-export type ImgType = 'xml' | 'eps' | 'pdf';
+export type LessonModuleType = 'video' | 'video-diapo' | 'diapo';
+export type DiapoType = 'xml' | 'eps' | 'pdf' | 'html';
 export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer';
 
 export interface ImageItem {
@@ -16,6 +16,11 @@ export interface Sync {
   type: 'measure' | 'end';
   time: number;
   location: Location;
+}
+
+export interface IVideoSync {
+  timeCode: number;
+  pos: number;
 }
 
 export interface TrackList {
@@ -60,7 +65,7 @@ export interface ILesson {
   sync?: Sync[];
 
   // Synchronization
-  videoSync?: Sync[] | string | null;
+  videoSync?: IVideoSync[] | Sync[] | string | null;
 
   // Audio
   audioUrl?: string;
@@ -70,7 +75,7 @@ export interface ILessonContext extends ILesson {
   lessonId: string;
   seq: string;
   moduleType: LessonModuleType;
-  imgType?: ImgType;
+  diapoType?: DiapoType;
   controlBarType: ControlBarType;
   hasVideo: boolean;
   hasAudio: boolean;
@@ -82,26 +87,26 @@ export interface ILessonContext extends ILesson {
 /**
  * Determines the module type based on lesson data
  * - video: loadVideo=true and loadImg=false
- * - video-img: loadVideo=true and loadImg=true
- * - img: loadImg=true and loadVideo=false
+ * - video-diapo: loadVideo=true and loadImg=true
+ * - diapo: loadImg=true and video = false
  */
 export function determineModuleType(lesson: ILesson): LessonModuleType {
   const hasVideo = lesson.loadVideo === true;
   const hasImg = lesson.loadImg === true;
 
   if (hasVideo && hasImg) {
-    return 'video-img';
+    return 'video-diapo';
   }
   if (hasVideo) {
     return 'video';
   }
-  return 'img';
+  return 'diapo';
 }
 
 /**
- * Determines the image type based on lesson data
+ * Determines the diapo (image) type based on lesson data
  */
-export function determineImgType(lesson: ILesson): ImgType | undefined {
+export function determineImgType(lesson: ILesson): DiapoType | undefined {
   if (!lesson.loadImg) {
     return undefined;
   }
@@ -114,6 +119,9 @@ export function determineImgType(lesson: ILesson): ImgType | undefined {
   if (typeImg === 'pdf' || (lesson.url && lesson.url.endsWith('.pdf'))) {
     return 'pdf';
   }
+  if (typeImg === 'html' || (lesson.url && (lesson.url.startsWith('http') || lesson.url.endsWith('.html')))) {
+    return 'html';
+  }
   return 'eps';
 }
 
@@ -124,34 +132,34 @@ export function determineControlBarType(
   lesson: ILesson,
   moduleType: LessonModuleType,
 ): ControlBarType {
-  const imgType = determineImgType(lesson);
+  const diapoType = determineImgType(lesson);
 
-  // video-img with xml -> video-xml control bar for sync
-  if (moduleType === 'video-img' && imgType === 'xml') {
+  // video-diapo with xml -> video-xml control bar for sync
+  if (moduleType === 'video-diapo' && diapoType === 'xml') {
     return 'video-xml';
   }
 
-  // img with xml -> video-xml for playback controls
-  if (moduleType === 'img' && imgType === 'xml') {
+  // diapo with xml -> audio-mixer (legacy behavior)
+  if (moduleType === 'diapo' && diapoType === 'xml') {
     return 'audio-mixer';
   }
 
-  // video or video-img with eps/pdf -> video control bar
-  if (moduleType === 'video' || moduleType === 'video-img') {
+  // video or video-diapo with other media -> video control bar
+  if (moduleType === 'video' || moduleType === 'video-diapo') {
     return 'video';
   }
 
-  // img with audio -> audio-mixer
+  // diapo with audio -> audio-mixer
   if (lesson.loadAudio) {
     return 'audio-mixer';
   }
 
-  // default for img
+  // default for diapo
   return 'video';
 }
 
 /**
- * Checks if lesson has sync points (videoSync for video-img or sync for img)
+ * Checks if lesson has sync points (videoSync for video-diapo or sync for diapo)
  */
 export function hasSyncPoints(lesson: ILesson): boolean {
   if (Array.isArray(lesson.videoSync) && lesson.videoSync.length > 0) {

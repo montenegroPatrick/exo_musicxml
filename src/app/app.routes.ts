@@ -24,14 +24,14 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/video/video-page.component').then(m => m.VideoPage),
       },
       {
-        path: 'video-img',
+        path: 'video-diapo',
         data: { showNavigation: true },
-        loadComponent: () => import('./modules/video-img/video-img.component').then(m => m.VideoImgComponent),
+        loadComponent: () => import('./modules/video-diapo/video-diapo.component').then(m => m.VideoDiapoComponent),
       },
       {
-        path: 'images',
+        path: 'diapo',
         data: { showNavigation: true },
-        loadComponent: () => import('./modules/img/img.component').then(m => m.ImgComponent),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'tap-rythm',
@@ -41,17 +41,22 @@ export const routes: Routes = [
       {
         path: 'music-xml',
         data: { showNavigation: true },
-        loadComponent: () => import('./modules/video/video-page.component').then(m => m.VideoPage),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'playback',
         data: { showNavigation: false },
-        loadComponent: () => import('./modules/img/img.component').then(m => m.ImgComponent),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'drummachine',
         data: { showNavigation: false, controlBar: 'drummachine' },
         loadComponent: () => import('./modules/video/video-page.component').then(m => m.VideoPage),
+      },
+      {
+        path: 'metronome',
+        data: { showNavigation: false, hideControlBar: true },
+        loadComponent: () => import('./modules/metronome/metronome-page.component').then(m => m.MetronomePage),
       },
       // Root redirect
       {

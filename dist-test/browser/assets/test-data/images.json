@@ -1,0 +1,24 @@
+{
+  "Chapter": 1,
+  "SubChapter": 1,
+  "Sequence": 1,
+  "ChapterTitle": "TEST",
+  "SubChapterTitle": "TEST",
+  "SequenceTitle": "TEST",
+  "typeImg": "eps",
+  "printable": true,
+  "printExt": "gbGVzc29uL2FjL3BkZi8xNTY5",
+  "pos": 0,
+  "imageList": [
+    {
+      "pos": 1,
+      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/ac\/score\/71493\/",
+      "ext": ".gif"
+    },
+    {
+      "pos": 2,
+      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/ac\/score\/71494\/",
+      "ext": ".gif"
+    }
+  ]
+}

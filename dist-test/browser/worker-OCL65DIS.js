@@ -1,0 +1,1 @@
+var e=null,l=25;addEventListener("message",({data:t})=>{t==="start"?e=setInterval(()=>postMessage("tick"),l):t.interval?(l=t.interval,e&&(clearInterval(e),e=setInterval(()=>postMessage("tick"),l))):t==="stop"&&(clearInterval(e),e=null)});

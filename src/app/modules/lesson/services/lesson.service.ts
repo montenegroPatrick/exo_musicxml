@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   BridgeAction,
@@ -12,13 +12,16 @@ import {
   determineModuleType,
   ILesson,
   ImageItem,
-  ImgType,
+  DiapoType,
   LessonModuleType,
   Sync,
+  IVideoSync,
   TrackList,
 } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, Observable, Subscription, tap } from 'rxjs';
+import { catchError, map, Observable, Subscription, tap } from 'rxjs';
+import { api_url } from '@core/constant/api_url';
+import { ActivatedRoute } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -26,6 +29,7 @@ import { catchError, Observable, Subscription, tap } from 'rxjs';
 export class LessonService {
   private _http = inject(HttpClient);
   private _bridgeService = inject(BridgeService);
+  private _activatedRoute = inject(ActivatedRoute);
   private _bridgeSub?: Subscription;
 
   // Core signals
@@ -50,8 +54,8 @@ export class LessonService {
     return determineModuleType(lesson);
   });
 
-  // Computed: Image type detection
-  readonly imgType = computed<ImgType | undefined>(() => {
+  // Computed: Diapo (image) type detection
+  readonly diapoType = computed<DiapoType | undefined>(() => {
     const lesson = this.lessonJson();
     if (!lesson) return undefined;
     return determineImgType(lesson);
@@ -68,7 +72,7 @@ export class LessonService {
   readonly hasVideo = computed(() => this.lessonJson()?.loadVideo === true);
   readonly hasAudio = computed(() => this.lessonJson()?.loadAudio === true);
   readonly hasImg = computed(() => this.lessonJson()?.loadImg === true);
-  readonly hasXml = computed(() => this.imgType() === 'xml');
+  readonly hasXml = computed(() => this.diapoType() === 'xml');
   readonly hasSyncPoints = computed(() => {
     const lesson = this.lessonJson();
     if (!lesson) return false;
@@ -88,10 +92,10 @@ export class LessonService {
     if (!lesson) return '';
 
     // For eps, use first image from imageList
-    if (this.imgType() === 'eps' && lesson.imageList?.length) {
+    if (this.diapoType() === 'eps' && lesson.imageList?.length) {
       return lesson.imageList[0].url ?? '';
     }
-    // For pdf/xml use url directly
+    // For pdf/xml/html use url directly
     return lesson.url ?? '';
   });
 
@@ -106,19 +110,39 @@ export class LessonService {
   readonly folder = computed(() => this.lessonJson()?.folder);
 
   // Sync points
-  readonly syncPoints = computed<Sync[]>(() => {
+  readonly videoSyncPoints = computed<IVideoSync[]>(() => {
     const lesson = this.lessonJson();
-    if (!lesson) return [];
-
-    // video-img uses videoSync
-    if (Array.isArray(lesson.videoSync)) {
-      return lesson.videoSync;
-    }
-    // img uses sync
-    if (Array.isArray(lesson.sync)) {
-      return lesson.sync;
+    if (
+      lesson &&
+      Array.isArray(lesson.videoSync) &&
+      (lesson.videoSync.length === 0 || 'timeCode' in lesson.videoSync[0])
+    ) {
+      return lesson.videoSync as IVideoSync[];
     }
     return [];
+  });
+
+  readonly measureSyncPoints = computed<Sync[]>(() => {
+    const lesson = this.lessonJson();
+    if (lesson && Array.isArray(lesson.sync)) {
+      return lesson.sync;
+    }
+    if (
+      lesson &&
+      Array.isArray(lesson.videoSync) &&
+      lesson.videoSync.length > 0 &&
+      'location' in (lesson.videoSync[0] as any)
+    ) {
+      return lesson.videoSync as Sync[];
+    }
+    return [];
+  });
+
+  // Legacy compatibility / general
+  readonly syncPoints = computed<(Sync | IVideoSync)[]>(() => {
+    const m = this.measureSyncPoints();
+    const v = this.videoSyncPoints();
+    return m.length > 0 ? m : v;
   });
 
   // Audio
@@ -166,7 +190,21 @@ export class LessonService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    const url = `assets/test-data/${moduleName}.json`;
+    // Try to get 'mock' from the current route or the root route
+    let mock = this._activatedRoute.snapshot.queryParamMap.get('mock');
+    if (!mock) {
+      // Fallback: check the global URL if snapshot is not yet ready
+      const urlParams = new URLSearchParams(window.location.search);
+      mock = urlParams.get('mock');
+    }
+
+    const targetSlug = mock || moduleName;
+    const url = `assets/test-data/${targetSlug}.json`;
+
+    console.log(
+      `%c[LessonService]: Loading JSON => ${targetSlug}.json`,
+      'background: #222; color: #bada55; font-size: 14px; padding: 4px;',
+    );
 
     return this._http.get<ILesson>(url).pipe(
       tap((lesson) => {
@@ -179,6 +217,33 @@ export class LessonService {
           `[LessonService]:loadTestData(${moduleName}) => error`,
           err,
         );
+        this.error.set(err);
+        this.isLoading.set(false);
+        throw err;
+      }),
+    );
+  }
+
+  /**
+   * Fetch lesson data from API
+   */
+  fetchLesson(lessonId: string, seq: string): Observable<ILesson> {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.lessonId.set(lessonId);
+    this.seq.set(seq);
+
+    const url = `${api_url.lesson}/${lessonId}/${seq}`;
+
+    return this._http.get<{ datas: ILesson }>(url).pipe(
+      map((res) => res.datas),
+      tap((lesson) => {
+        console.log('[LessonService]:fetchLesson =>', lesson);
+        this.lessonJson.set(lesson);
+        this.isLoading.set(false);
+      }),
+      catchError((err) => {
+        console.error('[LessonService]:fetchLesson => error', err);
         this.error.set(err);
         this.isLoading.set(false);
         throw err;
@@ -209,7 +274,7 @@ export class LessonService {
 
   /**
    * Get target route segment based on module type
-   * Returns the child route path: 'video', 'video-img', or 'img'
+   * Returns the child route path: 'video', 'video-diapo', or 'diapo'
    */
   getTargetRoute(): string {
     return this.moduleType();

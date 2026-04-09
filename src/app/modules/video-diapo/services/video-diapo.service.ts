@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { DiapoStateService } from '../../diapo/services/diapo.service';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import {
   IVideoDiapo,
   IVideoDiapoLayout,

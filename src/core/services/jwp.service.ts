@@ -7,7 +7,7 @@ import {
   Signal,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { DiapoStateService } from '@app/modules/diapo/services/diapo.service';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import {
   JWPlayerEvent,
   JWPlayerEventCallback,

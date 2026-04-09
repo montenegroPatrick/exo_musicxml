@@ -1,21 +1,25 @@
-import { Component, computed, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnInit } from '@angular/core';
 import { DiapoStateService } from './services/diapo.service';
 import { ButtonModule } from 'primeng/button';
-import { LessonService } from '../lesson/services/lesson.service';
+import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { XmlViewerComponent } from './components/xml-viewer/xml-viewer.component';
 import { EpsViewerComponent } from './components/eps-viewer/eps-viewer.component';
 import { PdfViewerComponent } from './components/pdf-viewer/pdf-viewer.component';
 import { HtmlViewerComponent } from './components/html-viewer/html-viewer.component';
+import { CommonModule } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-diapo',
   standalone: true,
   imports: [
+    CommonModule,
     XmlViewerComponent,
     EpsViewerComponent,
     PdfViewerComponent,
     HtmlViewerComponent,
     ButtonModule,
+    TooltipModule,
   ],
   templateUrl: './diapo.component.html',
 })
@@ -23,12 +27,24 @@ export class DiapoComponent implements OnInit {
   private _diapoService = inject(DiapoStateService);
   private _lessonService = inject(LessonService);
 
+  /** Theme: 'light' (default) or 'dark' */
+  theme = input<'light' | 'dark'>('light');
+
+  /** Show/Hide the navigation and toolkit sidebar */
+  showControls = input<boolean>(true);
+
+  /** Allow/Disallow zoom feature */
+  allowZoom = input<boolean>(true);
+
   ngOnInit(): void {
     const lesson = this._lessonService.lessonJson();
     const diapoType = this._lessonService.diapoType();
 
-    if (lesson && diapoType && !this._diapoService.type()) {
-      this._diapoService.type.set(diapoType as any);
+    // Auto-initialize if data is available and not already set
+    if (lesson && diapoType) {
+      if (this._diapoService.type() !== diapoType) {
+        this._diapoService.type.set(diapoType as any);
+      }
       this._diapoService.initVariables(lesson);
     }
   }
@@ -62,7 +78,7 @@ export class DiapoComponent implements OnInit {
   });
 
   canNavigate = computed(
-    () => (this.imageList()?.length ?? 0 > 1) || this.type() == 'pdf',
+    () => ((this.imageList()?.length ?? 0) > 1) || this.type() === 'pdf',
   );
 
   xml = computed(() => this._diapoService.currentXmlUrl());
@@ -71,16 +87,31 @@ export class DiapoComponent implements OnInit {
   jsonEps = computed(() => this._diapoService.jsonDiapoEps());
   jsonPdf = computed(() => this._diapoService.jsonDiapoPdf());
   pdfTotalPages = computed(() => this._diapoService.currentPdfTotalPages());
+  viewMode = computed(() => this._diapoService.viewMode());
+  layoutMode = computed(() => this._diapoService.layoutMode());
 
   nextPage() {
-    this._diapoService.currentImageListPos.set(
-      this._diapoService.currentImageListPos() + 1,
-    );
+    const max = this.pdfTotalPages() || (this.imageList()?.length ?? 0);
+    if (this.imageListPos() < max) {
+      this._diapoService.currentImageListPos.set(this.imageListPos() + 1);
+    }
   }
 
   previousPage() {
-    this._diapoService.currentImageListPos.set(
-      this._diapoService.currentImageListPos() - 1,
+    if (this.imageListPos() > 1) {
+      this._diapoService.currentImageListPos.set(this.imageListPos() - 1);
+    }
+  }
+
+  toggleViewMode() {
+    this._diapoService.viewMode.set(
+      this.viewMode() === 'fit' ? 'zoom' : 'fit'
+    );
+  }
+
+  toggleLayoutMode() {
+    this._diapoService.layoutMode.set(
+      this.layoutMode() === 'standard' ? 'expanded' : 'standard'
     );
   }
 

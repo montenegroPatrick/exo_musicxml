@@ -18,7 +18,47 @@ import {
 @Component({
   selector: 'app-video',
   imports: [],
-  template: ` <div class="" [id]="playerId"></div> `,
+  template: `
+    <div 
+      class="video-container" 
+      [class.fixed-ratio]="mode() === 'fixed-ratio'"
+      [class.fill]="mode() === 'fill'"
+      (click)="handleSingleClick()" 
+      (dblclick)="handleDoubleClick()"
+    >
+      <div [id]="playerId" class="jwplayer-wrapper"></div>
+    </div>
+  `,
+  styles: `
+    .video-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: black;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .video-container.fixed-ratio {
+      aspect-ratio: 16 / 9;
+      height: auto;
+    }
+
+    .video-container.fill {
+      height: 100%;
+    }
+
+    .jwplayer-wrapper {
+      width: 100%;
+      height: 100%;
+    }
+
+    :host ::ng-deep .jw-logo {
+      transform: scale(0.6) !important;
+      transform-origin: top left !important;
+      opacity: 0.7 !important;
+    }
+  `,
 })
 export class VideoComponent implements AfterViewInit, OnDestroy {
   private jwpService = inject(JwpService);
@@ -28,6 +68,13 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
 
   /** ID de la vidéo ou playlist JWPlayer */
   mediaId = input.required<string>();
+
+  /** 
+   * Mode d'affichage:
+   * - 'fixed-ratio': Garde un ratio 16/9 (pour page vidéo seule)
+   * - 'fill': Remplit tout l'espace (pour mode split/diapo)
+   */
+  mode = input<'fixed-ratio' | 'fill'>('fill');
 
   /** Options personnalisées pour le player */
   options = input<IJWPlayerOptions>({});
@@ -50,6 +97,7 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
   readonly playerId = `jwplayer-${Math.random().toString(36).substring(2, 9)}`;
 
   private isInitialized = false;
+  private clickTimer: any = null;
 
   constructor() {
     effect(() => {
@@ -66,6 +114,8 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
         autostart: this.typeImg() !== 'xml' ? true : this.autostart(),
         controls: this.controls(),
         mute: this.muted(),
+        width: '100%',
+        height: '100%',
         ...this.options(),
       };
 
@@ -86,7 +136,25 @@ export class VideoComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  handleSingleClick(): void {
+    if (this.clickTimer) return;
+    
+    this.clickTimer = setTimeout(() => {
+      this.jwpService.togglePlay();
+      this.clickTimer = null;
+    }, 250);
+  }
+
+  handleDoubleClick(): void {
+    if (this.clickTimer) {
+      clearTimeout(this.clickTimer);
+      this.clickTimer = null;
+    }
+    this.jwpService.toggleFullscreen();
+  }
+
   ngOnDestroy(): void {
+    if (this.clickTimer) clearTimeout(this.clickTimer);
     this.jwpService.destroyPlayer();
     this.isInitialized = false;
   }

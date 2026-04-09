@@ -26,6 +26,12 @@ export class DiapoStateService {
   type = signal<DiapoType | null>(null);
   // global position of imagelist
   currentImageListPos = signal<number>(1);
+  
+  // view mode: 'fit' (entire image visible) or 'zoom' (full width scrollable)
+  viewMode = signal<'fit' | 'zoom'>('fit');
+
+  // layout mode: 'standard' (1/3 diapo) or 'expanded' (2/3 diapo)
+  layoutMode = signal<'standard' | 'expanded'>('standard');
 
   // EPS VARIABLE
   jsonDiapoEps = signal<IDiapo | null>(null);

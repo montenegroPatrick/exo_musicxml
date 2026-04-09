@@ -7,8 +7,7 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { VideoComponent } from '@core/shared/video/video.component';
-import { DiapoComponent } from '../diapo/diapo.component';
-import { DiapoStateService } from '../diapo/services/diapo.service';
+import { DiapoComponent } from '@core/shared/diapo/diapo.component';
 import { ControlBarComponent } from '../control-bar/control-bar.component';
 import { JwpService } from '@core/services/jwp.service';
 import { FlatService } from '@core/services/flat.service';
@@ -19,7 +18,9 @@ import {
   Iratio,
   IVideoDiapoLayout,
 } from './interfaces/video-diapo.interface';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { ButtonModule } from 'primeng/button';
+import { HostListener } from '@angular/core';
 
 export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   imageRatio: '1/2',
@@ -28,66 +29,50 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
 
 @Component({
   selector: 'app-video-diapo',
+  standalone: true,
   imports: [VideoComponent, DiapoComponent, ControlBarComponent, ButtonModule],
   templateUrl: './video-diapo.component.html',
 })
 export class VideoDiapoComponent implements OnInit {
   private _lessonService = inject(LessonService);
-  private _diapoService = inject(DiapoStateService);
   private _jwpService = inject(JwpService);
   private _flatService = inject(FlatService);
   private _videoSyncService = inject(VideoSyncService);
+  private _diapoService = inject(DiapoStateService);
 
   typeImg = computed(() => this._lessonService.diapoType() ?? 'eps');
   currentVideo = computed(() => this._lessonService.jwPlayerId());
   videoIsReady = computed(() => this._jwpService.isReady());
-  xmlIsReady = computed(() => this._flatService.isReady());
+  
   videoDiapoLayout: WritableSignal<IVideoDiapoLayout> = signal<IVideoDiapoLayout>(
     defaultVideoDiapoLayout,
   );
 
+  isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth < 768);
+  }
+
+  ngOnInit(): void {
+    // Ensure "Fit Content" is the default for a better first impression
+    this._diapoService.viewMode.set('fit');
+  }
+
+  layoutMode = computed(() => this._diapoService.layoutMode());
+
   classImgContainer = computed(() => {
-    const ratio = this.videoDiapoLayout().imageRatio;
-    const position = this.videoDiapoLayout().imgPosition;
-    switch (ratio) {
-      case '1/2':
-        return 'col-span-3';
-      case '1/3':
-        return 'col-span-2';
-      case '1/4':
-        return 'col-span-1';
-      case 'full':
-        return 'col-span-4';
-      default:
-        return 'col-span-1';
-    }
+    // Standard layout: 1/3 diapo
+    // Expanded layout: 2/3 diapo
+    return this.layoutMode() === 'standard' ? 'col-span-1' : 'col-span-2';
   });
 
   classVideoContainer = computed(() => {
-    const ratio = this.videoDiapoLayout().imageRatio;
-    switch (ratio) {
-      case '1/2':
-        return 'col-span-1';
-      case '1/3':
-        return 'col-span-2';
-      case '1/4':
-        return 'col-span-3';
-      case 'full':
-        return 'col-span-4';
-      default:
-        return 'col-span-2';
-    }
+    // Standard layout: 2/3 video
+    // Expanded layout: 1/3 video
+    return this.layoutMode() === 'standard' ? 'col-span-2' : 'col-span-1';
   });
-
-  ngOnInit(): void {
-    const lesson = this._lessonService.lessonJson();
-    const diapoType = this._lessonService.diapoType();
-
-    if (lesson && diapoType) {
-      this._diapoService.type.set(diapoType as any);
-      this._diapoService.initVariables(lesson);
-    }
-  }
 
   changeLayout(ratio: Iratio) {
     this.videoDiapoLayout.update((layout) => ({

@@ -1,0 +1,137 @@
+<div 
+  class="flex w-full h-full transition-colors duration-300 relative" 
+  [ngClass]="{
+    'bg-neutral-50': theme() === 'light',
+    'bg-zinc-950': theme() === 'dark'
+  }"
+>
+  @if (showControls()) {
+    <div 
+      class="h-full flex-none gap-4 flex flex-col items-center py-4 z-10 w-[45px] transition-all duration-300 overflow-hidden"
+      [ngClass]="{
+        'text-zinc-500': theme() === 'light',
+        'text-zinc-100': theme() === 'dark'
+      }"
+    >
+      @if (printable()) {
+        <p-button
+          (onClick)="printPdf()"
+          [text]="true"
+          [plain]="true"
+          icon="pi pi-print"
+          pTooltip="Imprimer"
+          tooltipPosition="right"
+          styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
+        ></p-button>
+      }
+
+      <p-button
+        (onClick)="toggleLayoutMode()"
+        [text]="true"
+        [plain]="true"
+        [icon]="layoutMode() === 'standard' ? 'pi pi-window-maximize' : 'pi pi-window-minimize'"
+        [pTooltip]="layoutMode() === 'standard' ? 'Élargir la partition' : 'Réduire la partition'"
+        tooltipPosition="right"
+        styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
+      ></p-button>
+
+      @if (allowZoom()) {
+        <p-button
+          (onClick)="toggleViewMode()"
+          [text]="true"
+          [plain]="true"
+          [icon]="viewMode() === 'fit' ? 'pi pi-search-plus' : 'pi pi-search-minus'"
+          [pTooltip]="viewMode() === 'fit' ? 'Zoomer l\'image' : 'Adapter l\'image'"
+          tooltipPosition="right"
+          styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
+        ></p-button>
+      }
+      
+      @if (canNavigate() && (pdfTotalPages() > 1 || (imageList()?.length ?? 0) > 1)) {
+        <div class="flex flex-col gap-3 items-center mt-4 px-1">
+          <p-button
+            [disabled]="(imageList()?.length ?? 0) === 1 || imageListPos() === 1"
+            (onClick)="previousPage()"
+            [text]="true"
+            [plain]="true"
+            icon="pi pi-arrow-up"
+            styleClass="text-inherit"
+          ></p-button>
+          
+          <div class="text-[9px] font-black uppercase text-center leading-none tracking-tighter">
+            {{ imageListPos() }}<br/>
+            <span class="opacity-30">—</span><br/>
+            {{ pdfTotalPages() || (imageList()?.length ?? 0) }}
+          </div>
+          
+          <p-button
+            [disabled]="
+              imageListPos() === (pdfTotalPages() || (imageList()?.length ?? 0))
+            "
+            (onClick)="nextPage()"
+            [text]="true"
+            [plain]="true"
+            icon="pi pi-arrow-down"
+            styleClass="text-inherit"
+          ></p-button>
+        </div>
+      }
+    </div>
+  }
+
+  <div 
+    class="flex-grow h-full w-full relative transition-colors duration-300"
+    [ngClass]="theme() === 'light' ? 'bg-white' : 'bg-zinc-900'"
+  >
+    <div 
+      class="absolute inset-0 custom-scrollbar" 
+      [class.overflow-hidden]="viewMode() === 'fit'"
+      [class.overflow-auto]="viewMode() === 'zoom'"
+      [class.p-4]="viewMode() === 'fit'"
+    >
+      @switch (type()) {
+        @case ("xml") {
+          @if (xml()) {
+            <app-xml-viewer [xml]="xml()!"></app-xml-viewer>
+          } @else {
+            <div class="flex items-center justify-center h-full">
+              <span class="text-zinc-400 italic">Aucune partition disponible</span>
+            </div>
+          }
+        }
+        @case ("eps") {
+          @if (jsonEps()) {
+            <app-eps-viewer [eps]="jsonEps()!"></app-eps-viewer>
+          } @else {
+            <div class="flex items-center justify-center h-full">
+              <span class="text-zinc-400 italic">Aucun visuel disponible</span>
+            </div>
+          }
+        }
+        @case ("pdf") {
+          @if (jsonPdf()) {
+            <app-pdf-viewer [pdf]="jsonPdf()!"></app-pdf-viewer>
+          } @else {
+            <div class="flex items-center justify-center h-full">
+              <span class="text-zinc-400 italic">Document PDF non trouvé</span>
+            </div>
+          }
+        }
+        @case ("html") {
+          @if (xml()) {
+            <app-html-viewer [url]="xml()!"></app-html-viewer>
+          } @else {
+            <div class="flex items-center justify-center h-full">
+              <span class="text-zinc-400 italic">Contenu HTML indisponible</span>
+            </div>
+          }
+        }
+        @default {
+          <div class="flex items-center justify-center h-full border-2 border-dashed border-red-200 m-4 rounded-xl">
+            <p class="text-red-400 font-medium">Type de média non supporté : {{ type() }}</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</div>

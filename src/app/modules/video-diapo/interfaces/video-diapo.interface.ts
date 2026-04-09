@@ -1,4 +1,4 @@
-import { ImageItem, Sync } from '@app/modules/diapo/interfaces/diapo.interface';
+import { ImageItem, Sync } from '@core/shared/diapo/interfaces/diapo.interface';
 
 export interface IVideoDiapo {
   loadVideo?: boolean;

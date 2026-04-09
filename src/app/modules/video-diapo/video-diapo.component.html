@@ -1,14 +1,25 @@
 <div class="relative w-full h-full bg-zinc-950 overflow-hidden">
-  <div class="grid grid-cols-4 h-full">
-    <div [class]="classImgContainer()">
-      <app-diapo></app-diapo>
-    </div>
-    <div [class]="classVideoContainer()">
+  <div class="flex flex-col md:grid md:grid-cols-3 h-full overflow-y-auto md:overflow-hidden custom-scrollbar">
+    
+    <!-- Video Section: Top on mobile, right on desktop -->
+    <div 
+      [class]="classVideoContainer() + ' order-1 md:order-2 flex items-center justify-center bg-black min-h-[30vh] md:min-h-0'"
+    >
       <app-video 
+        mode="fixed-ratio"
+        class="w-full"
         [typeImg]="typeImg()" 
         [mediaId]="currentVideo()!"
       ></app-video>
     </div>
+
+    <!-- Diapo Section: Bottom on mobile, left on desktop -->
+    <div 
+      [class]="classImgContainer() + ' order-2 md:order-1 h-full min-h-[50vh] md:min-h-0'"
+    >
+      <app-diapo theme="dark" [showControls]="true" [allowZoom]="!isMobile()"></app-diapo>
+    </div>
+
   </div>
 
   <div class="fixed bottom-0 w-full z-10 transition-all duration-300">

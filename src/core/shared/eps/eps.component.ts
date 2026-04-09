@@ -1,6 +1,7 @@
-import { Component, computed, input } from '@angular/core';
-import { IJsonDiapoEps } from '@app/modules/diapo/interfaces/diapo.interface';
+import { Component, computed, inject, input } from '@angular/core';
+import { IJsonDiapoEps } from '@core/shared/diapo/interfaces/diapo.interface';
 import { CommonModule } from '@angular/common';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 
 @Component({
   selector: 'app-eps',
@@ -11,7 +12,11 @@ import { CommonModule } from '@angular/common';
       @if (currentImage()) {
         <img 
           [src]="currentImage()?.fullUrl" 
-          class="max-w-full max-h-full object-contain shadow-lg rounded"
+          class="shadow-lg rounded transition-all duration-500 ease-in-out"
+          [ngClass]="{
+            'max-w-full max-h-full object-contain h-full': viewMode() === 'fit',
+            'w-full h-auto': viewMode() === 'zoom'
+          }"
           alt="Diapo Image"
         >
       } @else {
@@ -21,6 +26,8 @@ import { CommonModule } from '@angular/common';
   `,
 })
 export class EpsComponent {
+  private _diapoService = inject(DiapoStateService);
+  viewMode = computed(() => this._diapoService.viewMode());
   eps = input.required<IJsonDiapoEps>();
 
   /**

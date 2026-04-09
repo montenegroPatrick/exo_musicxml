@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { IJsonDiapoPdf } from '@app/modules/diapo/interfaces/diapo.interface';
-import { DiapoStateService } from '@app/modules/diapo/services/diapo.service';
+import { IJsonDiapoPdf } from '@core/shared/diapo/interfaces/diapo.interface';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { PdfViewerModule, PDFDocumentProxy } from 'ng2-pdf-viewer';
 
 @Component({
@@ -11,7 +11,8 @@ import { PdfViewerModule, PDFDocumentProxy } from 'ng2-pdf-viewer';
     <pdf-viewer
       [src]="pdfUrl()!"
       [render-text]="true"
-      [original-size]="false"
+      [original-size]="viewMode() === 'zoom'"
+      [fit-to-page]="viewMode() === 'fit'"
       [autoresize]="true"
       [show-all]="false"
       [page]="currentPage()"
@@ -38,6 +39,7 @@ export class PdfComponent {
 
   pdfUrl = computed(() => this._diapoService.currentPdfUrl());
   currentPage = computed(() => this._diapoService.currentImageListPos());
+  viewMode = computed(() => this._diapoService.viewMode());
 
   onPdfLoaded(pdf: PDFDocumentProxy) {
     const totalPages = pdf.numPages;

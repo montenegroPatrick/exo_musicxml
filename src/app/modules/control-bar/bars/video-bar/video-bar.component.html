@@ -56,13 +56,13 @@
       <!-- Metadata Block -->
       <div class="lesson-info min-w-0">
         <span class="chapitre uppercase truncate">
-          CHAPITRE {{ _lessonService.chapter() }} - {{ chapterTitle() }}
+           {{ _lessonService.chapter() }}. {{ chapterTitle() }}
         </span>
         <span class="sous-chapitre truncate">
-          Sous-chapitre : {{ subChapterTitle() }}
+             {{ _lessonService.subChapter() }}. {{ subChapterTitle() }}
         </span>
         <span class="sequence truncate">
-          {{ sequenceTitle() }}
+          {{ _lessonService.sequence() }}. {{ sequenceTitle() }}
         </span>
       </div>
     </div>

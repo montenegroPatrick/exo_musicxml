@@ -31,7 +31,7 @@ export const routes: Routes = [
       {
         path: 'diapo',
         data: { showNavigation: true },
-        loadComponent: () => import('./modules/diapo/diapo.component').then(m => m.DiapoComponent),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'tap-rythm',
@@ -41,12 +41,12 @@ export const routes: Routes = [
       {
         path: 'music-xml',
         data: { showNavigation: true },
-        loadComponent: () => import('./modules/diapo/diapo.component').then(m => m.DiapoComponent),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'playback',
         data: { showNavigation: false },
-        loadComponent: () => import('./modules/diapo/diapo.component').then(m => m.DiapoComponent),
+        loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'drummachine',

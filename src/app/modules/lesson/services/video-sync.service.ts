@@ -1,7 +1,7 @@
 import { Injectable, inject, effect, Signal, signal } from '@angular/core';
 import { JwpService } from '@core/services/jwp.service';
 import { LessonService } from './lesson.service';
-import { DiapoStateService } from '@app/modules/diapo/services/diapo.service';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { IVideoSync } from '@core/interfaces/lesson.interface';
 
 @Injectable({

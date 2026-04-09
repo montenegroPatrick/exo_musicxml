@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { BridgeAction } from '@core/interfaces/bridge.interface';
+import {
+  BridgeAction,
+  FlutterToAngularMessage,
+} from '@core/interfaces/bridge.interface';
 import {
   hasSyncPoints as checkHasSyncPoints,
   ControlBarType,
@@ -15,7 +18,7 @@ import {
   TrackList,
 } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, from, Observable, Subscription, tap } from 'rxjs';
+import { catchError, Observable, Subscription, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -33,12 +36,12 @@ export class LessonService {
   readonly error = signal<Error | null>(null);
 
   // New metadata signals
-  readonly chapter = computed(() => this.lessonJson()?.Chapter);
-  readonly subChapter = computed(() => this.lessonJson()?.SubChapter);
-  readonly sequence = computed(() => this.lessonJson()?.Sequence);
-  readonly chapterTitle = computed(() => this.lessonJson()?.ChapterTitle);
-  readonly subChapterTitle = computed(() => this.lessonJson()?.SubChapterTitle);
-  readonly sequenceTitle = computed(() => this.lessonJson()?.SequenceTitle);
+  readonly chapter = computed(() => this.lessonJson()?.chapter);
+  readonly subChapter = computed(() => this.lessonJson()?.subChapter);
+  readonly sequence = computed(() => this.lessonJson()?.sequence);
+  readonly chapterTitle = computed(() => this.lessonJson()?.chapterTitle);
+  readonly subChapterTitle = computed(() => this.lessonJson()?.subChapterTitle);
+  readonly sequenceTitle = computed(() => this.lessonJson()?.sequenceTitle);
 
   // Computed: Module type detection
   readonly moduleType = computed<LessonModuleType>(() => {
@@ -125,8 +128,8 @@ export class LessonService {
    * Initialize bridge listener
    */
   constructor() {
-    this._bridgeSub = this._bridgeService.message$.subscribe((data) => {
-      this.lessonJson.set(data as unknown as ILesson);
+    this._bridgeSub = this._bridgeService.message$.subscribe((msg) => {
+      this.lessonJson.set(msg as unknown as ILesson);
     });
   }
 
@@ -144,7 +147,7 @@ export class LessonService {
       return this.loadTestData(moduleName);
     }
     console.log(`[LessonService]:loadData(${handlerName}) =>`);
-    return from(this._bridgeService.getFromFlutter<ILesson>(handlerName)).pipe(
+    return this._bridgeService.getFromFlutter<ILesson>(handlerName).pipe(
       tap((lesson) => {
         console.log(`[LessonService]:loadData(${handlerName}) =>`, lesson);
         this.lessonJson.set(lesson);
@@ -189,8 +192,8 @@ export class LessonService {
   setLessonData(data: ILesson): void {
     console.log('[LessonService]:setLessonData =>', data);
     this.lessonJson.set(data);
-    if (data.Chapter !== undefined) this.lessonId.set(data.Chapter.toString());
-    if (data.Sequence !== undefined) this.seq.set(data.Sequence.toString());
+    if (data.chapter !== undefined) this.lessonId.set(data.chapter.toString());
+    if (data.sequence !== undefined) this.seq.set(data.sequence.toString());
   }
 
   /**

@@ -36,5 +36,6 @@ export type BridgeAction =
 
 export interface AngularToFlutterMessage {
   action: BridgeAction;
+  requestId?: string;
   data?: any;
 }

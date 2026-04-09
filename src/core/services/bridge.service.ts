@@ -1,12 +1,12 @@
 import {
+  computed,
+  DestroyRef,
+  inject,
   Injectable,
   signal,
-  computed,
-  inject,
-  DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { filter, first, tap } from 'rxjs';
+import { filter, first, from, Observable, tap } from 'rxjs';
 import {
   AngularToFlutterMessage,
   BridgeAction,
@@ -95,44 +95,48 @@ export class BridgeService {
     };
   }
 
-  private _push(data: Record<string, unknown>): void {
-    this.lastMessage.set(data);
+  private _push(msg: Record<string, unknown>): void {
+    this.lastMessage.set(msg);
   }
 
   private _isBridgeMessage(data: any): boolean {
-    return data !== null && typeof data === 'object';
+    return data;
   }
 
   // ---------------------------------------------------------------------------
 
-  getFromFlutter<T>(handlerName: BridgeAction): Promise<T> {
+  getFromFlutter<T>(
+    handlerName: BridgeAction,
+  ): Observable<Record<string, unknown>> {
     if (this.isMobile()) {
-      return (window as any).flutter_inappwebview.callHandler(
-        handlerName,
-      ) as Promise<T>;
+      return from(
+        (window as any).flutter_inappwebview.callHandler(
+          handlerName,
+        ) as Promise<Record<string, unknown>>,
+      );
     }
 
     // Flutter Web: trigger a request then wait for the response
+    const requestId = crypto.randomUUID();
     window.parent.postMessage(
-      JSON.stringify({ type: 'init', subType: 'none' }),
+      JSON.stringify({ type: 'init', subType: 'none', requestId }),
       '*',
     );
-    console.log(`[BridgeService]: Flutter Web - requested [${handlerName}]`);
+    console.log(
+      `[BridgeService]: Flutter Web - requested [${handlerName}] requestId=${requestId}`,
+    );
 
-    return new Promise<T>((resolve) => {
-      this.message$
-        .pipe(
-          first(),
-          tap((data) =>
-            console.log(
-              `[BridgeService]: Flutter Web - response [${handlerName}] =>`,
-              data,
-            ),
-          ),
-          takeUntilDestroyed(this._destroyRef),
-        )
-        .subscribe((data) => resolve(data as T));
-    });
+    return this.message$.pipe(
+      filter((msg) => msg['requestId'] === requestId),
+      first(),
+      tap((data) =>
+        console.log(
+          `[BridgeService]: Flutter Web - response [${handlerName}] =>`,
+          data,
+        ),
+      ),
+      takeUntilDestroyed(this._destroyRef),
+    );
   }
 
   sendAction(action: BridgeAction, data?: any): void {
@@ -152,10 +156,18 @@ export class BridgeService {
         }
         break;
       }
-      case 'flutter-web':
-        window.parent.postMessage(JSON.stringify(message), '*');
-        console.log('[BridgeService]: Flutter Web => postMessage', message);
+      case 'flutter-web': {
+        const requestId = crypto.randomUUID();
+        window.parent.postMessage(
+          JSON.stringify({ ...message, requestId }),
+          '*',
+        );
+        console.log('[BridgeService]: Flutter Web => postMessage', {
+          ...message,
+          requestId,
+        });
         break;
+      }
       default:
         if (window.parent !== window) {
           window.parent.postMessage(JSON.stringify(message), '*');

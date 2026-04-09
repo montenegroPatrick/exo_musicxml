@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { IJsonImgPdf } from '@app/modules/img/interfaces/img.interface';
-import { ImgStateService } from '@app/modules/img/services/img.service';
+import { IJsonDiapoPdf } from '@app/modules/diapo/interfaces/diapo.interface';
+import { DiapoStateService } from '@app/modules/diapo/services/diapo.service';
 import { PdfViewerModule, PDFDocumentProxy } from 'ng2-pdf-viewer';
 
 @Component({
@@ -32,16 +32,16 @@ import { PdfViewerModule, PDFDocumentProxy } from 'ng2-pdf-viewer';
   `,
 })
 export class PdfComponent {
-  private imgService = inject(ImgStateService);
-  pdf = input.required<IJsonImgPdf>();
+  private _diapoService = inject(DiapoStateService);
+  pdf = input.required<IJsonDiapoPdf>();
   pdfLoaded = output<number>();
 
-  pdfUrl = computed(() => this.imgService.currentPdfUrl());
-  currentPage = computed(() => this.imgService.currentImageListPos());
+  pdfUrl = computed(() => this._diapoService.currentPdfUrl());
+  currentPage = computed(() => this._diapoService.currentImageListPos());
 
   onPdfLoaded(pdf: PDFDocumentProxy) {
     const totalPages = pdf.numPages;
-    console.log('PDF chargé, nombre de pages:', totalPages);
-    this.imgService.currentPdfTotalPages.set(totalPages);
+    console.log('[PdfComponent]: PDF chargé, nombre de pages:', totalPages);
+    this._diapoService.currentPdfTotalPages.set(totalPages);
   }
 }

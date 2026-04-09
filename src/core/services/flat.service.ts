@@ -48,7 +48,7 @@ export class FlatService {
   readonly isPlaying = this._isPlaying.asReadonly();
 
   readonly lessonJson = computed(() => this._lessonService.lessonJson());
-  readonly imgType = computed(() => this._lessonService.imgType());
+  readonly diapoType = computed(() => this._lessonService.diapoType());
   readonly originalSyncPoints = computed(() =>
     this._lessonService.syncPoints(),
   );
@@ -104,9 +104,9 @@ export class FlatService {
         controlsPrint: true,
       },
     });
-    console.log('[FlatService]:initEmbed => init', this.imgType());
-    if (this.imgType() !== 'xml') return;
-    console.log('[FlatService]:initEmbed => init xml', this.imgType());
+    console.log('[FlatService]:initEmbed => init', this.diapoType());
+    if (this.diapoType() !== 'xml') return;
+    console.log('[FlatService]:initEmbed => init xml', this.diapoType());
     this.initSyncPoints();
   }
   initSyncPoints() {

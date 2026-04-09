@@ -10,7 +10,7 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
   imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent],
   template: `
     <div
-      class="absolute bottom-0 left-0 right-0 bg-black/45 backdrop-blur-xl h-10 w-full"
+      class="relative bg-black/45 backdrop-blur-xl h-auto w-full"
     >
       @switch (typeControlBar()) {
         @case ('video') {

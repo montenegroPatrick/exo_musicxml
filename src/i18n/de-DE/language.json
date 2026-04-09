@@ -56,8 +56,12 @@
             "exercise" : "Übung",
             "start" : "Starten",
             "stop" : "Stoppen"
+        },
+        "metronome": {
+            "accent": "ERSTEN TAKTSCHLAG BETONEN",
+            "timer": "STOPPUHR",
+            "tap": "TAP",
+            "bpm": "BPM"
         }
-
-
     }
 }

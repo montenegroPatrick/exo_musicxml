@@ -65,8 +65,12 @@
             "start" : "Iniciar",
             "stop" : "Parar",
             "user_taps" : "Seus taps"
+        },
+        "metronome": {
+            "accent": "ACENTUAR O PRIMEIRO TEMPO",
+            "timer": "CRONÓMETRO",
+            "tap": "TAP",
+            "bpm": "BPM"
         }
-
-
     }
 }

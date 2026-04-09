@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { api_url } from '@core/constant/api_url';
 import {
   ILesson,
-  ImgType,
+  DiapoType,
   LessonModuleType,
   ControlBarType,
   Sync,
@@ -47,8 +47,8 @@ export class LessonService {
     return determineModuleType(lesson);
   });
 
-  // Computed: Image type detection
-  readonly imgType = computed<ImgType | undefined>(() => {
+  // Computed: Diapo (image) type detection
+  readonly diapoType = computed<DiapoType | undefined>(() => {
     const lesson = this.lessonJson();
     if (!lesson) return undefined;
     return determineImgType(lesson);
@@ -65,7 +65,7 @@ export class LessonService {
   readonly hasVideo = computed(() => this.lessonJson()?.loadVideo === true);
   readonly hasAudio = computed(() => this.lessonJson()?.loadAudio === true);
   readonly hasImg = computed(() => this.lessonJson()?.loadImg === true);
-  readonly hasXml = computed(() => this.imgType() === 'xml');
+  readonly hasXml = computed(() => this.diapoType() === 'xml');
   readonly hasSyncPoints = computed(() => {
     const lesson = this.lessonJson();
     if (!lesson) return false;
@@ -85,10 +85,10 @@ export class LessonService {
     if (!lesson) return '';
 
     // For eps, use first image from imageList
-    if (this.imgType() === 'eps' && lesson.imageList?.length) {
+    if (this.diapoType() === 'eps' && lesson.imageList?.length) {
       return lesson.imageList[0].url ?? '';
     }
-    // For pdf/xml use url directly
+    // For pdf/xml/html use url directly
     return lesson.url ?? '';
   });
 
@@ -165,6 +165,33 @@ export class LessonService {
   }
 
   /**
+   * Fetch lesson data from API
+   */
+  fetchLesson(lessonId: string, seq: string): Observable<ILesson> {
+    this.isLoading.set(true);
+    this.error.set(null);
+    this.lessonId.set(lessonId);
+    this.seq.set(seq);
+
+    const url = `${api_url.lesson}/${lessonId}/${seq}`;
+
+    return this._http.get<{ datas: ILesson }>(url).pipe(
+      map((res) => res.datas),
+      tap((lesson) => {
+        console.log('[LessonService]:fetchLesson =>', lesson);
+        this.lessonJson.set(lesson);
+        this.isLoading.set(false);
+      }),
+      catchError((err) => {
+        console.error('[LessonService]:fetchLesson => error', err);
+        this.error.set(err);
+        this.isLoading.set(false);
+        throw err;
+      }),
+    );
+  }
+
+  /**
    * Directly inject lesson data (useful for Bridge)
    */
   setLessonData(data: ILesson): void {
@@ -187,7 +214,7 @@ export class LessonService {
 
   /**
    * Get target route segment based on module type
-   * Returns the child route path: 'video', 'video-img', or 'img'
+   * Returns the child route path: 'video', 'video-diapo', or 'diapo'
    */
   getTargetRoute(): string {
     return this.moduleType();

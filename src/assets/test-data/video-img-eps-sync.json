@@ -1,0 +1,52 @@
+{
+  "mock": true,
+  "Chapter": 6,
+  "SubChapter": 1,
+  "Sequence": 2,
+  "ChapterTitle": "Romance de Bartoli",
+  "SubChapterTitle": "Présentation du morceau",
+  "SequenceTitle": "Interprétation",
+  "loadVideo": true,
+  "jw": "L5SHO7Q9",
+  "subtitles": [],
+  "videoSync": [
+    {
+      "timeCode": 0,
+      "pos": 0
+    },
+    {
+      "timeCode": 33.261049,
+      "pos": 1
+    },
+    {
+      "timeCode": 79.010541,
+      "pos": 0
+    },
+    {
+      "timeCode": 95.758162,
+      "pos": 1
+    },
+    {
+      "timeCode": 124.28,
+      "pos": 0
+    }
+  ],
+  "loadAudio": false,
+  "typeImg": "eps",
+  "printable": true,
+  "printExt": "bbGVzc29uL3NsXzQvcGRmLzI2",
+  "loadImg": true,
+  "pos": 0,
+  "imageList": [
+    {
+      "pos": 1,
+      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/sl_4\/score\/64372\/",
+      "ext": ".gif"
+    },
+    {
+      "pos": 2,
+      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/sl_4\/score\/64373\/",
+      "ext": ".gif"
+    }
+  ]
+}

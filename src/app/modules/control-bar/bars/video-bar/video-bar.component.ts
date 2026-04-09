@@ -15,11 +15,11 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./video-bar.component.scss'],
 })
 export class VideoBarComponent {
-  private _controlBarService = inject(ControlBarService);
-  private _flatService = inject(FlatService);
-  private _jwpService = inject(JwpService);
-  private _bridgeService = inject(BridgeService);
-  private _lessonService = inject(LessonService);
+  public _controlBarService = inject(ControlBarService);
+  public _flatService = inject(FlatService);
+  public _jwpService = inject(JwpService);
+  public _bridgeService = inject(BridgeService);
+  public _lessonService = inject(LessonService);
 
   showNavigation = input<boolean>(true);
 

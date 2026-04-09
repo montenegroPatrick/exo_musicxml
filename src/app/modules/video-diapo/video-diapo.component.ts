@@ -13,6 +13,7 @@ import { ControlBarComponent } from '../control-bar/control-bar.component';
 import { JwpService } from '@core/services/jwp.service';
 import { FlatService } from '@core/services/flat.service';
 import { LessonService } from '../lesson/services/lesson.service';
+import { VideoSyncService } from '../lesson/services/video-sync.service';
 import {
   Iposition,
   Iratio,
@@ -35,6 +36,7 @@ export class VideoDiapoComponent implements OnInit {
   private _diapoService = inject(DiapoStateService);
   private _jwpService = inject(JwpService);
   private _flatService = inject(FlatService);
+  private _videoSyncService = inject(VideoSyncService);
 
   typeImg = computed(() => this._lessonService.diapoType() ?? 'eps');
   currentVideo = computed(() => this._lessonService.jwPlayerId());

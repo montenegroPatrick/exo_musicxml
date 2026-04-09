@@ -50,7 +50,7 @@ export class FlatService {
   readonly lessonJson = computed(() => this._lessonService.lessonJson());
   readonly diapoType = computed(() => this._lessonService.diapoType());
   readonly originalSyncPoints = computed(() =>
-    this._lessonService.syncPoints(),
+    this._lessonService.measureSyncPoints(),
   );
   syncPoints = signal<Sync[]>([]);
   totalTime = signal<number>(0);

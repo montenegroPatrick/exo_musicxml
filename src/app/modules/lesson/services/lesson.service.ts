@@ -1,5 +1,6 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { BridgeAction } from '@core/interfaces/bridge.interface';
 import {
   hasSyncPoints as checkHasSyncPoints,
@@ -12,10 +13,12 @@ import {
   DiapoType,
   LessonModuleType,
   Sync,
+  IVideoSync,
   TrackList,
 } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, Observable, Subscription, tap } from 'rxjs';
+import { catchError, map, Observable, Subscription, tap } from 'rxjs';
+import { api_url } from '@core/constant/api_url';
 
 @Injectable({
   providedIn: 'root',
@@ -23,6 +26,7 @@ import { catchError, Observable, Subscription, tap } from 'rxjs';
 export class LessonService {
   private _http = inject(HttpClient);
   private _bridgeService = inject(BridgeService);
+  private _activatedRoute = inject(ActivatedRoute);
   private _bridgeSub?: Subscription;
 
   // Core signals
@@ -103,19 +107,30 @@ export class LessonService {
   readonly folder = computed(() => this.lessonJson()?.folder);
 
   // Sync points
-  readonly syncPoints = computed<Sync[]>(() => {
+  readonly videoSyncPoints = computed<IVideoSync[]>(() => {
     const lesson = this.lessonJson();
-    if (!lesson) return [];
-
-    // video-img uses videoSync
-    if (Array.isArray(lesson.videoSync)) {
-      return lesson.videoSync;
-    }
-    // img uses sync
-    if (Array.isArray(lesson.sync)) {
-      return lesson.sync;
+    if (lesson && Array.isArray(lesson.videoSync) && (lesson.videoSync.length === 0 || 'timeCode' in lesson.videoSync[0])) {
+      return lesson.videoSync as IVideoSync[];
     }
     return [];
+  });
+
+  readonly measureSyncPoints = computed<Sync[]>(() => {
+    const lesson = this.lessonJson();
+    if (lesson && Array.isArray(lesson.sync)) {
+      return lesson.sync;
+    }
+    if (lesson && Array.isArray(lesson.videoSync) && (lesson.videoSync.length > 0 && 'location' in (lesson.videoSync[0] as any))) {
+      return lesson.videoSync as Sync[];
+    }
+    return [];
+  });
+
+  // Legacy compatibility / general
+  readonly syncPoints = computed<(Sync | IVideoSync)[]>(() => {
+    const m = this.measureSyncPoints();
+    const v = this.videoSyncPoints();
+    return m.length > 0 ? m : v;
   });
 
   // Audio
@@ -147,39 +162,37 @@ export class LessonService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    try {
-      const response = this._bridgeService.getFromFlutter<ILesson>(handlerName);
-      console.log(`[LessonService]:loadData(${handlerName}) =>`, response);
-      this.lessonJson.set(response);
-      this.isLoading.set(false);
-    } catch (err) {
-      console.error(`[LessonService]:loadData(${handlerName}) => error`, err);
-
-      const url = `assets/test-data/${moduleName}.json`;
-
-      return this._http.get<ILesson>(url).pipe(
-        tap((lesson) => {
-          console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
-          this.lessonJson.set(lesson);
-          this.isLoading.set(false);
-        }),
-        catchError((err) => {
-          console.error(
-            `[LessonService]:loadTestData(${moduleName}) => error`,
-            err,
-          );
-          this.error.set(err);
-          this.isLoading.set(false);
-          throw err;
-        }),
-      );
-    }
+    return this._bridgeService.getFromFlutter<ILesson>(handlerName).pipe(
+      tap((response) => {
+        console.log(`[LessonService]:loadData(${handlerName}) =>`, response);
+        this.lessonJson.set(response);
+        this.isLoading.set(false);
+      }),
+      catchError((err) => {
+        console.warn(
+          `[LessonService]:loadData(${handlerName}) failed, falling back to mock data.`,
+          err,
+        );
+        return this.loadTestData(moduleName);
+      }),
+    );
   }
   loadTestData(moduleName: string): Observable<ILesson> {
     this.isLoading.set(true);
     this.error.set(null);
 
-    const url = `assets/test-data/${moduleName}.json`;
+    // Try to get 'mock' from the current route or the root route
+    let mock = this._activatedRoute.snapshot.queryParamMap.get('mock');
+    if (!mock) {
+      // Fallback: check the global URL if snapshot is not yet ready
+      const urlParams = new URLSearchParams(window.location.search);
+      mock = urlParams.get('mock');
+    }
+
+    const targetSlug = mock || moduleName;
+    const url = `assets/test-data/${targetSlug}.json`;
+
+    console.log(`%c[LessonService]: Loading JSON => ${targetSlug}.json`, 'background: #222; color: #bada55; font-size: 14px; padding: 4px;');
 
     return this._http.get<ILesson>(url).pipe(
       tap((lesson) => {

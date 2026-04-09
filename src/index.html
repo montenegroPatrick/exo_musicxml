@@ -6,15 +6,19 @@
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <!-- Allow iframe embedding and Flat.io resources -->
+    
+    <!-- JWPlayer Library -->
+    <script src="https://cdn.jwplayer.com/libraries/SZ5bBMKC.js"></script>
+
+    <!-- Allow iframe embedding and Flat.io/JWPlayer resources -->
     <!-- <meta http-equiv="Content-Security-Policy" content="
       frame-ancestors *;
-      frame-src 'self' https://*.flat.io https://flat.io https://embed.flat.io;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.flat.io;
-      connect-src 'self' https://*.flat.io https://prod.flat-cdn.com wss://*.flat.io;
+      frame-src 'self' https://*.flat.io https://flat.io https://embed.flat.io https://cdn.jwplayer.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.flat.io https://cdn.jwplayer.com;
+      connect-src 'self' https://*.flat.io https://prod.flat-cdn.com wss://*.flat.io https://*.jwplayer.com;
       img-src 'self' data: https: blob:;
       style-src 'self' 'unsafe-inline' https://*.flat.io;
-      media-src 'self' https://*.flat.io blob:;
+      media-src 'self' https://*.flat.io https://*.jwplayer.com blob:;
       worker-src 'self' blob:;
     "> -->
   </head>

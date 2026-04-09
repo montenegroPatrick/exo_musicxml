@@ -38,16 +38,44 @@
   <!-- Content Container (Always Row, Fixed Height) -->
   <div class="flex flex-row items-center justify-between px-4 h-full gap-4">
     
-    <!-- SECTION LEFT: Playback Controls -->
-    <div class="controls-left flex items-center gap-2 sm:gap-4 flex-shrink-0">
-      <!-- Skip Back -->
-      <button class="time-skip-button flex items-center justify-center p-2 hover:text-white transition-colors" (click)="handleStepBackward()">
+    <!-- NEW SECTION: Navigation & Metadata (Matching Reference Image) -->
+    <div class="flex items-center flex-1 min-w-0">
+      <!-- Navigation Buttons Group -->
+      <div class="nav-group" *ngIf="showNavigation()">
+        <button class="hover:scale-110 active:scale-90 transition-all text-white" (click)="handlePrevious()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="hover:scale-110 active:scale-90 transition-all text-white" (click)="handleNext()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+        </button>
+      </div>
+
+      <!-- Vertical Separator -->
+      <div class="nav-separator mx-4 hidden sm:block" *ngIf="showNavigation()"></div>
+
+      <!-- Metadata Block -->
+      <div class="lesson-info min-w-0">
+        <span class="chapitre uppercase truncate">
+          CHAPITRE {{ _lessonService.chapter() }} - {{ chapterTitle() }}
+        </span>
+        <span class="sous-chapitre truncate">
+          Sous-chapitre : {{ subChapterTitle() }}
+        </span>
+        <span class="sequence truncate">
+          {{ sequenceTitle() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- SECTION CENTER: Playback Controls (Compact) -->
+    <div class="controls-center flex items-center gap-4 flex-shrink-0">
+      <!-- Step Backward (-10s) -->
+      <button id="btn-step-backward" class="icon-button text-white/70 hover:text-white" (click)="handleStepBackward()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
-        <span class="ml-1 text-[10px] hidden md:inline">-10s</span>
       </button>
 
       <!-- Play / Pause -->
-      <button class="play-button bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center rounded-full transition-all backdrop-blur-md" 
+      <button id="btn-toggle-play" class="play-button bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center rounded-full transition-all backdrop-blur-md" 
               (click)="handleTogglePlay()">
         @if (isPlaying()) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
@@ -56,51 +84,17 @@
         }
       </button>
 
-      <!-- Skip Forward -->
-      <button class="time-skip-button flex items-center justify-center p-2 hover:text-white transition-colors" (click)="handleStepForward()">
-        <span class="mr-1 text-[10px] hidden md:inline">+10s</span>
+      <!-- Step Forward (+10s) -->
+      <button id="btn-step-forward" class="icon-button text-white/70 hover:text-white" (click)="handleStepForward()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
       </button>
 
-      <!-- Time Display (Hidden on XS) -->
-      <div class="time-display hidden sm:flex items-center gap-1 text-[11px] md:text-sm font-medium text-white/80 tabular-nums">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden md:inline"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <!-- Time Display -->
+      <div class="time-display hidden md:flex items-center gap-1 text-sm font-medium text-white/80 tabular-nums">
         <span>{{ formatTime(currentTime()) }}</span>
         <span class="text-white/40">/</span>
         <span class="text-white/60">{{ formatTime(duration()) }}</span>
       </div>
-    </div>
-
-    <!-- SECTION CENTER: Navigation & Metadata -->
-    <div class="controls-center flex items-center gap-2 sm:gap-4 flex-1 min-w-0 justify-center">
-      <!-- Prev Sequence -->
-      <button class="icon-button" (click)="handlePrevious()" *ngIf="showNavigation()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-      </button>
-
-      <!-- Metadata (Desktop: Inline | Mobile: Info Button & Popin) -->
-      <div class="lesson-info hidden sm:flex flex-col justify-center min-w-0 text-left">
-        <span class="chapitre uppercase text-[10px] tracking-widest text-white/50 font-semibold mb-0.5 truncate">
-          {{ chapterTitle() }}
-        </span>
-        <span class="sous-chapitre uppercase text-[10px] tracking-widest text-white/50 font-semibold mb-0.5 truncate">
-          {{ subChapterTitle() }}
-        </span>
-        <span class="sequence text-sm font-bold text-white truncate">
-          {{ sequenceTitle() }}
-        </span>
-      </div>
-
-      <!-- Info Button (Visible ONLY on XS) -->
-      <button class="xs-info-button flex sm:hidden items-center justify-center p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all active:scale-95"
-              (click)="toggleInfoPopin()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-      </button>
-
-      <!-- Next Sequence -->
-      <button class="icon-button flex" (click)="handleNext()" *ngIf="showNavigation()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-      </button>
     </div>
 
     <!-- SECTION RIGHT: Switches & Settings (Selective Hide on XS) -->

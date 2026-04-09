@@ -18,6 +18,11 @@ export interface Sync {
   location: Location;
 }
 
+export interface IVideoSync {
+  timeCode: number;
+  pos: number;
+}
+
 export interface TrackList {
   pos?: number;
   label?: string;
@@ -60,7 +65,7 @@ export interface ILesson {
   sync?: Sync[];
 
   // Synchronization
-  videoSync?: Sync[] | string | null;
+  videoSync?: IVideoSync[] | Sync[] | string | null;
 
   // Audio
   audioUrl?: string;

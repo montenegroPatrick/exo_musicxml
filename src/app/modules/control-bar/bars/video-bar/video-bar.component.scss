@@ -1,16 +1,16 @@
 // Colors
-$primary-red: #ef4444; // red-500
-$primary-red-dark: #dc2626; // red-600
+$primary-red: #FA5E46; 
+$primary-red-dark: #FA5E46; 
 $white-overlay-10: rgba(255, 255, 255, 0.1);
 $white-overlay-20: rgba(255, 255, 255, 0.2);
 
 .control-bar {
-  background: linear-gradient(to right, $primary-red-dark, $primary-red);
+  background: $primary-red;
   position: relative;
   z-index: 50;
   animation: slideUp 0.4s ease-out;
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
-  height: 80px !important; // Force fixed height
+  height: 85px !important; // Slightly taller to accommodate 3 lines
 }
 
 // Info Popin (XS)
@@ -96,6 +96,7 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
   height: 40px;
   align-items: center;
   justify-content: center;
+  display: inline-flex !important;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.8);
   transition: all 0.2s;
@@ -124,12 +125,46 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
 
 // Metadata
 .lesson-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 12px;
+  
   .chapitre {
-    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.2;
+    letter-spacing: 0.02em;
   }
+  
+  .sous-chapitre {
+    font-size: 13px;
+    color: white;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+  
   .sequence {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
   }
+}
+
+.nav-separator {
+  width: 1px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+}
+
+.nav-group {
+    display: flex;
+    align-items: center;
+    gap: 24px; // Spacing identical to photo
+    padding-right: 8px;
 }
 
 // Tab Switcher

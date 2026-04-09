@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import {
   IDiapo,
   ImageItem,
@@ -29,13 +29,27 @@ export class DiapoStateService {
 
   // EPS VARIABLE
   jsonDiapoEps = signal<IDiapo | null>(null);
-  currentImgEps = signal<ImageItem | null>(null);
   currentImageListEps = signal<ImageItem[] | null>(null);
+  currentImgEps = computed(() => {
+    const list = this.currentImageListEps();
+    const pos = this.currentImageListPos();
+    if (list && list.length >= pos && pos > 0) {
+      return list[pos - 1];
+    }
+    return list && list.length > 0 ? list[0] : null;
+  });
 
   // PDF VARIABLE
   jsonDiapoPdf = signal<IDiapo | null>(null);
-  currentImgPdf = signal<ImageItem | null>(null);
   currentImageListPdf = signal<ImageItem[] | null>(null);
+  currentImgPdf = computed(() => {
+    const list = this.currentImageListPdf();
+    const pos = this.currentImageListPos();
+    if (list && list.length >= pos && pos > 0) {
+      return list[pos - 1];
+    }
+    return list && list.length > 0 ? list[0] : null;
+  });
   currentPdfBlob = signal<Blob | null>(null);
   currentPdfUrl = signal<string | null>(null);
   currentPdfTotalPages = signal<number>(0);
@@ -110,7 +124,8 @@ export class DiapoStateService {
     this.jsonDiapoEps.set(eps as any);
     if (eps.imageList && eps.imageList.length > 0) {
       this.currentImageListEps.set(eps.imageList);
-      this.currentImgEps.set(eps.imageList[0]);
+      // Initial position from JSON if any, else 1
+      this.currentImageListPos.set(eps.pos || 1);
     }
   }
 

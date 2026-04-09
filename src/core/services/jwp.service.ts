@@ -14,6 +14,7 @@ import {
   JWPlayerInstance,
   IJWPlayerOptions,
 } from '@core/interfaces/jwplayer.interface';
+import { environment } from '../../environments/environment';
 
 export type JWPlaybackStatus =
   | 'idle'
@@ -45,6 +46,9 @@ export class JwpService {
   // Compatibility alias for VideoComponent
   readonly state = this.playbackState;
 
+  private _timeCallbacks: ((ms: number) => void)[] = [];
+  private _stateCallbacks: ((state: JWPlaybackStatus) => void)[] = [];
+
   constructor() {}
 
   async initPlayer(
@@ -52,13 +56,25 @@ export class JwpService {
     mediaId: string,
     options: IJWPlayerOptions = {},
   ): Promise<void> {
-    const jwplayer = (window as any).jwplayer;
-    if (!jwplayer) {
-      throw new Error('JWPlayer library not loaded');
+    // Wait up to 5 seconds for the library to load
+    let retryCount = 0;
+    while (!(window as any).jwplayer && retryCount < 50) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      retryCount++;
     }
 
+    const jwplayer = (window as any).jwplayer;
+    if (!jwplayer) {
+      throw new Error('JWPlayer library not loaded after waiting');
+    }
+
+    const playlistUrl = `https://content.jwplatform.com/v2/media/${mediaId}`;
+
     this._player = jwplayer(containerId).setup({
-      file: mediaId,
+      playlist: playlistUrl,
+      key: environment.JW_PLAYER_USER_KEY,
+      autostart: options.autostart ?? true,
+      mute: options.autostart ? true : (options.mute ?? false),
       ...options,
     });
 
@@ -67,22 +83,57 @@ export class JwpService {
       if (this._player) {
         this.duration.set(this._player.getDuration() * 1000);
         this.volume.set(this._player.getVolume());
+        
+        // RE-ATTACH QUEUED LISTENERS
+        this._attachListeners();
+
+        // FORCE AUTOPLAY IF REQUESTED
+        if (options.autostart) {
+          console.log('[JwpService]: Forcing autoplay');
+          this._player.play();
+        }
       }
     });
+  }
 
-    this._player?.on('time', (event: any) => {
-      this.positionMs.set(event.position * 1000);
+  private _attachListeners(): void {
+    if (!this._player) return;
+
+    this._player.on('time', (event: any) => {
+      const ms = event.position * 1000;
+      this.positionMs.set(ms);
+      this._timeCallbacks.forEach(cb => cb(ms));
     });
 
-    this._player?.on('play', () => this.playbackState.set('playing'));
-    this._player?.on('pause', () => this.playbackState.set('paused'));
-    this._player?.on('buffer', () => this.playbackState.set('buffering'));
-    this._player?.on('idle', () => this.playbackState.set('idle'));
-    this._player?.on('complete', () => this.playbackState.set('complete'));
+    this._player.on('play', () => {
+      this.playbackState.set('playing');
+      this._stateCallbacks.forEach(cb => cb('playing'));
+    });
+
+    this._player.on('pause', () => {
+      this.playbackState.set('paused');
+      this._stateCallbacks.forEach(cb => cb('paused'));
+    });
+
+    this._player.on('buffer', () => {
+      this.playbackState.set('buffering');
+      this._stateCallbacks.forEach(cb => cb('buffering'));
+    });
+
+    this._player.on('idle', () => {
+      this.playbackState.set('idle');
+      this._stateCallbacks.forEach(cb => cb('idle'));
+    });
+
+    this._player.on('complete', () => {
+      this.playbackState.set('complete');
+      this._stateCallbacks.forEach(cb => cb('complete'));
+    });
   }
 
   loadMedia(mediaId: string): void {
-    this._player?.load([{ file: mediaId }]);
+    const playlistUrl = `https://content.jwplatform.com/v2/media/${mediaId}`;
+    this._player?.load(playlistUrl);
   }
 
   play(): void {
@@ -106,12 +157,7 @@ export class JwpService {
     this.positionMs.set(0);
   }
 
-  /**
-   * Seek to a position
-   * @param position - Position in seconds
-   */
   seek(position: number): void {
-    // Standard JWPlayer seek takes seconds
     this._player?.seek(position);
   }
 
@@ -144,19 +190,23 @@ export class JwpService {
     }
   }
 
-  // Event helpers
+  // Event helpers - Now they store callbacks if player is not ready
   onTimeUpdate(callback: (ms: number) => void): void {
-    this._player?.on('time', (event: any) => {
-      callback(event.position * 1000);
-    });
+    this._timeCallbacks.push(callback);
+    // If player already exists, attach it immediately too
+    this._player?.on('time', (event: any) => callback(event.position * 1000));
   }
 
   onStateChange(callback: (state: JWPlaybackStatus) => void): void {
-    this._player?.on('play', () => callback('playing'));
-    this._player?.on('pause', () => callback('paused'));
-    this._player?.on('buffer', () => callback('buffering'));
-    this._player?.on('idle', () => callback('idle'));
-    this._player?.on('complete', () => callback('complete'));
+    this._stateCallbacks.push(callback);
+    // If player already exists, attach them immediately
+    if (this._player) {
+      this._player.on('play', () => callback('playing'));
+      this._player.on('pause', () => callback('paused'));
+      this._player.on('buffer', () => callback('buffering'));
+      this._player.on('idle', () => callback('idle'));
+      this._player.on('complete', () => callback('complete'));
+    }
   }
 
   on(event: JWPlayerEvent, callback: JWPlayerEventCallback): void {

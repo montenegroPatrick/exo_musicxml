@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { map, Observable, of, Subject } from 'rxjs';
+import { from, map, Observable, of, Subject, tap, throwError } from 'rxjs';
 import {
   AngularToFlutterMessage,
   BridgeAction,
@@ -79,11 +79,17 @@ export class BridgeService {
   }
 
   getFromFlutter<T>(handlerName: BridgeAction): Observable<T> {
-    return of((window as any).flutter_inappwebview.callHandler(handlerName))
-      .pipe(map((res) => res as T))
-      .subscribe((res) => {
-        console.log('[BridgeService]: Incoming data via callHandler =>', res);
-      });
+    if ((window as any).flutter_inappwebview?.callHandler) {
+      return from(
+        (window as any).flutter_inappwebview.callHandler(handlerName),
+      ).pipe(
+        map((res) => res as T),
+        tap((res) =>
+          console.log('[BridgeService]: Incoming data via callHandler =>', res),
+        ),
+      );
+    }
+    return throwError(() => new Error('Bridge not available'));
   }
 
   sendAction(action: BridgeAction, data?: any): void {

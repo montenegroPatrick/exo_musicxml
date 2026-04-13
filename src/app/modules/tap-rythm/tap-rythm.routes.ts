@@ -1,16 +1,16 @@
 import { Routes } from '@angular/router';
-import { TapRythmPage } from './tap-rythm.component';
+import { TapRythmPageComponent } from './tap-rythm.component';
 import { flatResolver } from '@app/modules/tap-rythm/resolver/flat-resolver.service';
 
 export default [
   {
     path: '',
-    component: TapRythmPage,
+    component: TapRythmPageComponent,
     resolve: { flat: flatResolver },
   },
   {
     path: ':seq',
-    component: TapRythmPage,
+    component: TapRythmPageComponent,
     resolve: { flat: flatResolver },
   },
 ] as Routes;

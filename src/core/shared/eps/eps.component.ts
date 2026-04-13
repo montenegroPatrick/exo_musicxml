@@ -8,18 +8,20 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-center justify-center w-full h-full">
-      @if (currentImage()) {
-        <img 
-          [src]="currentImage()?.fullUrl" 
-          class="shadow-lg rounded transition-all duration-500 ease-in-out"
-          [ngClass]="{
-            'max-w-full max-h-full object-contain h-full': viewMode() === 'fit',
-            'w-full h-auto': viewMode() === 'zoom'
-          }"
-          alt="Diapo Image"
-        >
-      } @else {
+    <div class="flex items-center justify-center w-full h-full p-4 overflow-hidden">
+      @for (img of [currentImage()]; track img?.fullUrl) {
+        @if (img) {
+          <img 
+            [src]="img.fullUrl" 
+            class="shadow-lg rounded transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95"
+            [ngClass]="{
+              'max-w-full max-h-full object-contain': viewMode() === 'fit',
+              'w-full h-auto': viewMode() === 'zoom'
+            }"
+            alt="Diapo Image"
+          >
+        }
+      } @empty {
         <div class="text-zinc-400">Aucune image sélectionnée</div>
       }
     </div>
@@ -28,6 +30,7 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 export class EpsComponent {
   private _diapoService = inject(DiapoStateService);
   viewMode = computed(() => this._diapoService.viewMode());
+  currentPos = computed(() => this._diapoService.currentImageListPos());
   eps = input.required<IJsonDiapoEps>();
 
   /**
@@ -54,9 +57,10 @@ export class EpsComponent {
 
   currentImage = computed(() => {
     const data = this.eps();
+    const pos = this.currentPos();
     if (data.imageList && data.imageList.length > 0) {
-      // Use the pos if available (1-indexed), else the first one
-      const idx = (data.pos ?? 1) - 1;
+      // Use the global position (1-indexed)
+      const idx = pos - 1;
       const img = data.imageList[idx] || data.imageList[0];
 
       if (img) {

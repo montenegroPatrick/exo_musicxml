@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input } from '@angular/core';
+import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { PlayControlsComponent } from '../../components/play-controls/play-controls.component';
@@ -12,6 +12,7 @@ import { AudioService } from '@core/services/audio.service';
 
 @Component({
   selector: 'app-audio-mixer-bar',
+  standalone: true,
   imports: [
     PlayControlsComponent,
     SpeedControlComponent,
@@ -19,6 +20,7 @@ import { AudioService } from '@core/services/audio.service';
     TrackMixerComponent,
     TimelineSliderComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audio-mixer-bar.component.html',
   styles: ``,
 })
@@ -28,19 +30,24 @@ export class AudioMixerBarComponent {
   private _audioService = inject(AudioService);
   private _bridgeService = inject(BridgeService);
 
+  // -- Inputs --
   showNavigation = input<boolean>(true);
-  typeControlBar = computed(() => this._controlBarService.controlBar());
-  duration = computed(() => this._audioService.duration());
-  track = computed(() => this._audioService.tracks());
+
+  // -- Derived Signals --
+  typeControlBar = this._controlBarService.controlBar;
+  duration = this._audioService.duration;
+  isPlaying = this._controlBarService.isPlaying;
+  currentTime = this._controlBarService.time;
+  
+  tracks = this._audioService.tracks;
 
   ready = computed(
     () => this._audioService.isReady() && this._flatService.isReady(),
   );
 
   seekTo(time: number) {
-    if (time == undefined) return;
+    if (time === undefined) return;
     this._audioService.seek(time);
-    this._controlBarService.isPlaying.set(false);
     this._audioService.pause();
     this._flatService.seekTrackTo(time);
   }
@@ -54,12 +61,10 @@ export class AudioMixerBarComponent {
   }
 
   handleTogglePlay() {
-    if (this._controlBarService.isPlaying()) {
-      this._controlBarService.isPlaying.set(false);
+    if (this.isPlaying()) {
       this._audioService.pause();
       this._flatService.pause();
     } else {
-      this._controlBarService.isPlaying.set(true);
       this._audioService.play();
       this._flatService.play();
     }
@@ -67,16 +72,14 @@ export class AudioMixerBarComponent {
 
   handleStepBackward() {
     if (this._flatService.loopMode()) return;
-    const currentTime = this._controlBarService.time();
-    this.seekTo(Math.max(0, currentTime - 10));
-    this._controlBarService.time.set(currentTime - 10);
+    const target = Math.max(0, this.currentTime() - 10);
+    this.seekTo(target);
   }
 
   handleStepForward() {
     if (this._flatService.loopMode()) return;
-    const currentTime = this._controlBarService.time();
-    this.seekTo(Math.min(this.duration(), currentTime + 10));
-    this._controlBarService.time.set(currentTime + 10);
+    const target = Math.min(this.duration(), this.currentTime() + 10);
+    this.seekTo(target);
   }
 
   handleVolumeChange(volume: number) {
@@ -85,11 +88,9 @@ export class AudioMixerBarComponent {
 
   async handleSpeedChange(speed: number) {
     this._audioService.seek(0);
-    this._controlBarService.time.set(0);
     this._audioService.pause();
     this._flatService.seekTrackTo(0);
 
-    this._controlBarService.isPlaying.set(false);
     this._audioService.setPlaybackRate(speed);
     await this._flatService.reinitializeTrackWithSpeed(speed);
   }

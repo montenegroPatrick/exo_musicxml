@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ControlBarService } from '../../services/control-bar.service';
 import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
@@ -11,34 +11,42 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-video-bar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-bar.component.html',
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
+    }
+  `],
   styleUrls: ['./video-bar.component.scss'],
 })
 export class VideoBarComponent {
-  public _controlBarService = inject(ControlBarService);
-  public _flatService = inject(FlatService);
-  public _jwpService = inject(JwpService);
-  public _bridgeService = inject(BridgeService);
-  public _lessonService = inject(LessonService);
+  // Services
+  protected readonly _controlBarService = inject(ControlBarService);
+  protected readonly _flatService = inject(FlatService);
+  protected readonly _jwpService = inject(JwpService);
+  private readonly _bridgeService = inject(BridgeService);
+  public readonly _lessonService = inject(LessonService);
 
+  // -- Inputs --
   showNavigation = input<boolean>(true);
 
-  // States
+  // -- Component Local State --
   activeTab = signal<'video' | 'metronome'>('video');
-  showVolumeSlider = signal(false);
   showInfoPopin = signal(false);
   private _popinTimer: any;
 
-  // Computed data from services
-  typeControlBar = computed(() => this._controlBarService.controlBar());
-  duration = computed(() => this._jwpService.duration() / 1000);
-  currentTime = computed(() => this._controlBarService.time());
-  isPlaying = computed(() => this._controlBarService.isPlaying());
+  // -- Reactive Derived State --
+  typeControlBar = this._controlBarService.controlBar;
+  durationInSec = computed(() => this._jwpService.duration() / 1000);
+  currentTime = this._controlBarService.time;
+  isPlaying = this._controlBarService.isPlaying;
   
-  // Lesson Metadata
-  chapterTitle = computed(() => this._lessonService.chapterTitle());
-  subChapterTitle = computed(() => this._lessonService.subChapterTitle());
-  sequenceTitle = computed(() => this._lessonService.sequenceTitle());
+  // Metadata Signals
+  chapterTitle = this._lessonService.chapterTitle;
+  subChapterTitle = this._lessonService.subChapterTitle;
+  sequenceTitle = this._lessonService.sequenceTitle;
 
   formatTime(seconds: number): string {
     if (isNaN(seconds)) return '00:00';
@@ -47,31 +55,29 @@ export class VideoBarComponent {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
-  handleTogglePlay() {
-    if (this.isPlaying()) {
-      this._jwpService.pause();
-    } else {
-      this._jwpService.play();
-    }
+  handleTogglePlay(): void {
+    this.isPlaying() ? this._jwpService.pause() : this._jwpService.play();
   }
 
-  handlePrevious() {
+  handlePrevious(): void {
     this._bridgeService.sendAction('prev');
   }
 
-  handleNext() {
+  handleNext(): void {
     this._bridgeService.sendAction('next');
   }
 
-  handleStepBackward() {
-    this.seekTo(Math.max(0, this.currentTime() - 10));
+  handleStepBackward(): void {
+    const target = Math.max(0, this.currentTime() - 10);
+    this.seekTo(target);
   }
 
-  handleStepForward() {
-    this.seekTo(Math.min(this.duration(), this.currentTime() + 10));
+  handleStepForward(): void {
+    const target = Math.min(this.durationInSec(), this.currentTime() + 10);
+    this.seekTo(target);
   }
 
-  seekTo(time: number) {
+  seekTo(time: number): void {
     if (time === undefined) return;
     this._jwpService.seek(time);
     if (this.typeControlBar() === 'video-xml') {

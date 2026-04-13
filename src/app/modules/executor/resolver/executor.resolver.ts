@@ -3,9 +3,11 @@ import { ResolveFn } from '@angular/router';
 import { ILesson } from '@core/interfaces/lesson.interface';
 import { catchError, of } from 'rxjs';
 import { LessonService } from '../../lesson/services/lesson.service';
+import { CoreDataService } from '@core/services/core-data.service';
 
 export const executorResolver: ResolveFn<ILesson | null> = (route, _state) => {
   const lessonService = inject(LessonService);
+  const coreData = inject(CoreDataService);
   const moduleName = route.url[0]?.path || 'video';
 
   // Force mock via query param (dev/debug only)

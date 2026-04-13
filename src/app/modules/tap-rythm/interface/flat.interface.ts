@@ -8,11 +8,6 @@ export interface IUserTap {
   diffMs: number;
 }
 
-export interface IJsonXml {
-  notes?: number[];
-  duration?: number;
-}
-
 export type ExerciseStatus = 'not-started' | 'playing' | 'finish';
 export type CountInStatus = 'not-started' | 'play' | 'finish';
 export type Level = 1 | 1.1 | 1.2 | 1.3 | 1.4 | 1.5;

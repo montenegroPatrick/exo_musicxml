@@ -3,105 +3,89 @@ import {
   computed,
   ElementRef,
   inject,
-  input,
   viewChild,
+  ChangeDetectionStrategy,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { TapRythmService } from '@app/modules/tap-rythm/services/tap-rythm.service';
 import { ExerciseStateService } from '@app/modules/tap-rythm/services/exercise-state.service';
 import { TimerService } from '@app/modules/tap-rythm/services/timer.service';
-import { MetronomeService } from 'src/core/services/utils/metronome.service';
 
 @Component({
   selector: 'app-tap-visualizer',
   standalone: true,
+  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="w-full h-full  relative overflow-hidden shadow-lg border border-gray-200/50"
-      style="background: transparent"
+      class="w-full h-12 relative overflow-hidden rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-2xl"
       #tapViewContainer
     >
-      <!-- Subtle grid background -->
-      <!-- <div
-        class="absolute inset-0 opacity-20 z-0"
-        style="background-image: repeating-linear-gradient(90deg, transparent, transparent 49px, #cbd5e1 49px, #cbd5e1 50px),
-                                     repeating-linear-gradient(0deg, transparent, transparent 24px, #cbd5e1 24px, #cbd5e1 25px);"
-      ></div> -->
+      <!-- MEASURE MARKERS -->
+      @for (time of measureTimes(); track $index) {
+        <div class="absolute inset-y-0 w-px bg-white/10 z-0"
+             [style.left]="getTapPosition(time)"></div>
+      }
 
-      <!-- Progress gradient fill -->
-      <!-- <div
-          class="absolute top-0 bottom-0 z-10 transition-all duration-100"
-          [style.width]="progressPosition()"
-          style="background: linear-gradient(90deg, rgba(174, 199, 57, 0.15) 0%, rgba(174, 199, 57, 0.25) 100%);
-                 box-shadow: inset 0 0 20px rgba(174, 199, 57, 0.1);"
-        ></div> -->
-
-      <!-- Center playhead line with glow -->
+      <!-- PLAYHEAD -->
       <div
-        class="absolute top-0 bottom-0 w-1 z-10 bg-[#4d5529] shadow-xl"
-        [style.width]="progressPosition()"
-        style="box-shadow: 0 0 15px rgba(174, 199, 57, 0.6), 0 0 30px rgba(174, 199, 57, 0.3);"
+        class="absolute inset-y-0 w-1 bg-[#FA5E46] z-30 transition-shadow duration-150"
+        [style.left]="progressPosition()"
+        style="box-shadow: 0 0 20px rgba(250,94,70,0.8), 0 0 40px rgba(250,94,70,0.4);"
       >
-        <!-- Playhead indicator circle -->
-        <!-- <div
-          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full"
-          style="background: #AEC739; box-shadow: 0 0 10px rgba(174, 199, 57, 0.8), 0 0 20px rgba(174, 199, 57, 0.4);"
-        ></div> -->
+        <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#FA5E46] rounded-full blur-[2px]"></div>
+        <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#FA5E46] rounded-full blur-[2px]"></div>
       </div>
-      <!-- Container of measures -->
-      <div class="w-full md:max-w-[10%] absolute inset-0 z-20">
-        @for (measure of measureTimes; track $index) {
-          <div
-            class="absolute top-0 bottom-10 w-[3px] z-10 bg-secondary rounded-full transition-all duration-200"
-            [style.left]="getTapPosition(measure)"
-          ></div>
-        }
-      </div>
-      <!-- Container that scrolls with feedback bars -->
-      <div class="w-full md:max-w-[10%] absolute inset-0 z-20">
+
+      <!-- TAP FEEDBACK -->
+      <div class="absolute inset-0 z-20">
         @for (tap of taps(); track $index) {
           <div
-            class="absolute top-5 bottom-0 w-[2px] z-20 rounded-full transition-all duration-200"
+            class="absolute inset-y-2 w-0.5 rounded-full transition-all duration-300"
             [style.left]="getTapPosition(tap.timeMs)"
-            [class]="getTapColor(tap.result)"
+            [ngClass]="getTapColor(tap.result)"
           ></div>
         }
       </div>
+
+      <!-- PROGRESS OVERLAY -->
+      <div class="absolute inset-y-0 left-0 bg-white/5 pointer-events-none z-10"
+           [style.width]="progressPosition()"></div>
     </div>
   `,
 })
 export class TapVisualizerComponent {
-  private tapRythmService = inject(TapRythmService);
-  private exerciseState = inject(ExerciseStateService);
-  private timer = inject(TimerService);
-  private metronome = inject(MetronomeService);
+  private readonly _tapRythmService = inject(TapRythmService);
+  private readonly _exerciseState = inject(ExerciseStateService);
+  private readonly _timer = inject(TimerService);
 
-  totalDuration = computed(
-    () => (this.tapRythmService.jsonXml().duration ?? 100000) + 1000,
-  );
-  tapViewContainer = viewChild<ElementRef<HTMLDivElement>>('tapViewContainer');
-  currentTime = computed(() => this.timer.currentTimeMs());
-  taps = computed(() => this.exerciseState.userTaps());
-  nbMeasure = computed(() => this.exerciseState.nbMeasures());
-  measureTimes: number[] = [];
-  progressPosition = computed(() => {
-    return this.getTapPosition(this.currentTime());
-  });
-  constructor() {
-    for (let i = 0; i < this.nbMeasure(); i++) {
-      this.measureTimes.push((i * this.totalDuration()) / this.nbMeasure());
+  private readonly _tapViewContainer = viewChild<ElementRef<HTMLDivElement>>('tapViewContainer');
+
+  readonly totalDuration = computed(() => (this._tapRythmService.jsonXml().duration ?? 100000) + 1000);
+  readonly currentTime = computed(() => this._timer.currentTimeMs());
+  readonly taps = computed(() => this._exerciseState.userTaps());
+  readonly nbMeasures = computed(() => this._exerciseState.nbMeasures());
+
+  readonly measureTimes = computed(() => {
+    const times: number[] = [];
+    const count = this.nbMeasures();
+    const duration = this.totalDuration();
+    if (count <= 0) return [];
+    
+    for (let i = 0; i <= count; i++) {
+      times.push((i * (duration - 1000)) / count);
     }
-  }
+    return times;
+  });
+
+  readonly progressPosition = computed(() => this.getTapPosition(this.currentTime()));
 
   getTapPosition(tapTimeMs: number): string {
-    const container = this.tapViewContainer();
+    const container = this._tapViewContainer();
     if (!container) return '0%';
 
     const containerWidth = container.nativeElement.offsetWidth;
-
-    const pixelsPerMs = containerWidth / this.totalDuration();
-
-    // Position absolue depuis le début de la timeline
-    const position = tapTimeMs * pixelsPerMs;
+    const position = (tapTimeMs / this.totalDuration()) * containerWidth;
 
     return `${position}px`;
   }
@@ -109,17 +93,15 @@ export class TapVisualizerComponent {
   getTapColor(result: string): string {
     switch (result) {
       case 'Good':
-        return 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)]';
+        return 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]';
       case 'Late':
-        return 'bg-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.6)]';
       case 'Early':
-        return 'bg-yellow-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]';
+        return 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]';
       case 'Too early':
-        return 'bg-red-500 shadow-[0_0_15px_rgba(234,179,8,0.6)]';
       case 'Too late':
-        return 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)]';
+        return 'bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]';
       default:
-        return 'bg-gray-500 shadow-[0_0_10px_rgba(107,114,128,0.5)]';
+        return 'bg-zinc-500';
     }
   }
 }

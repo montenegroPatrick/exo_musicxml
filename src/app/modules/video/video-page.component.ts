@@ -1,36 +1,49 @@
-import { Component, computed, inject } from '@angular/core';
-
+import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
 import { VideoComponent } from '@core/shared/video/video.component';
-import { LessonService } from '../lesson/services/lesson.service';
-import { JwpService } from '@core/services/jwp.service';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Component({
   selector: 'app-video-page',
   standalone: true,
   imports: [VideoComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="h-full w-full bg-black flex items-center justify-center p-2 sm:p-4">
+    <div class="video-container-wrapper bg-zinc-950 h-full w-full overflow-hidden">
       <app-video 
-        mode="fixed-ratio"
-        typeImg="eps" 
+        mode="fill"
+        typeImg="none" 
         [mediaId]="jwPlayerId()">
       </app-video>
     </div>
   `,
-  styles: `
+  styles: [`
     :host {
       display: block;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #09090b; /* zinc-950 */
+      overflow: hidden;
+    }
+
+    .video-container-wrapper {
+      position: relative;
       width: 100%;
       height: 100%;
     }
 
     app-video {
+      display: block;
       width: 100%;
-      max-width: 1200px;
+      height: 100%;
     }
-  `,
+  `],
 })
-export class VideoPage {
-  private _lessonService = inject(LessonService);
-  jwPlayerId = computed(() => this._lessonService.jwPlayerId());
+export class VideoPageComponent {
+  private readonly _coreData = inject(CoreDataService);
+  
+  /** Reactive source for the current lesson's JWPlayer ID */
+  readonly jwPlayerId = this._coreData.jwPlayerId;
 }

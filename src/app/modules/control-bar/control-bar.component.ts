@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, inject, input, ChangeDetectionStrategy } from '@angular/core';
 import { ControlBarService } from './services/control-bar.service';
 import { CommonModule } from '@angular/common';
 import { AudioMixerBarComponent } from './bars/audio-mixer-bar/audio-mixer-bar.component';
@@ -8,10 +8,9 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
   selector: 'app-control-bar',
   standalone: true,
   imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div
-      class="relative bg-black/45 backdrop-blur-xl h-auto w-full"
-    >
+    <div class="relative bg-black/40 backdrop-blur-2xl border-t border-white/5 h-auto w-full shadow-2xl">
       @switch (typeControlBar()) {
         @case ('video') {
           <app-video-bar [showNavigation]="showNavigation()"></app-video-bar>
@@ -28,11 +27,19 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
       }
     </div>
   `,
-  styles: ``,
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
+      z-index: 40;
+    }
+  `],
 })
 export class ControlBarComponent {
-  private _controlBarService = inject(ControlBarService);
-  typeControlBar = computed(() => this._controlBarService.controlBar());
+  private readonly _controlBarService = inject(ControlBarService);
+  
+  /** Reactive source of truth for the active control bar type */
+  readonly typeControlBar = this._controlBarService.controlBar;
   
   /** Input to toggle next/prev global navigation buttons */
   showNavigation = input<boolean>(true);

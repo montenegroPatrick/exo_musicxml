@@ -1,0 +1,42 @@
+{
+    "mock": true,
+    "chapter": 2,
+  "subChapter": 8,
+  "sequence": 1,
+  "chapterTitle": "Blues mineur",
+  "subChapterTitle": "A vous de jouer",
+  "sequenceTitle": "Playback multipistes",
+    "folder": "https://www.imusic-school.tv/app/datas/playback/ft_blues_min_full/",
+    "trackList": [
+        {
+            "pos": 1,
+            "label": "All",
+            "name": "piste1.mp3"
+        }
+    ],
+    "timeline": [],
+    "sync": [
+        {
+            "type": "start",
+            "time": 3.3901133786848074,
+            "location": {
+                "measureIdx": 0
+            }
+        },
+        {
+            "type": "measure",
+            "time": 97.48380952380953,
+            "location": {
+                "measureIdx": 63
+            }
+        },
+        {
+            "type": "end",
+            "time": 104.9
+        }
+    ],
+    "typeImg": "xml",
+    "loadImg": true,
+    "url": "https://www.imusic-school.tv/app/datas//partitions/67975.xml",
+    "pos": 1
+}

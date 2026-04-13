@@ -1,28 +1,31 @@
-import { Component, output, signal } from '@angular/core';
+import { Component, model, output, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { SliderModule } from 'primeng/slider';
 
 @Component({
   selector: 'app-volume-control',
+  standalone: true,
   imports: [ButtonModule, SliderModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative">
       <p-button
         [icon]="volumeIcon()"
         [text]="true"
         severity="secondary"
+        styleClass="text-zinc-400 hover:text-white transition-colors"
         (onClick)="handleToggleVolumeSliderView()"
       />
       @if (!hidden()) {
-        <div class="absolute  bottom-15 left-4 ">
+        <div class="absolute bottom-16 left-4 bg-[#2a2a2a] p-3 rounded-lg shadow-2xl border border-white/10 z-50">
           <p-slider
-            [(ngModel)]="volume"
+            [(ngModel)]="volumeValue"
             [max]="100"
             [min]="0"
             orientation="vertical"
             (onChange)="onVolumeChange($event.value!)"
-            class="w-24"
+            class="h-32 block"
           />
         </div>
       }
@@ -30,8 +33,14 @@ import { SliderModule } from 'primeng/slider';
   `,
 })
 export class VolumeControlComponent {
-  volume = signal<number>(100);
+  /** Two-way bindable volume */
+  volume = model<number>(100);
   isMuted = signal<boolean>(false);
+  
+  /** Technical property for ngModel binding to signals */
+  get volumeValue(): number { return this.volume(); }
+  set volumeValue(val: number) { this.volume.set(val); }
+
   private previousVolume = 100;
 
   volumeChange = output<number>();
@@ -39,17 +48,16 @@ export class VolumeControlComponent {
 
   hidden = signal<boolean>(true);
 
-  volumeIcon() {
-    if (this.isMuted() || this.volume() === 0) {
-      return 'pi pi-volume-off';
-    } else if (this.volume() < 50) {
-      return 'pi pi-volume-down';
-    } else {
-      return 'pi pi-volume-up';
-    }
-  }
+  /** Computed icon based on volume level */
+  volumeIcon = computed(() => {
+    const vol = this.volume();
+    if (this.isMuted() || vol === 0) return 'pi pi-volume-off';
+    if (vol < 50) return 'pi pi-volume-down';
+    return 'pi pi-volume-up';
+  });
+
   handleToggleVolumeSliderView() {
-    this.hidden.set(!this.hidden());
+    this.hidden.update(v => !v);
   }
 
   toggleMute() {

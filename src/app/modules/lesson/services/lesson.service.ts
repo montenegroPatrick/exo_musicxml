@@ -1,27 +1,12 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
-import {
-  BridgeAction,
-  FlutterToAngularMessage,
-} from '@core/interfaces/bridge.interface';
-import {
-  hasSyncPoints as checkHasSyncPoints,
-  ControlBarType,
-  determineControlBarType,
-  determineImgType,
-  determineModuleType,
-  ILesson,
-  ImageItem,
-  DiapoType,
-  LessonModuleType,
-  Sync,
-  IVideoSync,
-  TrackList,
-} from '@core/interfaces/lesson.interface';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal, effect, untracked, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { BridgeAction } from '@core/interfaces/bridge.interface';
+import { ILesson, determineImgType } from '@core/interfaces/lesson.interface';
 import { BridgeService } from '@core/services/bridge.service';
-import { catchError, map, Observable, Subscription, tap } from 'rxjs';
+import { CoreDataService } from '@core/services/core-data.service';
+import { catchError, map, Observable, tap } from 'rxjs';
 import { api_url } from '@core/constant/api_url';
-import { ActivatedRoute } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -29,254 +14,142 @@ import { ActivatedRoute } from '@angular/router';
 export class LessonService {
   private _http = inject(HttpClient);
   private _bridgeService = inject(BridgeService);
-  private _activatedRoute = inject(ActivatedRoute);
-  private _bridgeSub?: Subscription;
+  private _coreDataStore = inject(CoreDataService);
 
-  // Core signals
-  readonly lessonJson = signal<ILesson | null>(null);
-  readonly lessonId = signal<string>('');
-  readonly seq = signal<string>('');
-  readonly isLoading = signal<boolean>(false);
-  readonly error = signal<Error | null>(null);
-
-  // New metadata signals
-  readonly chapter = computed(() => this.lessonJson()?.chapter);
-  readonly subChapter = computed(() => this.lessonJson()?.subChapter);
-  readonly sequence = computed(() => this.lessonJson()?.sequence);
-  readonly chapterTitle = computed(() => this.lessonJson()?.chapterTitle);
-  readonly subChapterTitle = computed(() => this.lessonJson()?.subChapterTitle);
-  readonly sequenceTitle = computed(() => this.lessonJson()?.sequenceTitle);
-
-  // Computed: Module type detection
-  readonly moduleType = computed<LessonModuleType>(() => {
-    const lesson = this.lessonJson();
-    if (!lesson) return 'video';
-    return determineModuleType(lesson);
+  // -- Local State (Identifiers) --
+  private readonly _lessonId = signal<string>('');
+  private readonly _seq = signal<string>('');
+  private readonly _isLoading = signal<boolean>(false);
+  private readonly _error = signal<Error | null>(null);
+  
+  // -- Mode Check --
+  private readonly _isMockMode = computed(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return !!urlParams.get('mock');
   });
 
-  // Computed: Diapo (image) type detection
-  readonly diapoType = computed<DiapoType | undefined>(() => {
-    const lesson = this.lessonJson();
-    if (!lesson) return undefined;
-    return determineImgType(lesson);
-  });
+  // -- Reactive Interop with Bridge --
+  private _bridgeMsg = toSignal(this._bridgeService.message$, { initialValue: null });
 
-  // Computed: Control bar type
-  readonly controlBarType = computed<ControlBarType>(() => {
-    const lesson = this.lessonJson();
-    if (!lesson) return 'video';
-    return determineControlBarType(lesson, this.moduleType());
-  });
+  // -- Source of Truth Accessors (Proxied to CoreDataService) --
+  readonly lessonJson = this._coreDataStore.lessonJson;
+  readonly lessonId = this._lessonId.asReadonly();
+  readonly seq = this._seq.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
 
-  // Computed: Helper flags
-  readonly hasVideo = computed(() => this.lessonJson()?.loadVideo === true);
-  readonly hasAudio = computed(() => this.lessonJson()?.loadAudio === true);
-  readonly hasImg = computed(() => this.lessonJson()?.loadImg === true);
-  readonly hasXml = computed(() => this.diapoType() === 'xml');
-  readonly hasSyncPoints = computed(() => {
-    const lesson = this.lessonJson();
-    if (!lesson) return false;
-    return checkHasSyncPoints(lesson);
-  });
+  // -- Computed metadata Proxies --
+  readonly chapter = this._coreDataStore.chapter;
+  readonly sequence = this._coreDataStore.sequence;
+  readonly chapterTitle = this._coreDataStore.chapterTitle;
+  readonly subChapterTitle = this._coreDataStore.subChapterTitle;
+  readonly sequenceTitle = this._coreDataStore.sequenceTitle;
+  readonly courseTitle = this._coreDataStore.courseTitle;
+  readonly navigationTitle = this._coreDataStore.navigationTitle;
+  
+  readonly titre = this._coreDataStore.titre;
+  readonly compositeur = this._coreDataStore.compositeur;
+  readonly producteur = this._coreDataStore.producteur;
+  readonly videoSyncPoints = this._coreDataStore.videoSyncPoints;
 
-  // Computed: Specific properties
-  readonly jwPlayerId = computed(() => this.lessonJson()?.jw ?? '');
-  readonly videoName = computed(() => this.lessonJson()?.videoName);
-  readonly subtitles = computed(() => this.lessonJson()?.subtitles ?? []);
+  readonly moduleType = this._coreDataStore.moduleType;
+  readonly controlBarType = this._coreDataStore.controlBarType;
+  readonly diapoType = this._coreDataStore.diapoType;
+  
+  // -- Media Proxies --
+  readonly jwPlayerId = this._coreDataStore.jwPlayerId;
+  readonly youtubeId = this._coreDataStore.youtubeId;
+  readonly vimeoId = this._coreDataStore.vimeoId;
+  readonly xmlUrl = this._coreDataStore.xmlUrl;
 
-  readonly imageList = computed<ImageItem[]>(
-    () => this.lessonJson()?.imageList ?? [],
-  );
-  readonly currentImgUrl = computed(() => {
-    const lesson = this.lessonJson();
-    if (!lesson) return '';
+  private readonly _messageEffect = effect(() => {
+    const isMock = this._isMockMode();
+    if (isMock) return; // Prevent bridge from overriding mock data
 
-    // For eps, use first image from imageList
-    if (this.diapoType() === 'eps' && lesson.imageList?.length) {
-      return lesson.imageList[0].url ?? '';
+    const msg = this._bridgeMsg();
+    if (msg) {
+      // -- Bridge Message Filtering --
+      // Only treat message as a lesson if it contains at least one characteristic property
+      const keys = Object.keys(msg);
+      const matchingKey = [
+        'chapter', 'Chapter', 
+        'sync', 'Sync', 
+        'url', 
+        'chapterTitle', 'ChapterTitle', 
+        'videoSync', 
+        'trackList', 'TrackList', 
+        'folder', 'Folder',
+        'imageList', 'ImageList'
+      ].find(k => keys.includes(k));
+      
+      if (matchingKey) {
+          console.log(`[LessonService] Bridge message identifies as a Lesson (via key: ${matchingKey}). Updating state...`);
+          untracked(() => this.setLessonData(msg as unknown as ILesson));
+      } else {
+          console.log('%c[LessonService] Technical bridge message ignored:', 'color: #EF6C00; font-style: italic', keys);
+      }
     }
-    // For pdf/xml/html use url directly
-    return lesson.url ?? '';
   });
 
-  readonly printable = computed(() => this.lessonJson()?.printable ?? false);
-  readonly printExt = computed(() => this.lessonJson()?.printExt);
-
-  // XML specific
-  readonly trackList = computed<TrackList[]>(
-    () => this.lessonJson()?.trackList ?? [],
-  );
-  readonly xmlUrl = computed(() => this.lessonJson()?.url ?? '');
-  readonly folder = computed(() => this.lessonJson()?.folder);
-
-  // Sync points
-  readonly videoSyncPoints = computed<IVideoSync[]>(() => {
-    const lesson = this.lessonJson();
-    if (
-      lesson &&
-      Array.isArray(lesson.videoSync) &&
-      (lesson.videoSync.length === 0 || 'timeCode' in lesson.videoSync[0])
-    ) {
-      return lesson.videoSync as IVideoSync[];
-    }
-    return [];
-  });
-
-  readonly measureSyncPoints = computed<Sync[]>(() => {
-    const lesson = this.lessonJson();
-    if (lesson && Array.isArray(lesson.sync)) {
-      return lesson.sync;
-    }
-    if (
-      lesson &&
-      Array.isArray(lesson.videoSync) &&
-      lesson.videoSync.length > 0 &&
-      'location' in (lesson.videoSync[0] as any)
-    ) {
-      return lesson.videoSync as Sync[];
-    }
-    return [];
-  });
-
-  // Legacy compatibility / general
-  readonly syncPoints = computed<(Sync | IVideoSync)[]>(() => {
-    const m = this.measureSyncPoints();
-    const v = this.videoSyncPoints();
-    return m.length > 0 ? m : v;
-  });
-
-  // Audio
-  readonly audioUrl = computed(() => this.lessonJson()?.audioUrl);
-
-  /**
-   * Initialize bridge listener
-   */
-  constructor() {
-    this._bridgeSub = this._bridgeService.message$.subscribe((msg) => {
-      this.lessonJson.set(msg as unknown as ILesson);
-    });
-  }
-
-  ngOnDestroy(): void {
-    this._bridgeSub?.unsubscribe();
-  }
+  constructor() {}
 
   loadData(handlerName: BridgeAction, moduleName: string): Observable<ILesson> {
-    this.isLoading.set(true);
-    this.error.set(null);
-    if (
-      !this._bridgeService.isMobile() &&
-      !this._bridgeService.isFlutterWeb()
-    ) {
+    this._isLoading.set(true);
+    if (!this._bridgeService.isMobile() && !this._bridgeService.isFlutterWeb()) {
       return this.loadTestData(moduleName);
     }
-    console.log(`[LessonService]:loadData(${handlerName}) =>`);
     return this._bridgeService.getFromFlutter<ILesson>(handlerName).pipe(
       tap((lesson) => {
-        console.log(`[LessonService]:loadData(${handlerName}) =>`, lesson);
-        this.lessonJson.set(lesson);
-        this.isLoading.set(false);
+        this.setLessonData(lesson);
+        this._isLoading.set(false);
       }),
-      catchError((err) => {
-        console.warn(
-          `[LessonService]:loadData flutter failed, fallback to mock(${moduleName}) =>`,
-          err,
-        );
-        return this.loadTestData(moduleName);
-      }),
+      catchError(() => this.loadTestData(moduleName))
     );
   }
+
   loadTestData(moduleName: string): Observable<ILesson> {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    // Try to get 'mock' from the current route or the root route
-    let mock = this._activatedRoute.snapshot.queryParamMap.get('mock');
-    if (!mock) {
-      // Fallback: check the global URL if snapshot is not yet ready
-      const urlParams = new URLSearchParams(window.location.search);
-      mock = urlParams.get('mock');
-    }
-
+    this._isLoading.set(true);
+    const urlParams = new URLSearchParams(window.location.search);
+    const mock = urlParams.get('mock');
     const targetSlug = mock || moduleName;
     const url = `assets/test-data/${targetSlug}.json`;
 
-    console.log(
-      `%c[LessonService]: Loading JSON => ${targetSlug}.json`,
-      'background: #222; color: #bada55; font-size: 14px; padding: 4px;',
-    );
-
     return this._http.get<ILesson>(url).pipe(
       tap((lesson) => {
-        console.log(`[LessonService]:loadTestData(${moduleName}) =>`, lesson);
-        this.lessonJson.set(lesson);
-        this.isLoading.set(false);
+        this.setLessonData(lesson);
+        this._isLoading.set(false);
       }),
       catchError((err) => {
-        console.error(
-          `[LessonService]:loadTestData(${moduleName}) => error`,
-          err,
-        );
-        this.error.set(err);
-        this.isLoading.set(false);
+        this._error.set(err);
+        this._isLoading.set(false);
         throw err;
-      }),
+      })
     );
   }
 
-  /**
-   * Fetch lesson data from API
-   */
-  fetchLesson(lessonId: string, seq: string): Observable<ILesson> {
-    this.isLoading.set(true);
-    this.error.set(null);
-    this.lessonId.set(lessonId);
-    this.seq.set(seq);
-
-    const url = `${api_url.lesson}/${lessonId}/${seq}`;
-
-    return this._http.get<{ datas: ILesson }>(url).pipe(
-      map((res) => res.datas),
-      tap((lesson) => {
-        console.log('[LessonService]:fetchLesson =>', lesson);
-        this.lessonJson.set(lesson);
-        this.isLoading.set(false);
-      }),
-      catchError((err) => {
-        console.error('[LessonService]:fetchLesson => error', err);
-        this.error.set(err);
-        this.isLoading.set(false);
-        throw err;
-      }),
-    );
-  }
-
-  /**
-   * Directly inject lesson data (useful for Bridge)
-   */
   setLessonData(data: ILesson): void {
-    console.log('[LessonService]:setLessonData =>', data);
-    this.lessonJson.set(data);
-    if (data.chapter !== undefined) this.lessonId.set(data.chapter.toString());
-    if (data.sequence !== undefined) this.seq.set(data.sequence.toString());
+    console.log('%c[LessonService] RECEIVING DATA:', 'background: #0277BD; color: white; padding: 2px 5px; border-radius: 2px', data);
+    this._coreDataStore.setLessonData(data);
+    if (data.chapter !== undefined) this._lessonId.set(data.chapter.toString());
+    if (data.sequence !== undefined) this._seq.set(data.sequence.toString());
+
+    // -- Reactive XML Loading --
+    if (data.url && (this.diapoType() === 'xml' || data.typeImg === 'xml')) {
+        console.log('[LessonService] Detected XML lesson, fetching file...');
+        this._http.get(data.url, { responseType: 'text' }).subscribe({
+            next: (xml) => {
+                console.log('[LessonService] XML file loaded successfully');
+                this._coreDataStore.setXmlContent(xml);
+            },
+            error: (err) => console.error('[LessonService] XML fetch error:', err)
+        });
+    }
   }
 
-  /**
-   * Clear lesson data
-   */
   clearLesson(): void {
-    this.lessonJson.set(null);
-    this.lessonId.set('');
-    this.seq.set('');
-    this.isLoading.set(false);
-    this.error.set(null);
-  }
-
-  /**
-   * Get target route segment based on module type
-   * Returns the child route path: 'video', 'video-diapo', or 'diapo'
-   */
-  getTargetRoute(): string {
-    return this.moduleType();
+    this._coreDataStore.clear();
+    this._lessonId.set('');
+    this._seq.set('');
+    this._isLoading.set(false);
   }
 }

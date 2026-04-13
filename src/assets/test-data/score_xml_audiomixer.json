@@ -1,0 +1,52 @@
+{
+  "titre": "Badinerie - Jean Sébastien Bach",
+  "compositeur": "Yannick Robert",
+  "producteur": "ims",
+  "type": "audio",
+  "duration": 60.6,
+  "trackList": [
+        {
+            "label": "GTR",
+            "name": "piste1.mp3",
+            "pos": 1
+        }
+    ],
+  "imgId": 70989,
+  "tonalite": "Bm",
+  "tempo": null,
+  "sync": [
+    {
+      "type": "start",
+      "time": 0,
+      "location": {
+        "measureIdx": 0
+      }
+    },
+    {
+      "type": "measure",
+      "time": 16.922993197278913,
+      "location": {
+        "measureIdx": 17
+      }
+    },
+    {
+      "type": "measure",
+      "time": 32.780589569160995,
+      "location": {
+        "measureIdx": 32
+      }
+    },
+    {
+      "type": "measure",
+      "time": 45.08825396825395,
+      "location": {
+        "measureIdx": 42
+      }
+    },
+    {
+      "type": "end",
+      "time": 60.6
+    }
+  ],
+  "typeImg": "xml"
+}

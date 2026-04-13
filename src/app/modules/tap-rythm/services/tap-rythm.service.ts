@@ -4,97 +4,103 @@ import { environment } from '@environments/environment';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { api_url } from 'src/core/constant/api_url';
 import { IJsonXml, Level } from '../interface/flat.interface';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Injectable({
   providedIn: 'root',
 })
+@Injectable({
+  providedIn: 'root',
+})
 export class TapRythmService {
-  private _http = inject(HttpClient);
   static readonly FLAT_APP_ID = environment.FLAT_APP_ID;
+  private readonly _http = inject(HttpClient);
+  private readonly _coreData = inject(CoreDataService);
+  
+  // -- Private Writable Signals (Processed Data) --
+  private readonly _jsonXml = signal<IJsonXml>({});
+  private readonly _jsonXmlOriginal = signal<IJsonXml>({}); // Keeping cache for speed scaling
+  private readonly _isError = signal<boolean>(false);
 
-  musicXml = signal<string>('');
-  jsonXmlOriginal = signal<IJsonXml>({});
-  jsonXml = signal<IJsonXml>({});
-  isError = signal<boolean>(false);
+  // -- Public Readonly Accessors --
+  readonly musicXml = this._coreData.xmlContent;
+  readonly jsonXml = this._jsonXml.asReadonly();
+  readonly isError = this._isError.asReadonly();
 
+  /**
+   * Fetches the MusicXML file for a specific sequence.
+   * On success, also triggers the fetch for the companion JSON data.
+   */
   xmlFetch(seq: string): Observable<HttpResponse<string | null>> {
-    // to determinate the seq, we need to get the seq from the url
-
     const url = `${api_url.exoMusicXml}${seq}.musicxml`;
-    return this._http
-      .get(url, {
-        responseType: 'text',
-        observe: 'response',
-        headers: new HttpHeaders({
-          'Content-Type': 'text/xml',
-          'cache-control': 'no-cache',
-        }),
+    const headers = new HttpHeaders({
+      'Content-Type': 'text/xml',
+      'Cache-Control': 'no-cache',
+    });
+
+    return this._http.get(url, { responseType: 'text', observe: 'response', headers }).pipe(
+      map((res: HttpResponse<string | null>) => {
+        if (res.status === 200 && res.body) {
+          this._coreData.setXmlContent(res.body);
+          this._isError.set(false);
+          this.getJsonFile(seq).subscribe();
+        } else {
+          this._isError.set(true);
+        }
+        return res;
+      }),
+      catchError((error) => {
+        console.error('[TapRythmService]: Error fetching XML', error);
+        this._isError.set(true);
+        return of(new HttpResponse({ body: null, status: error.status || 500 }));
       })
-      .pipe(
-        map((res: HttpResponse<string | null>) => {
-          if (res.status === 200 && res.body != null) {
-            this.musicXml.set(res.body!);
-            this.isError.set(false);
-            this.getJsonFile(seq).subscribe();
-          } else {
-            this.isError.set(true);
-          }
-          return res;
-        }),
-        catchError((error) => {
-          console.error('Erreur lors du fetch XML:', error);
-          this.isError.set(true);
-          // Retourne une réponse vide pour permettre au resolver de continuer
-          return of(
-            new HttpResponse({ body: null, status: error.status || 500 }),
-          );
-        }),
-      );
+    );
   }
+
+  /**
+   * Fetches the JSON companion file for scoring and metadata.
+   */
   getJsonFile(seq: string): Observable<HttpResponse<IJsonXml | null>> {
     const url = `${api_url.exoMusicXml}${seq}.json`;
-    return this._http
-      .get(url, {
-        observe: 'response',
-        headers: new HttpHeaders({
-          'cache-control': 'no-cache',
-        }),
+    const headers = new HttpHeaders({ 'Cache-Control': 'no-cache' });
+
+    return this._http.get<IJsonXml>(url, { observe: 'response', headers }).pipe(
+      map((res: HttpResponse<IJsonXml | null>) => {
+        if (res.status === 200 && res.body) {
+          this._coreData.setExercisePayload(res.body);
+          this._jsonXmlOriginal.set(res.body);
+          this._jsonXml.set(res.body);
+          this._isError.set(false);
+        } else {
+          this._isError.set(true);
+        }
+        return res;
+      }),
+      catchError((error) => {
+        console.error('[TapRythmService]: Error fetching JSON', error);
+        this._isError.set(true);
+        return of(new HttpResponse({ body: null, status: error.status || 500 }));
       })
-      .pipe(
-        map((res: HttpResponse<any>) => {
-          if (res.status === 200 && res.body != null) {
-            this.jsonXmlOriginal.set(res.body!);
-            this.jsonXml.set(res.body!);
-            this.isError.set(false);
-          } else {
-            this.isError.set(true);
-          }
-          return res;
-        }),
-        catchError((error) => {
-          console.error('Erreur lors du fetch JSON:', error);
-          this.isError.set(true);
-          return of(
-            new HttpResponse({ body: null, status: error.status || 500 }),
-          );
-        }),
-      );
+    );
   }
+
+  /**
+   * Scales note timings based on completion level (speed factor).
+   */
   changeSpeedNotes(speed: Level): void {
+    const original = this._jsonXmlOriginal();
+    
     if (speed === 1) {
-      this.jsonXml.set(this.jsonXmlOriginal());
+      this._jsonXml.set(original);
       return;
     }
 
-    this.jsonXml.update((jsonXml) => {
-      if (jsonXml.notes) {
-        return {
-          ...jsonXml,
-          duration: (this.jsonXmlOriginal()?.duration ?? 100000) / speed,
-          notes: this.jsonXmlOriginal()?.notes?.map((note) => note / speed),
-        };
-      }
-      return jsonXml;
-    });
+    if (original.notes) {
+      this._jsonXml.set({
+        ...original,
+        duration: (original.duration ?? 100000) / speed,
+        notes: original.notes.map(note => note / speed),
+      });
+    }
   }
 }

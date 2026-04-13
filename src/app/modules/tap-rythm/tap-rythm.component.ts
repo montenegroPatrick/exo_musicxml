@@ -58,101 +58,97 @@ import { FlatService } from '@core/services/flat.service';
     BottomButtonsComponent,
     FormsModule,
   ],
-
   templateUrl: './tap-rythm.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TapRythmPage implements AfterViewInit, OnDestroy {
-  locale = inject(L10N_LOCALE);
-  translationService = inject(L10nTranslationService);
-  @ViewChild('flatContainer') flatContainer!: ElementRef<HTMLDivElement>;
+export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
+  readonly locale = inject(L10N_LOCALE);
+  readonly translationService = inject(L10nTranslationService);
+  
+  @ViewChild('flatContainer') private readonly _flatContainer!: ElementRef<HTMLDivElement>;
 
-  // injects
-  private tapRythmService = inject(TapRythmService);
-  private flatService = inject(FlatService);
-  protected exerciseState = inject(ExerciseStateService);
-  protected timer = inject(TimerService);
-  protected metronome = inject(MetronomeService);
-  protected tapEvaluationService = inject(TapEvaluationService);
-  protected soundService = inject(SoundService);
-  private onboardingService = inject(OnboardingService);
-  private postMessageService = inject(PostMessageService);
-  private route = inject(ActivatedRoute);
+  // -- Services --
+  private readonly _tapRythmService = inject(TapRythmService);
+  private readonly _flatService = inject(FlatService);
+  private readonly _tapEvaluationService = inject(TapEvaluationService);
+  private readonly _soundService = inject(SoundService);
+  private readonly _onboardingService = inject(OnboardingService);
+  private readonly _postMessageService = inject(PostMessageService);
+  private readonly _route = inject(ActivatedRoute);
 
-  private currentSequence = signal<string>('7');
+  readonly exerciseState = inject(ExerciseStateService);
+  readonly timer = inject(TimerService);
+  readonly metronome = inject(MetronomeService);
 
-  // computed
-  hasFinePointer = window.matchMedia('(pointer: fine)').matches;
-  xmlContent = computed(() => this.tapRythmService.musicXml());
-  jsonContent = computed(() => this.tapRythmService.jsonXml());
-  isXmlError = computed(() => this.tapRythmService.isError());
-  totalDurationMs = computed(() => this.jsonContent().duration ?? 100000);
-  partsSignal = signal<any[]>([]);
-  exoMode = false;
+  // -- Private State --
+  private readonly _currentSequence = signal<string>('7');
+  private readonly _parts = signal<any[]>([]);
 
-  async ngAfterViewInit() {
-    // Récupérer l'ID de séquence depuis les paramètres de route
-    const seq = this.route.snapshot.params['seq'] || '7';
-    this.currentSequence.set(seq);
+  // -- Reactive Mappings --
+  readonly hasFinePointer = window.matchMedia('(pointer: fine)').matches;
+  readonly xmlContent = this._tapRythmService.musicXml;
+  readonly jsonContent = this._tapRythmService.jsonXml;
+  readonly isXmlError = this._tapRythmService.isError;
+  
+  readonly totalDurationMs = computed(() => this.jsonContent().duration ?? 100000);
+  readonly partsSignal = this._parts.asReadonly();
 
-    this.flatService.initEmbed(this.flatContainer.nativeElement, {
+  async ngAfterViewInit(): Promise<void> {
+    const seq = this._route.snapshot.params['seq'] || '7';
+    this._currentSequence.set(seq);
+
+    await this._initializeFlat();
+    this._initEmbedEvents();
+  }
+
+  private async _initializeFlat(): Promise<void> {
+    this._flatService.initEmbed(this._flatContainer.nativeElement, {
       controlsDisplay: false,
       playbackMetronome: 'active',
       layout: 'responsive',
     });
 
-    this.soundService.initAudioContext();
-    await this.flatService.loadMusicXML(this.xmlContent());
+    this._soundService.initAudioContext();
+    await this._flatService.loadMusicXML(this.xmlContent());
 
-    const nbMeasures = await this.flatService.getNbMeasures();
+    const nbMeasures = await this._flatService.getNbMeasures();
     this.exerciseState.setNbMeasures(nbMeasures ?? 0);
     this.exerciseState.setXmlIsLoaded(true);
 
-    await this.flatService.setMetronomeMode(1);
+    await this._flatService.setMetronomeMode(1);
 
-    const mesureDetails = await this.flatService.getMeasureDetails();
-    this.metronome.setOriginalBpm(mesureDetails?.tempo?.bpm || 0);
-    this.metronome.setBpm(mesureDetails?.tempo?.bpm || 0);
+    const details = await this._flatService.getMeasureDetails();
+    if (details?.tempo?.bpm) {
+      this.metronome.setOriginalBpm(details.tempo.bpm);
+      this.metronome.setBpm(details.tempo.bpm);
+    }
 
     if (this.exerciseState.level() !== 1) {
       this.handleLevelChange(this.exerciseState.level());
     }
 
-    this.metronome.setTimeBeatType(
-      mesureDetails?.time?.['beat-type'] as number,
-    );
-    this.metronome.setTimeSignature(mesureDetails?.time?.beats || 4);
+    this.metronome.setTimeBeatType(details?.time?.['beat-type'] as number);
+    this.metronome.setTimeSignature(details?.time?.beats || 4);
 
-    // Apply saved settings
-    await this.flatService.setMasterVolume(this.exerciseState.masterVolume());
-    await this.flatService.setPlaybackSpeed(this.exerciseState.level());
-
-    this.initEmbedEvents();
+    // Sync persisted settings
+    await this._flatService.setMasterVolume(this.exerciseState.masterVolume());
+    await this._flatService.setPlaybackSpeed(this.exerciseState.level());
   }
 
-  ngOnDestroy(): void {
-    this.flatService.destroyEmbed();
-  }
+  private _initEmbedEvents(): void {
+    this._flatService.getParts().then((parts: any) => this._parts.set(parts || []));
 
-  private initEmbedEvents = async () => {
-    const parts = await this.flatService.getParts();
-    this.partsSignal.set(parts || []);
-
-    this.flatService.onPlay(() => {});
-
-    this.flatService.onPause(() => {
+    this._flatService.onPause(() => {
       this.timer.stop();
       this.exerciseState.setIsPlaying(false);
     });
 
-    this.flatService.onStop(() => {
+    this._flatService.onStop(() => {
       this.timer.stop();
       this.metronome.stop();
 
       if (this.timer.currentTimeMs() >= this.totalDurationMs()) {
-        this.tapEvaluationService.evaluateMissedTap(
-          this.exerciseState.userTaps(),
-        );
+        this._tapEvaluationService.evaluateMissedTap(this.exerciseState.userTaps());
         this.exerciseState.setExerciseStatus('finish');
       } else {
         this.exerciseState.setExerciseStatus('not-started');
@@ -161,125 +157,113 @@ export class TapRythmPage implements AfterViewInit, OnDestroy {
       this.exerciseState.calculateResult();
       this.exerciseState.setIsPlaying(false);
     });
-  };
+  }
 
-  startExercice = () => {
+  // -- Core Exercise Logic --
+
+  startExercise(): void {
     this.exerciseState.resetTaps();
     this.timer.reset();
-
     this.exerciseState.setExerciseStatus('playing');
     this.exerciseState.setIsPlaying(true);
+    
     this.metronome.startCountIn(() => {
       this.timer.start();
     });
-  };
+  }
 
-  handleUserTap = (e: Event) => {
+  handleUserTap(e: Event): void {
     e.preventDefault();
     e.stopPropagation();
+    
     if (!this.exerciseState.canTap()) return;
+    
     const tapMs = this.timer.currentTimeMs();
-    this.soundService.playTapSound();
+    this._soundService.playTapSound();
+    
     const notes = this.jsonContent().notes ?? [];
     this.exerciseState.recordTap(tapMs, notes);
-  };
+  }
 
-  handleToggleListen = async () => {
-    if (this.exerciseState.isListening()) {
-      await this.flatService.stop();
+  async toggleListen(): Promise<void> {
+    const listening = this.exerciseState.isListening();
+    
+    if (listening) {
+      await this._flatService.stop();
     } else {
-      await this.flatService.play();
-      await this.flatService.setPartVolume(
-        this.partsSignal()?.[0]?.uuid!,
-        100,
-      );
-    }
-    this.exerciseState.setIsListening(!this.exerciseState.isListening());
-  };
-
-  handlePlayStop = async () => {
-    if (this.exerciseState.isPlaying()) {
-      await this.flatService.stop();
-      this.resetExercice();
-    } else {
-      await this.flatService.play();
-      if (!this.exerciseState.isListening()) this.startExercice();
-
-      // await 1second to let the part be loaded
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      try {
-        await this.flatService.setPartVolume(
-          this.partsSignal()?.[0]?.uuid!,
-          this.exerciseState.partSound() ? 100 : 0,
-        );
-      } catch (error) {
-        console.error('Error setting part volume', error);
+      await this._flatService.play();
+      const firstPart = this._parts()[0];
+      if (firstPart?.uuid) {
+        await this._flatService.setPartVolume(firstPart.uuid, 100);
       }
-      await this.flatService.getPartVolume(this.partsSignal()?.[0]?.uuid!);
     }
-  };
+    
+    this.exerciseState.setIsListening(!listening);
+  }
 
-  resetExercice = () => {
+  async handlePlayStop(): Promise<void> {
+    if (this.exerciseState.isPlaying()) {
+      await this._flatService.stop();
+      this.resetExercise();
+    } else {
+      await this._flatService.play();
+      if (!this.exerciseState.isListening()) {
+        this.startExercise();
+      }
+
+      // Small delay to ensure player is ready for volume adjustments
+      setTimeout(async () => {
+        const firstPart = this._parts()[0];
+        if (firstPart?.uuid) {
+          const vol = this.exerciseState.partSound() ? 100 : 0;
+          await this._flatService.setPartVolume(firstPart.uuid, vol);
+        }
+      }, 500);
+    }
+  }
+
+  resetExercise(): void {
     this.exerciseState.reset();
     this.timer.reset();
     this.metronome.reset();
-  };
+  }
 
-  handleContinue = () => {
-    const currentSeq = this.currentSequence();
-    const nextSeq = (parseInt(currentSeq) + 1).toString();
+  handleContinue(): void {
+    this._postMessageService.emitSequenceChange();
+  }
 
-    // Préparer les résultats de l'exercice
-    const results = {
-      percentage: this.exerciseState.resultPercentage(),
-      totalNotes: this.exerciseState.totalNotes(),
-      totalTaps: this.exerciseState.totalTaps(),
-      goodTaps: this.exerciseState.goodTaps(),
-      lateTaps: this.exerciseState.lateTaps(),
-      earlyTaps: this.exerciseState.earlyTaps(),
-      tooLateTaps: this.exerciseState.tooLateTaps(),
-      tooEarlyTaps: this.exerciseState.tooEarlyTaps(),
-      missedTaps: this.exerciseState.missedTaps(),
-      level: this.exerciseState.level(),
-    };
+  // -- Settings Adjustments --
 
-    // Envoyer l'événement au parent AngularJS
-    this.postMessageService.emitSequenceChange();
-  };
-
-  handleMasterVolumeChange = async (value: number) => {
+  async handleMasterVolumeChange(value: number): Promise<void> {
     this.exerciseState.setMasterVolume(value);
-    await this.flatService.setMasterVolume(value);
-  };
+    await this._flatService.setMasterVolume(value);
+  }
 
-  handleMetronomeVolumeChange = async (value: number) => {};
-
-  handleTapVolumeChange = async (value: number) => {
+  handleTapVolumeChange(value: number): void {
     this.exerciseState.setTapVolume(value);
-  };
+  }
 
-  handleLevelChange = async (value: Level) => {
+  async handleLevelChange(value: Level): Promise<void> {
     this.exerciseState.setLevel(value);
-    await this.flatService.setPlaybackSpeed(value);
+    await this._flatService.setPlaybackSpeed(value);
     this.metronome.setBpm(this.metronome.originalBpm() * value);
+    this._tapRythmService.changeSpeedNotes(value);
+  }
 
-    this.tapRythmService.changeSpeedNotes(value);
-  };
-
-  handlePartSoundChange = async (value: boolean) => {
+  async handlePartSoundChange(value: boolean): Promise<void> {
     this.exerciseState.setPartSound(value);
-    if (this.exerciseState.isPlaying()) {
-      await this.flatService.setPartVolume(
-        this.partsSignal()?.[0]?.uuid!,
-        this.exerciseState.partSound() ? 100 : 0,
-      );
+    const firstPart = this._parts()[0];
+    if (this.exerciseState.isPlaying() && firstPart?.uuid) {
+      const vol = value ? 100 : 0;
+      await this._flatService.setPartVolume(firstPart.uuid, vol);
     }
-  };
+  }
 
-  startOnboardingTour(): void {
-    this.onboardingService.startTour(
-      this.onboardingService.defaultExoxmlTourSteps(),
-    );
+  startOnboarding(): void {
+    this._onboardingService.startTour(this._onboardingService.defaultExoxmlTourSteps());
+  }
+
+  ngOnDestroy(): void {
+    this._flatService.destroyEmbed();
   }
 }

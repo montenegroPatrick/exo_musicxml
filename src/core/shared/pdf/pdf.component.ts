@@ -44,6 +44,6 @@ export class PdfComponent {
   onPdfLoaded(pdf: PDFDocumentProxy) {
     const totalPages = pdf.numPages;
     console.log('[PdfComponent]: PDF chargé, nombre de pages:', totalPages);
-    this._diapoService.currentPdfTotalPages.set(totalPages);
+    this._diapoService.setPdfTotalPages(totalPages);
   }
 }

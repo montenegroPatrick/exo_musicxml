@@ -52,7 +52,7 @@ export class BridgeService {
     this.isMobile.set(isMobile);
 
     if (isMobile) {
-      console.log('[BridgeService]: Mobile platform detected (InAppWebView)');
+      // console.log('[BridgeService]: Mobile platform detected (InAppWebView)');
       return;
     }
 
@@ -61,9 +61,7 @@ export class BridgeService {
       new URLSearchParams(window.location.search).get('platform') === 'web';
     this.isFlutterWeb.set(isFlutterWeb);
 
-    console.log(
-      `[BridgeService]: ${isFlutterWeb ? 'Flutter Web' : 'Standalone'} platform detected`,
-    );
+    // console.log(`[BridgeService]: ${isFlutterWeb ? 'Flutter Web' : 'Standalone'} platform detected`);
   }
 
   private _setupEventListener(): void {
@@ -77,7 +75,7 @@ export class BridgeService {
         }
       }
       if (this._isBridgeMessage(data)) {
-        console.log('[BridgeService]: postMessage =>', data);
+        // console.log('[BridgeService]: postMessage =>', data);
         this._push(data as Record<string, unknown>);
       }
     };
@@ -89,7 +87,7 @@ export class BridgeService {
 
     (window as any).onFlutterMessage = (data: any) => {
       if (this._isBridgeMessage(data)) {
-        console.log('[BridgeService]: onFlutterMessage =>', data);
+        // console.log('[BridgeService]: onFlutterMessage =>', data);
         this._push(data as Record<string, unknown>);
       }
     };
@@ -122,18 +120,13 @@ export class BridgeService {
       JSON.stringify({ type: 'init', subType: 'none', requestId }),
       '*',
     );
-    console.log(
-      `[BridgeService]: Flutter Web - requested [${handlerName}] requestId=${requestId}`,
-    );
+    // console.log(`[BridgeService]: Flutter Web - requested [${handlerName}] requestId=${requestId}`);
 
     return this.message$.pipe(
       filter((msg) => msg['requestId'] === requestId),
       first(),
       tap((data) =>
-        console.log(
-          `[BridgeService]: Flutter Web - response [${handlerName}] =>`,
-          data,
-        ),
+        console.log(`[BridgeService]: Flutter Web - response [${handlerName}] =>`, data,),
       ),
       takeUntilDestroyed(this._destroyRef),
     );
@@ -150,7 +143,7 @@ export class BridgeService {
             handlerName,
             message,
           );
-          console.log(`[BridgeService]: Mobile => [${handlerName}]`, message);
+          // console.log(`[BridgeService]: Mobile => [${handlerName}]`, message);
         } else {
           console.warn('[BridgeService]: callHandler not available yet');
         }
@@ -162,17 +155,14 @@ export class BridgeService {
           JSON.stringify({ ...message, requestId }),
           '*',
         );
-        console.log('[BridgeService]: Flutter Web => postMessage', {
-          ...message,
-          requestId,
-        });
+        // console.log('[BridgeService]: Flutter Web => postMessage', { ...message, requestId });
         break;
       }
       default:
         if (window.parent !== window) {
           window.parent.postMessage(JSON.stringify(message), '*');
         } else {
-          console.log('[BridgeService]: Standalone => action logged', message);
+          // console.log('[BridgeService]: Standalone => action logged', message);
         }
     }
   }

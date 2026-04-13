@@ -8,74 +8,72 @@ import {
   output,
   signal,
   viewChild,
+  ChangeDetectionStrategy,
+  OnDestroy
 } from '@angular/core';
 import { ControlBarService } from '../../services/control-bar.service';
 
 @Component({
   selector: 'app-timeline-slider',
+  standalone: true,
   imports: [],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (onHover()) {
-      <span
-        class=" absolute bottom-12 text-white left-0 text-xs w-fit mx-2  p-2 bg-black/75 backdrop-blur-3xl rounded-lg min-w-[40px] duration-500 transition-shadow "
-        >{{ formatTime(currentTime()) }}</span
-      >
-      <span
-        class=" absolute bottom-12 right-0 text-xs text-white w-fit mx-2  p-2 bg-black/75 backdrop-blur-3xl rounded-lg min-w-[40px] duration-500 transition-shadow "
-        >{{ formatTime(duration()) }}</span
-      >
+      <div class="time-tooltip absolute bottom-12 left-0 right-0 flex justify-between px-2 pointer-events-none">
+        <span class="text-white text-[10px] font-bold py-1 px-2 bg-black/80 backdrop-blur-md rounded border border-white/10 shadow-xl">
+          {{ formatTime(currentTime()) }}
+        </span>
+        <span class="text-white text-[10px] font-bold py-1 px-2 bg-black/80 backdrop-blur-md rounded border border-white/10 shadow-xl">
+          {{ formatTime(duration()) }}
+        </span>
+      </div>
     }
+    
     <div
       #track
-      class="h-1  cursor-pointer absolute w-full bottom-10 left-0 right-0"
-      (mouseover)="onMouseHover($event)"
-      (mouseleave)="onMouseLeave($event)"
+      class="timeline-hitbox cursor-pointer absolute w-full bottom-10 left-0 right-0 h-4 flex items-center"
+      (mouseenter)="onMouseEnter()"
+      (mouseleave)="onMouseLeave()"
       (mousedown)="onMouseDown($event)"
       (touchstart)="onTouchStart($event)"
     >
-      <div class="timeline-progress" [style.width.%]="progress()"></div>
-      <div class="timeline-thumb" [style.left.%]="progress()"></div>
+      <div class="timeline-track-bg w-full h-1 bg-white/10 rounded-full overflow-hidden relative">
+        <div class="timeline-progress absolute h-full bg-[#aec739] shadow-[0_0_8px_rgba(174,199,57,0.4)]" [style.width.%]="progress()"></div>
+      </div>
+      <div class="timeline-thumb absolute w-3 h-3 bg-white rounded-full shadow-lg border border-zinc-500 transition-transform" 
+           [style.left.%]="progress()"
+           [class.scale-150]="isDragging() || onHover()">
+      </div>
     </div>
   `,
-  styles: `
-    .timeline-track {
-      flex-grow: 1;
-      height: 100%;
-      background: transparent;
-      border-radius: 3px;
-      cursor: pointer;
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
     }
-
-    .timeline-progress {
-      height: 100%;
-      background: #aec739;
-      border-radius: 3px;
-      pointer-events: none;
+    .timeline-hitbox:hover .timeline-track-bg {
+      height: 6px;
+      transition: height 0.1s ease;
     }
-
     .timeline-thumb {
-      width: 14px;
-      height: 14px;
-      background: white;
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(0.5);
-      opacity: 0;
+      transform: translate(-50%, 0);
       pointer-events: none;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+      z-index: 10;
     }
-  `,
+  `],
 })
-export class TimelineSliderComponent {
+export class TimelineSliderComponent implements OnDestroy {
   private _controlBarService = inject(ControlBarService);
-  private trackRef = viewChild<ElementRef<HTMLElement>>('track');
-  private isDragging = signal(false);
-
+  private trackRef = viewChild.required<ElementRef<HTMLElement>>('track');
+  
+  isDragging = signal(false);
   onHover = signal(false);
 
-  duration = input<number>(0);
+  duration = input.required<number>();
   seek = output<number>();
 
-  currentTime = computed(() => this._controlBarService.time());
+  currentTime = this._controlBarService.time;
   progress = computed(() => {
     const dur = this.duration();
     if (!dur) return 0;
@@ -83,33 +81,40 @@ export class TimelineSliderComponent {
   });
 
   constructor() {
+    // Manage document-level event listeners reactively
     effect(() => {
       if (this.isDragging()) {
-        document.addEventListener('mousemove', this.onMouseMove);
-        document.addEventListener('mouseup', this.onMouseUp);
-        document.addEventListener('touchmove', this.onTouchMove);
-        document.addEventListener('touchend', this.onTouchEnd);
+        window.addEventListener('mousemove', this.onMouseMove);
+        window.addEventListener('mouseup', this.onMouseUp);
+        window.addEventListener('touchmove', this.onTouchMove);
+        window.addEventListener('touchend', this.onTouchEnd);
       } else {
-        document.removeEventListener('mousemove', this.onMouseMove);
-        document.removeEventListener('mouseup', this.onMouseUp);
-        document.removeEventListener('touchmove', this.onTouchMove);
-        document.removeEventListener('touchend', this.onTouchEnd);
+        window.removeEventListener('mousemove', this.onMouseMove);
+        window.removeEventListener('mouseup', this.onMouseUp);
+        window.removeEventListener('touchmove', this.onTouchMove);
+        window.removeEventListener('touchend', this.onTouchEnd);
       }
     });
   }
 
-  onMouseHover(event: MouseEvent) {
+  ngOnDestroy(): void {
+    // Ensure cleanup
+    window.removeEventListener('mousemove', this.onMouseMove);
+    window.removeEventListener('mouseup', this.onMouseUp);
+    window.removeEventListener('touchmove', this.onTouchMove);
+    window.removeEventListener('touchend', this.onTouchEnd);
+  }
+
+  onMouseEnter() {
     this.onHover.set(true);
   }
 
-  onMouseLeave(event: MouseEvent) {
-    setTimeout(() => {
-      this.onHover.set(false);
-    }, 6000);
+  onMouseLeave() {
+    this.onHover.set(false);
   }
 
   onMouseDown(event: MouseEvent) {
-    event.preventDefault();
+    if (event.button !== 0) return; // Left click only
     this.isDragging.set(true);
     this.updateFromEvent(event.clientX);
   }
@@ -122,9 +127,7 @@ export class TimelineSliderComponent {
   }
 
   private onMouseMove = (event: MouseEvent) => {
-    if (this.isDragging()) {
-      this.updateFromEvent(event.clientX);
-    }
+    this.updateFromEvent(event.clientX);
   };
 
   private onMouseUp = () => {
@@ -132,7 +135,7 @@ export class TimelineSliderComponent {
   };
 
   private onTouchMove = (event: TouchEvent) => {
-    if (this.isDragging() && event.touches.length > 0) {
+    if (event.touches.length > 0) {
       this.updateFromEvent(event.touches[0].clientX);
     }
   };
@@ -142,15 +145,10 @@ export class TimelineSliderComponent {
   };
 
   private updateFromEvent(clientX: number) {
-    const track = this.trackRef()?.nativeElement;
-    if (!track) return;
-
+    const track = this.trackRef().nativeElement;
     const rect = track.getBoundingClientRect();
     const relativeX = clientX - rect.left;
-    const percentage = Math.max(
-      0,
-      Math.min(100, (relativeX / rect.width) * 100),
-    );
+    const percentage = Math.max(0, Math.min(100, (relativeX / rect.width) * 100));
     const time = (percentage / 100) * this.duration();
 
     this.seek.emit(time);

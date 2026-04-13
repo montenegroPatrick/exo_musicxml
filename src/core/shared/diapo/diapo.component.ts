@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit } from '@angular/core';
+import { Component, computed, inject, input, OnInit, ChangeDetectionStrategy, effect, untracked } from '@angular/core';
 import { DiapoStateService } from './services/diapo.service';
 import { ButtonModule } from 'primeng/button';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
@@ -21,108 +21,101 @@ import { TooltipModule } from 'primeng/tooltip';
     ButtonModule,
     TooltipModule,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './diapo.component.html',
 })
 export class DiapoComponent implements OnInit {
-  private _diapoService = inject(DiapoStateService);
-  private _lessonService = inject(LessonService);
+  private readonly _diapoService = inject(DiapoStateService);
+  private readonly _lessonService = inject(LessonService);
 
-  /** Theme: 'light' (default) or 'dark' */
+  // -- Inputs --
   theme = input<'light' | 'dark'>('light');
-
-  /** Show/Hide the navigation and toolkit sidebar */
   showControls = input<boolean>(true);
-
-  /** Allow/Disallow zoom feature */
   allowZoom = input<boolean>(true);
 
-  ngOnInit(): void {
-    const lesson = this._lessonService.lessonJson();
-    const diapoType = this._lessonService.diapoType();
+  // -- Reactive Mappings --
+  readonly type = this._diapoService.type;
+  readonly viewMode = this._diapoService.viewMode;
+  readonly layoutMode = this._diapoService.layoutMode;
+  readonly imageListPos = this._diapoService.currentImageListPos;
+  
+  readonly xml = this._diapoService.currentXmlUrl;
+  readonly jsonEps = this._diapoService.jsonDiapoEps;
+  readonly jsonPdf = this._diapoService.jsonDiapoPdf;
+  readonly currentImgEps = this._diapoService.currentImgEps;
+  readonly currentPdfUrl = this._diapoService.currentPdfUrl;
+  
+  readonly pdfTotalPages = this._diapoService.currentPdfTotalPages;
 
-    // Auto-initialize if data is available and not already set
-    if (lesson && diapoType) {
-      if (this._diapoService.type() !== diapoType) {
-        this._diapoService.type.set(diapoType as any);
+  constructor() {
+    effect(() => {
+      const lesson = this._lessonService.lessonJson();
+      const diapoType = this._lessonService.diapoType();
+
+      if (lesson && diapoType) {
+        untracked(() => {
+          if (this.type() !== diapoType) {
+            this._diapoService.setType(diapoType as any);
+          }
+          this._diapoService.initVariables(lesson);
+        });
       }
-      this._diapoService.initVariables(lesson);
-    }
+    }, { allowSignalWrites: true });
   }
 
-  type = computed(() => this._diapoService.type());
+  ngOnInit(): void {}
 
   printable = computed(() => {
     switch (this.type()) {
-      case 'xml':
-        return false;
-      case 'eps':
-        return this.jsonEps()?.printable;
-      case 'pdf':
-        return this.jsonPdf()?.printable;
-      case 'html':
-        return this._diapoService.jsonDiapoHtml()?.printable;
-      default:
-        return false;
+      case 'xml': return false;
+      case 'eps': return this.jsonEps()?.printable;
+      case 'pdf': return this.jsonPdf()?.printable;
+      case 'html': return this._diapoService.jsonDiapoHtml()?.printable;
+      default: return false;
     }
   });
 
   imageList = computed(() => {
     switch (this.type()) {
-      case 'eps':
-        return this._diapoService.currentImageListEps();
-      case 'pdf':
-        return this._diapoService.currentImageListPdf();
-      default:
-        return null;
+      case 'eps': return this._diapoService.currentImageListEps();
+      case 'pdf': return this._diapoService.currentImageListPdf();
+      default: return null;
     }
   });
 
-  canNavigate = computed(
-    () => ((this.imageList()?.length ?? 0) > 1) || this.type() === 'pdf',
-  );
+  canNavigate = computed(() => {
+    const len = this.imageList()?.length ?? 0;
+    return len > 1 || this.type() === 'pdf';
+  });
 
-  xml = computed(() => this._diapoService.currentXmlUrl());
-  imageListPos = computed(() => this._diapoService.currentImageListPos());
-  currentImgEps = computed(() => this._diapoService.currentImgEps());
-  jsonEps = computed(() => this._diapoService.jsonDiapoEps());
-  jsonPdf = computed(() => this._diapoService.jsonDiapoPdf());
-  pdfTotalPages = computed(() => this._diapoService.currentPdfTotalPages());
-  viewMode = computed(() => this._diapoService.viewMode());
-  layoutMode = computed(() => this._diapoService.layoutMode());
-
-  nextPage() {
+  nextPage(): void {
     const max = this.pdfTotalPages() || (this.imageList()?.length ?? 0);
     if (this.imageListPos() < max) {
-      this._diapoService.currentImageListPos.set(this.imageListPos() + 1);
+      this._diapoService.setPos(this.imageListPos() + 1);
     }
   }
 
-  previousPage() {
+  previousPage(): void {
     if (this.imageListPos() > 1) {
-      this._diapoService.currentImageListPos.set(this.imageListPos() - 1);
+      this._diapoService.setPos(this.imageListPos() - 1);
     }
   }
 
-  toggleViewMode() {
-    this._diapoService.viewMode.set(
-      this.viewMode() === 'fit' ? 'zoom' : 'fit'
-    );
+  toggleViewMode(): void {
+    this._diapoService.setViewMode(this.viewMode() === 'fit' ? 'zoom' : 'fit');
   }
 
-  toggleLayoutMode() {
-    this._diapoService.layoutMode.set(
-      this.layoutMode() === 'standard' ? 'expanded' : 'standard'
-    );
+  toggleLayoutMode(): void {
+    this._diapoService.setLayoutMode(this.layoutMode() === 'standard' ? 'expanded' : 'standard');
   }
 
-  printPdf() {
-    if (this.type() === 'xml') {
-      return;
-    }
-    const url =
-      this.type() === 'pdf'
-        ? this._diapoService.currentPdfUrl()!
-        : this.currentImgEps()?.url;
+  printPdf(): void {
+    if (this.type() === 'xml') return;
+    
+    const url = this.type() === 'pdf'
+      ? this.currentPdfUrl()
+      : this.currentImgEps()?.url;
+      
     if (url) {
       window.open(url)?.print();
     }

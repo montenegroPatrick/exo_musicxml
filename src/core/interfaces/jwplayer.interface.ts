@@ -172,7 +172,7 @@ export interface JWPlayerInstance {
   setFullscreen(fullscreen: boolean): void;
   resize(width: number | string, height: number | string): void;
   on(event: JWPlayerEvent, callback: JWPlayerEventCallback): JWPlayerInstance;
-  off(event: JWPlayerEvent): JWPlayerInstance;
+  off(event: JWPlayerEvent, callback?: Function): JWPlayerInstance;
   once(event: JWPlayerEvent, callback: JWPlayerEventCallback): JWPlayerInstance;
 }
 

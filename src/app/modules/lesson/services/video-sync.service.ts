@@ -1,4 +1,4 @@
-import { Injectable, inject, effect, Signal, signal } from '@angular/core';
+import { Injectable, inject, effect, untracked } from '@angular/core';
 import { JwpService } from '@core/services/jwp.service';
 import { LessonService } from './lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
@@ -8,53 +8,60 @@ import { IVideoSync } from '@core/interfaces/lesson.interface';
   providedIn: 'root'
 })
 export class VideoSyncService {
-  private _jwpService = inject(JwpService);
-  private _lessonService = inject(LessonService);
-  private _diapoService = inject(DiapoStateService);
-
-  private _isBusting = false; // Flag to prevent infinite loops if we ever do two-way sync
+  private readonly _jwpService = inject(JwpService);
+  private readonly _lessonService = inject(LessonService);
+  private readonly _diapoService = inject(DiapoStateService);
 
   constructor() {
-    // We use an effect to react to video time changes
+    this._initAutoSync();
+  }
+
+  /**
+   * Initializes the reactive effect that tracks video playback 
+   * and synchronizes the slideshow (diapo) position.
+   */
+  private _initAutoSync(): void {
     effect(() => {
-      const currentTimeSeconds = this._jwpService.positionMs() / 1000;
+      const currentTime = this._jwpService.positionMs() / 1000;
       const syncPoints = this._lessonService.videoSyncPoints();
       
-      if (syncPoints.length === 0) {
-        return;
-      }
       if (syncPoints.length === 0) return;
 
-      // Find the last sync point that is less than or equal to current time
-      // syncPoints should be sorted by timeCode
-      let activeSyncPoint: IVideoSync | null = null;
+      const activePoint = this._findActiveSyncPoint(currentTime, syncPoints);
       
-      for (const point of syncPoints) {
-        if (point.timeCode <= currentTimeSeconds + 0.1) { // 0.1s buffer for better reactivity
-          activeSyncPoint = point;
-        } else {
-          break; // Since it's sorted, we can stop
-        }
-      }
-
-      if (activeSyncPoint !== null) {
-        // The pos in videoSync is 0-indexed (array index), 
-        // but DiapoStateService expects 1-indexed for the UI.
-        const targetPos = activeSyncPoint.pos + 1;
+      if (activePoint) {
+        // Target position is 1-indexed in UI but 0-indexed in data
+        const targetPos = activePoint.pos + 1;
         
-        if (this._diapoService.currentImageListPos() !== targetPos) {
-          console.log(`[VideoSync]: Syncing to pos ${targetPos} at ${currentTimeSeconds}s`);
-          this._diapoService.currentImageListPos.set(targetPos);
+        // Only update if different, using untracked to avoid cyclic dependency
+        const currentPos = untracked(() => this._diapoService.currentImageListPos());
+        
+        if (currentPos !== targetPos) {
+          this._diapoService.setPos(targetPos);
         }
       }
     });
   }
 
   /**
-   * Manual trigger if needed, though the constructor effect handles it reactively.
+   * Finds the last sync point that has passed relative to current time.
+   * Assumes syncPoints are sorted by timeCode.
    */
-  syncNow() {
-    // The effect will trigger automatically as soon as this service is instantiated
-    // and JwpService.positionMs changes.
+  private _findActiveSyncPoint(time: number, points: IVideoSync[]): IVideoSync | null {
+    let active: IVideoSync | null = null;
+    
+    // 0.1s buffer to ensure we don't miss transitions due to tiny timing differences
+    const threshold = time + 0.1;
+
+    for (const point of points) {
+      if (point.timeCode <= threshold) {
+        active = point;
+      } else {
+        // Since points are sorted, we can exit early once we exceed the threshold
+        break;
+      }
+    }
+    
+    return active;
   }
 }

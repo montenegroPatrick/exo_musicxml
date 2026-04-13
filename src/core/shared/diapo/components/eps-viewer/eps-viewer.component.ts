@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, EpsComponent],
   template: `
-    <div class="w-full h-full flex items-center justify-center p-4">
+    <div class="w-full h-full flex items-center justify-center">
       @if (eps()) {
         <app-eps [eps]="eps()!"></app-eps>
       } @else {

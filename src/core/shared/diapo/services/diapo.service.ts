@@ -11,91 +11,114 @@ import {
 import { ILesson } from '@core/interfaces/lesson.interface';
 import { api_url } from '@core/constant/api_url';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, tap } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DiapoStateService {
   private readonly _imgUrl = `${api_url.lesson}`;
-  private _imgApiService = inject(DiapoApiService);
-  private _sanitizer = inject(DomSanitizer);
+  private readonly _imgApiService = inject(DiapoApiService);
+  private readonly _sanitizer = inject(DomSanitizer);
+  private readonly _coreData = inject(CoreDataService);
   
-  // GLOBAL VARIABLE
-  type = signal<DiapoType | null>(null);
-  // global position of imagelist
-  currentImageListPos = signal<number>(1);
-  
-  // view mode: 'fit' (entire image visible) or 'zoom' (full width scrollable)
-  viewMode = signal<'fit' | 'zoom'>('fit');
+  // -- Common State Signals --
+  private readonly _type = signal<DiapoType | null>(null);
+  private readonly _currentImageListPos = signal<number>(1);
+  private readonly _viewMode = signal<'fit' | 'zoom'>('fit');
+  private readonly _layoutMode = signal<'standard' | 'expanded'>('standard');
+  private readonly _imageIsReady = signal<boolean>(false);
 
-  // layout mode: 'standard' (1/3 diapo) or 'expanded' (2/3 diapo)
-  layoutMode = signal<'standard' | 'expanded'>('standard');
+  // -- EPS State Signals --
+  private readonly _jsonDiapoEps = signal<IDiapo | null>(null);
+  private readonly _currentImageListEps = signal<ImageItem[] | null>(null);
 
-  // EPS VARIABLE
-  jsonDiapoEps = signal<IDiapo | null>(null);
-  currentImageListEps = signal<ImageItem[] | null>(null);
-  currentImgEps = computed(() => {
-    const list = this.currentImageListEps();
-    const pos = this.currentImageListPos();
-    if (list && list.length >= pos && pos > 0) {
-      return list[pos - 1];
-    }
-    return list && list.length > 0 ? list[0] : null;
+  // -- PDF State Signals --
+  private readonly _jsonDiapoPdf = signal<IDiapo | null>(null);
+  private readonly _currentImageListPdf = signal<ImageItem[] | null>(null);
+  private readonly _currentPdfBlob = signal<Blob | null>(null);
+  private readonly _currentPdfUrl = signal<string | null>(null);
+  private readonly _currentPdfTotalPages = signal<number>(0);
+
+  // -- XML State Signals --
+  private readonly _currentJsonXml = signal<IJSONDiapoXML | null>(null);
+  readonly currentXmlUrl = this._coreData.xmlContent;
+
+  // -- HTML State Signals --
+  private readonly _currentHtmlUrl = signal<string | null>(null);
+  private readonly _jsonDiapoHtml = signal<IJsonDiapoHtml | null>(null);
+
+  // -- Public Readonly Accessors --
+  readonly type = this._type.asReadonly();
+  readonly currentImageListPos = this._currentImageListPos.asReadonly();
+  readonly viewMode = this._viewMode.asReadonly();
+  readonly layoutMode = this._layoutMode.asReadonly();
+  readonly imageIsReady = this._imageIsReady.asReadonly();
+
+  readonly jsonDiapoEps = this._jsonDiapoEps.asReadonly();
+  readonly currentImageListEps = this._currentImageListEps.asReadonly();
+
+  readonly jsonDiapoPdf = this._jsonDiapoPdf.asReadonly();
+  readonly currentImageListPdf = this._currentImageListPdf.asReadonly();
+  readonly currentPdfUrl = this._currentPdfUrl.asReadonly();
+  readonly currentPdfTotalPages = this._currentPdfTotalPages.asReadonly();
+
+  readonly currentJsonXml = this._currentJsonXml.asReadonly();
+
+  readonly jsonDiapoHtml = this._jsonDiapoHtml.asReadonly();
+  readonly currentHtmlUrl = this._currentHtmlUrl.asReadonly();
+
+  // -- Reactive Derived Signals --
+  readonly currentImgEps = computed(() => {
+    const list = this._currentImageListEps();
+    const pos = this._currentImageListPos();
+    if (!list || list.length === 0) return null;
+    return list[Math.max(0, Math.min(pos - 1, list.length - 1))];
   });
 
-  // PDF VARIABLE
-  jsonDiapoPdf = signal<IDiapo | null>(null);
-  currentImageListPdf = signal<ImageItem[] | null>(null);
-  currentImgPdf = computed(() => {
-    const list = this.currentImageListPdf();
-    const pos = this.currentImageListPos();
-    if (list && list.length >= pos && pos > 0) {
-      return list[pos - 1];
-    }
-    return list && list.length > 0 ? list[0] : null;
+  readonly currentImgPdf = computed(() => {
+    const list = this._currentImageListPdf();
+    const pos = this._currentImageListPos();
+    if (!list || list.length === 0) return null;
+    return list[Math.max(0, Math.min(pos - 1, list.length - 1))];
   });
-  currentPdfBlob = signal<Blob | null>(null);
-  currentPdfUrl = signal<string | null>(null);
-  currentPdfTotalPages = signal<number>(0);
 
-  // IMAGE XML VARIABLE
-  currentJsonXml = signal<IJSONDiapoXML | null>(null);
-  currentXmlUrl = signal<string | null>(null);
+  // -- Public Actions --
 
-  // HTML VARIABLE
-  currentHtmlUrl = signal<string | null>(null);
-  jsonDiapoHtml = signal<IJsonDiapoHtml | null>(null);
+  setType(type: DiapoType | null): void {
+    this._type.set(type);
+  }
 
-  imageIsReady = signal<boolean>(false);
+  setPos(pos: number): void {
+    this._currentImageListPos.set(pos);
+  }
 
-  getJsonImg({ lessonId, seq }: { lessonId: string; seq: string }) {
+  setViewMode(mode: 'fit' | 'zoom'): void {
+    this._viewMode.set(mode);
+  }
+
+  setLayoutMode(mode: 'standard' | 'expanded'): void {
+    this._layoutMode.set(mode);
+  }
+
+  setPdfTotalPages(count: number): void {
+    this._currentPdfTotalPages.set(count);
+  }
+
+  getJsonImg({ lessonId, seq }: { lessonId: string; seq: string }): Observable<any> {
     const url = `${this._imgUrl}/${lessonId}/seq/${seq}.json`;
     return this._imgApiService.getJsonDiapo(url).pipe(
       map((res: IJSONDiapoXML | IJsonDiapoEps | IJsonDiapoPdf | IJsonDiapoHtml) => {
-        switch (this.type()) {
-          case 'xml':
-            this._handleJsonXml(res as IJSONDiapoXML);
-            break;
-          case 'eps':
-            this._handleJsonEps(res as IJsonDiapoEps);
-            break;
-          case 'pdf':
-            this._handleJsonPdf(res as IJsonDiapoPdf);
-            break;
-          case 'html':
-            this._handleJsonHtml(res as IJsonDiapoHtml);
-            break;
-        }
+        this.initVariables(res);
         return res;
       }),
     );
   }
 
-  initVariables(data: IJSONDiapoXML | IJsonDiapoEps | IJsonDiapoPdf | IJsonDiapoHtml | ILesson) {
-    console.log('[DiapoService]: initVariables', this.type(), data);
-    switch (this.type()) {
+  initVariables(data: IJSONDiapoXML | IJsonDiapoEps | IJsonDiapoPdf | IJsonDiapoHtml | ILesson): void {
+    switch (this._type()) {
       case 'xml':
         this._handleJsonXml(data as IJSONDiapoXML);
         break;
@@ -111,60 +134,41 @@ export class DiapoStateService {
     }
   }
 
-  _handleJsonXml(xml: IJSONDiapoXML) {
-    this.currentJsonXml.set(xml);
-
-    if (xml.url) {
-      this.xmlFetch(xml.url)
-        .pipe(
-          map((content: string) => {
-            this.currentXmlUrl.set(content);
-            return content;
-          }),
-        )
-        .subscribe();
-    }
+  private _handleJsonXml(xml: IJSONDiapoXML): void {
+    this._currentJsonXml.set(xml);
+    // Note: FETCH logic is now handled by LessonService/CoreDataService centrally
   }
 
-  _handleJsonEps(eps: IJsonDiapoEps) {
-    this.jsonDiapoEps.set(eps as any);
+  private _handleJsonEps(eps: IJsonDiapoEps): void {
+    this._jsonDiapoEps.set(eps as any);
     if (eps.imageList && eps.imageList.length > 0) {
-      this.currentImageListEps.set(eps.imageList);
-      // Initial position from JSON if any, else 1
-      this.currentImageListPos.set(eps.pos || 1);
+      this._currentImageListEps.set(eps.imageList || null);
+      this._currentImageListPos.set(eps.pos || 1);
     }
   }
 
-  _handleJsonPdf(pdf: IJsonDiapoPdf) {
-    this.jsonDiapoPdf.set(pdf as any);
+  private _handleJsonPdf(pdf: IJsonDiapoPdf): void {
+    this._jsonDiapoPdf.set(pdf as any);
     if (pdf.pos) {
-      this.currentImageListPos.set(pdf.pos);
+      this._currentImageListPos.set(pdf.pos);
     }
     if (pdf.url) {
-      this.loadPdfBlob(pdf.url).subscribe();
+      this._imgApiService.getPdfBlob(pdf.url).pipe(
+        map((blob: Blob) => {
+          this._currentPdfBlob.set(blob);
+          const blobUrl = URL.createObjectURL(blob);
+          this._currentPdfUrl.set(`${blobUrl}#toolbar=0`);
+          return blob;
+        })
+      ).subscribe();
     }
   }
 
-  _handleJsonHtml(html: IJsonDiapoHtml) {
-    this.jsonDiapoHtml.set(html);
+  private _handleJsonHtml(html: IJsonDiapoHtml): void {
+    this._jsonDiapoHtml.set(html);
     if (html.url) {
-      this.currentHtmlUrl.set(html.url);
+      this._currentHtmlUrl.set(html.url);
     }
-  }
-
-  loadPdfBlob(url: string) {
-    return this._imgApiService.getPdfBlob(url).pipe(
-      map((blob: Blob) => {
-        this.currentPdfBlob.set(blob);
-        const blobUrl = URL.createObjectURL(blob);
-        this.currentPdfUrl.set(`${blobUrl}#toolbar=0`);
-        return blob;
-      }),
-    );
-  }
-
-  xmlFetch(xmlUrl: string) {
-    return this._imgApiService.getXml(xmlUrl);
   }
 }
 
@@ -172,7 +176,7 @@ export class DiapoStateService {
   providedIn: 'root',
 })
 export class DiapoApiService {
-  private _http = inject(HttpClient);
+  private readonly _http = inject(HttpClient);
 
   getJsonDiapo(url: string): Observable<any> {
     return this._http.get<any>(url);

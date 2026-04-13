@@ -1,12 +1,14 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ControlBarService } from '../../services/control-bar.service';
 
 @Component({
   selector: 'app-play-controls',
+  standalone: true,
   imports: [ButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="flex gap-1 text-white  rounded-lg">
+    <section class="flex gap-1 text-white rounded-lg">
       @if (showNavigation()) {
         <p-button
           icon="pi pi-angle-left"
@@ -55,8 +57,7 @@ import { ControlBarService } from '../../services/control-bar.service';
 export class PlayControlsComponent {
   private _controlBarService = inject(ControlBarService);
 
-  isPlaying = computed(() => this._controlBarService.isPlaying());
-
+  isPlaying = this._controlBarService.isPlaying;
   showNavigation = input<boolean>(true);
 
   togglePlay = output<void>();

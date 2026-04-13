@@ -1,14 +1,46 @@
-<div class="relative h-screen w-full flex flex-col bg-black text-white overflow-hidden font-sans">
+<div class="relative h-screen w-full flex flex-col bg-zinc-950 font-sans text-white overflow-hidden selection:bg-white/20">
+  
   <!-- Main Content Area -->
-  <main class="flex-grow relative overflow-hidden bg-zinc-900">
+  <main class="relative overflow-hidden bg-black w-full flex-1 min-h-0">
     <router-outlet></router-outlet>
     
-    <!-- Loading Overlay -->
+    <!-- Premium Loading Overlay -->
     @if (isLoading()) {
-      <div class="absolute inset-0 flex items-center justify-center bg-black/80 z-50">
-        <div class="flex flex-col items-center gap-3">
-          <i class="pi pi-spin pi-spinner text-4xl text-primary-500"></i>
-          <span class="text-sm font-medium">Chargement...</span>
+      <div class="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-950/90 backdrop-blur-md transition-all duration-700 ease-in-out">
+        <div class="relative w-40 h-40 flex items-center justify-center">
+          <!-- Multi-layered Ambient Glow -->
+          <div class="absolute inset-0 bg-white/5 blur-[80px] rounded-full animate-pulse"></div>
+          <div class="absolute inset-4 bg-white/10 blur-[40px] rounded-full [animation-delay:400ms] animate-pulse"></div>
+          
+          <!-- Outer Ring -->
+          <div class="absolute inset-0 rounded-full border border-white/5"></div>
+          
+          <!-- Animated Progress Ring -->
+          <svg class="w-24 h-24 rotate-[-90deg]">
+            <circle cx="48" cy="48" r="44" 
+                    class="fill-none stroke-white/[0.03] stroke-[1px]" />
+            <circle cx="48" cy="48" r="44" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    stroke-width="1.5" 
+                    stroke-dasharray="276"
+                    stroke-dashoffset="200"
+                    class="text-white/80 animate-[dash_2s_ease-in-out_infinite]" />
+          </svg>
+
+          <!-- Core Spinner -->
+          <div class="absolute w-8 h-8 rounded-full border-t border-white animate-spin"></div>
+        </div>
+        
+        <div class="mt-10 text-center space-y-3">
+          <h2 class="text-2xl font-light tracking-tight text-white/90">
+            Initialisation du contenu
+          </h2>
+          <div class="flex items-center justify-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:200ms]"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce [animation-delay:400ms]"></span>
+          </div>
         </div>
       </div>
     }
@@ -16,9 +48,18 @@
 
   <!-- Dynamic Control Bar -->
   @if (showControlBar()) {
-    <app-control-bar 
-      class="w-full relative z-10"
-      [showNavigation]="showNavigation()">
-    </app-control-bar>
+    <footer class="w-full h-20 overflow-visible z-50 bg-[#FA5E46] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+      @if (controlBarType() === 'audiomixer') {
+        <app-audiomixer-control-bar-v2 
+          class="w-full h-full relative block"
+          [showNavigation]="showNavigation()">
+        </app-audiomixer-control-bar-v2>
+      } @else {
+        <app-control-bar 
+          class="w-full h-full relative block"
+          [showNavigation]="showNavigation()">
+        </app-control-bar>
+      }
+    </footer>
   }
 </div>

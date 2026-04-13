@@ -4,7 +4,8 @@ import {
   inject,
   OnInit,
   signal,
-  WritableSignal,
+  ChangeDetectionStrategy,
+  HostListener,
 } from '@angular/core';
 import { VideoComponent } from '@core/shared/video/video.component';
 import { DiapoComponent } from '@core/shared/diapo/diapo.component';
@@ -20,7 +21,6 @@ import {
 } from './interfaces/video-diapo.interface';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { ButtonModule } from 'primeng/button';
-import { HostListener } from '@angular/core';
 
 export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   imageRatio: '1/2',
@@ -31,60 +31,55 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   selector: 'app-video-diapo',
   standalone: true,
   imports: [VideoComponent, DiapoComponent, ControlBarComponent, ButtonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-diapo.component.html',
 })
 export class VideoDiapoComponent implements OnInit {
-  private _lessonService = inject(LessonService);
-  private _jwpService = inject(JwpService);
-  private _flatService = inject(FlatService);
-  private _videoSyncService = inject(VideoSyncService);
-  private _diapoService = inject(DiapoStateService);
+  private readonly _lessonService = inject(LessonService);
+  private readonly _jwpService = inject(JwpService);
+  private readonly _flatService = inject(FlatService);
+  private readonly _videoSyncService = inject(VideoSyncService);
+  private readonly _diapoService = inject(DiapoStateService);
 
-  typeImg = computed(() => this._lessonService.diapoType() ?? 'eps');
-  currentVideo = computed(() => this._lessonService.jwPlayerId());
-  videoIsReady = computed(() => this._jwpService.isReady());
+  // -- Reactive Data Sources --
+  readonly typeImg = computed(() => this._lessonService.diapoType() ?? 'eps');
+  readonly currentVideo = this._lessonService.jwPlayerId;
+  readonly videoIsReady = this._jwpService.isReady;
+  readonly layoutMode = this._diapoService.layoutMode;
   
-  videoDiapoLayout: WritableSignal<IVideoDiapoLayout> = signal<IVideoDiapoLayout>(
-    defaultVideoDiapoLayout,
-  );
-
-  isMobile = signal<boolean>(window.innerWidth < 768);
+  // -- Components State --
+  readonly videoDiapoLayout = signal<IVideoDiapoLayout>(defaultVideoDiapoLayout);
+  readonly isMobile = signal<boolean>(window.innerWidth < 768);
 
   @HostListener('window:resize')
-  onResize() {
+  onResize(): void {
     this.isMobile.set(window.innerWidth < 768);
   }
 
   ngOnInit(): void {
     // Ensure "Fit Content" is the default for a better first impression
-    this._diapoService.viewMode.set('fit');
+    this._diapoService.setViewMode('fit');
   }
 
-  layoutMode = computed(() => this._diapoService.layoutMode());
-
-  classImgContainer = computed(() => {
-    // Standard layout: 1/3 diapo
-    // Expanded layout: 2/3 diapo
-    return this.layoutMode() === 'standard' ? 'col-span-1' : 'col-span-2';
+  // -- Dynamic Classes --
+  readonly classImgContainer = computed(() => {
+    // Standard: 1/3 (min 510px) | Expanded: 2/3 (min 510px)
+    const base = 'w-full flex-shrink-0 min-w-[510px] transition-all duration-300';
+    return this.layoutMode() === 'standard' 
+      ? `${base} md:w-1/3` 
+      : `${base} md:w-2/3`;
   });
 
-  classVideoContainer = computed(() => {
-    // Standard layout: 2/3 video
-    // Expanded layout: 1/3 video
-    return this.layoutMode() === 'standard' ? 'col-span-2' : 'col-span-1';
+  readonly classVideoContainer = computed(() => {
+    return 'w-full md:flex-1 min-w-0 overflow-hidden bg-black';
   });
 
-  changeLayout(ratio: Iratio) {
-    this.videoDiapoLayout.update((layout) => ({
-      ...layout,
-      imageRatio: ratio,
-    }));
+  // -- Layout Actions --
+  changeLayout(ratio: Iratio): void {
+    this.videoDiapoLayout.update((l) => ({ ...l, imageRatio: ratio }));
   }
 
-  changePosition(position: Iposition) {
-    this.videoDiapoLayout.update((layout) => ({
-      ...layout,
-      imgPosition: position,
-    }));
+  changePosition(position: Iposition): void {
+    this.videoDiapoLayout.update((l) => ({ ...l, imgPosition: position }));
   }
 }

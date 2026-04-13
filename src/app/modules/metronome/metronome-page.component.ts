@@ -1,32 +1,33 @@
-import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy, ChangeDetectionStrategy, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { L10N_LOCALE, L10nTranslatePipe } from 'angular-l10n';
-import { MetronomeService } from './services/metronome.service';
+import { MetronomeService } from 'src/core/services/utils/metronome.service';
 
 @Component({
   selector: 'app-metronome-page',
   standalone: true,
   imports: [CommonModule, FormsModule, L10nTranslatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './metronome-page.component.html',
-  styleUrls: ['./metronome-page.component.scss']
+  styleUrl: './metronome-page.component.scss'
 })
-export class MetronomePage implements OnDestroy {
-  metronomeService = inject(MetronomeService);
-  locale = inject(L10N_LOCALE);
+export class MetronomePageComponent implements OnDestroy {
+  readonly metronomeService = inject(MetronomeService);
+  readonly locale = inject(L10N_LOCALE);
   
-  // Tap Tempo State
-  private lastTap = 0;
-  private tapTimes: number[] = [];
+  // -- Tap Tempo State --
+  private _lastTap = 0;
+  private _tapTimes: number[] = [];
 
-  // Timer State
-  timerMinutes = signal(1);
-  timerSeconds = signal(0);
-  isTimerActive = signal(false);
-  private timerInterval: any = null;
+  // -- Timer State --
+  readonly timerMinutes = signal<number>(1);
+  readonly timerSeconds = signal<number>(0);
+  readonly isTimerActive = signal<boolean>(false);
+  private _timerInterval: any = null;
 
-  // Tempo Labels (Legacy port)
-  tempoLabels = [
+  // -- Tempo Classification (Logic Pro Style) --
+  private readonly _tempoLabels = [
     { min: 10, max: 39, label: "Larghissimo" },
     { min: 40, max: 60, label: "Largo" },
     { min: 52, max: 68, label: "Lento" },
@@ -37,87 +38,84 @@ export class MetronomePage implements OnDestroy {
     { min: 112, max: 160, label: "Allegro" },
     { min: 138, max: 142, label: "Vivace" },
     { min: 140, max: 200, label: "Presto" },
-    { min: 188, max: 300, label: "Prestissimo" }
+    { min: 188, max: 320, label: "Prestissimo" }
   ];
 
-  currentTempoLabel = computed(() => {
+  /** Reactive label for the current BPM range */
+  readonly currentTempoLabel = computed(() => {
     const bpm = this.metronomeService.bpm();
-    return this.tempoLabels.find(t => bpm >= t.min && bpm <= t.max)?.label || '';
+    return this._tempoLabels.find(t => bpm >= t.min && bpm <= t.max)?.label || '';
   });
 
-  beats = computed(() => Array(this.metronomeService.timeInMeasure()).fill(0));
+  /** Visual beats array for the measure progress bar */
+  readonly beats = computed(() => Array(this.metronomeService.timeInMeasure()).fill(0));
 
   constructor() {
-    // Stop timer if metronome stops manually
+    // Automatically stop and reset the timer if the metronome is stopped manually
     effect(() => {
       if (!this.metronomeService.isPlaying() && this.isTimerActive()) {
-        this.stopTimer();
+        untracked(() => this.stopTimer());
       }
     });
   }
 
-  // Control Methods
-  increaseBpm(amount: number) {
+  // -- Control Actions --
+
+  changeBpm(amount: number): void {
     this.metronomeService.setBpm(this.metronomeService.bpm() + amount);
   }
 
-  decreaseBpm(amount: number) {
-    this.metronomeService.setBpm(this.metronomeService.bpm() - amount);
+  onBpmInput(event: Event): void {
+    const val = (event.target as HTMLInputElement).value;
+    this.metronomeService.setBpm(Number(val));
   }
 
-  onBpmChange(event: any) {
-    this.metronomeService.setBpm(Number((event.target as HTMLInputElement).value));
+  changeSignature(amount: number): void {
+    this.metronomeService.setSignature(this.metronomeService.timeInMeasure() + amount);
   }
 
-  updateSignature(amount: number) {
-    const newVal = Math.min(Math.max(this.metronomeService.timeInMeasure() + amount, 2), 12);
-    this.metronomeService.setSignature(newVal);
-  }
-
-  setSub(s: number | string) {
+  setDivision(s: number | 'shuffle'): void {
     if (s === 'shuffle') {
       this.metronomeService.setSubdivision(3);
-      this.metronomeService.isShuffle.set(true);
+      this.metronomeService.setShuffle(true);
     } else {
       this.metronomeService.setSubdivision(Number(s));
-      this.metronomeService.isShuffle.set(false);
+      this.metronomeService.setShuffle(false);
     }
   }
 
-  // Tap Tempo Logic
-  tapTempo() {
+  // -- Tap Tempo Logic --
+
+  tapTempo(): void {
     const now = Date.now();
-    if (this.lastTap > 0) {
-      const diff = now - this.lastTap;
-      if (diff < 2000) { // Reset if gap > 2s
-        this.tapTimes.push(diff);
-        if (this.tapTimes.length > 4) this.tapTimes.shift();
-        const avg = this.tapTimes.reduce((a, b) => a + b) / this.tapTimes.length;
-        const bpm = Math.round(60000 / avg);
-        this.metronomeService.setBpm(bpm);
+    if (this._lastTap > 0) {
+      const diff = now - this._lastTap;
+      if (diff < 2000) { // Only count if taps are less than 2s apart
+        this._tapTimes.push(diff);
+        if (this._tapTimes.length > 5) this._tapTimes.shift();
+        
+        const avg = this._tapTimes.reduce((a, b) => a + b) / this._tapTimes.length;
+        this.metronomeService.setBpm(Math.round(60000 / avg));
       } else {
-        this.tapTimes = [];
+        this._tapTimes = [];
       }
     }
-    this.lastTap = now;
+    this._lastTap = now;
   }
 
-  // Timer Methods
-  toggleTimer() {
-    if (this.isTimerActive()) {
-      this.stopTimer();
-    } else {
-      this.startTimer();
-    }
+  // -- Session Timer Logic --
+
+  toggleTimer(): void {
+    this.isTimerActive() ? this.stopTimer() : this.startTimer();
   }
 
-  private startTimer() {
+  startTimer(): void {
     this.isTimerActive.set(true);
     let totalSeconds = this.timerMinutes() * 60 + this.timerSeconds();
     
-    if (totalSeconds === 0) totalSeconds = 60; // Default 1m
+    if (totalSeconds === 0) totalSeconds = 60; 
 
-    this.timerInterval = setInterval(() => {
+    this._timerInterval = setInterval(() => {
       if (totalSeconds <= 0) {
         this.stopTimer();
         this.metronomeService.stop();
@@ -127,28 +125,35 @@ export class MetronomePage implements OnDestroy {
       this.timerMinutes.set(Math.floor(totalSeconds / 60));
       this.timerSeconds.set(totalSeconds % 60);
     }, 1000);
+    
+    if (!this.metronomeService.isPlaying()) {
+      this.metronomeService.start();
+    }
   }
 
-  private stopTimer() {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-      this.timerInterval = null;
+  stopTimer(): void {
+    if (this._timerInterval) {
+      clearInterval(this._timerInterval);
+      this._timerInterval = null;
     }
     this.isTimerActive.set(false);
   }
 
-  addTime(seconds: number) {
-    const current = this.timerMinutes() * 60 + this.timerSeconds();
-    const next = Math.max(0, current + seconds);
-    this.timerMinutes.set(Math.floor(next / 60));
-    this.timerSeconds.set(next % 60);
+  modifyTimer(seconds: number): void {
+    const currentTotal = this.timerMinutes() * 60 + this.timerSeconds();
+    const newTotal = Math.max(0, currentTotal + seconds);
+    
+    this.timerMinutes.set(Math.floor(newTotal / 60));
+    this.timerSeconds.set(newTotal % 60);
+    
+    // Restart interval if active to sync with new time
     if (this.isTimerActive()) {
        this.stopTimer();
        this.startTimer();
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     this.stopTimer();
   }
 }

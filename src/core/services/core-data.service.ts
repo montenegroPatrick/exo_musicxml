@@ -10,10 +10,16 @@ export class CoreDataService {
   private readonly _xmlContent = signal<string>('');
   private readonly _exercisePayload = signal<any>(null);
 
+  // -- Interaction Requests (Agnostic Command Store) --
+  private readonly _seekRequest = signal<{ time: number, timestamp: number } | null>(null);
+  private readonly _loopRangeRequest = signal<{ start: number | null, end: number | null, timestamp: number } | null>(null);
+
   // -- Public Readonly Accessors --
   readonly lessonJson = this._lessonJson.asReadonly();
   readonly xmlContent = this._xmlContent.asReadonly();
   readonly exercisePayload = this._exercisePayload.asReadonly();
+  readonly seekRequest = this._seekRequest.asReadonly();
+  readonly loopRangeRequest = this._loopRangeRequest.asReadonly();
 
   // -- Metadata Computeds --
   readonly chapter = computed(() => this.lessonJson()?.chapter ?? this.lessonJson()?.Chapter);
@@ -46,7 +52,10 @@ export class CoreDataService {
   });
 
   readonly controlBarType = computed(() => {
-    if (window.location.search.includes('mock=lesson_playback_xml')) return 'audio-mixer';
+    const search = window.location.search;
+    if (search.includes('mock=lesson_playback_xml')) return 'audio-mixer';
+    if (search.includes('mock=video-img-xml-sync')) return 'video-xml';
+    
     const lesson = this.lessonJson();
     return lesson ? determineControlBarType(lesson, this.moduleType()) : 'video';
   });
@@ -65,6 +74,20 @@ export class CoreDataService {
     const rawSync = (lesson as any).sync || (lesson as any).Sync || (lesson as any).videoSync;
     
     if (rawSync && Array.isArray(rawSync) && rawSync.length > 0) {
+        // -- Smart Mapping for Video-XML Sync --
+        // If it's a score (XML) but points are in Video format (timeCode/pos)
+        const isVideoFormat = 'timeCode' in rawSync[0];
+        if (this.diapoType() === 'xml' && isVideoFormat) {
+            console.log('[CoreDataService] Mapping VideoSync to MusicXML format...');
+            return rawSync.map((p: any, index: number) => {
+                const isLast = (index === rawSync.length - 1);
+                return {
+                    time: p.timeCode,
+                    location: { measureIdx: p.pos },
+                    type: isLast ? 'end' : (p.timeCode === 0 ? 'start' : 'measure')
+                };
+            });
+        }
         return rawSync;
     }
 
@@ -112,9 +135,19 @@ export class CoreDataService {
     this._exercisePayload.set(payload);
   }
 
+  requestSeek(time: number): void {
+    this._seekRequest.set({ time, timestamp: Date.now() });
+  }
+
+  requestLoopRange(start: number | null, end: number | null): void {
+    this._loopRangeRequest.set({ start, end, timestamp: Date.now() });
+  }
+
   clear(): void {
     this._lessonJson.set(null);
     this._xmlContent.set('');
     this._exercisePayload.set(null);
+    this._seekRequest.set(null);
+    this._loopRangeRequest.set(null);
   }
 }

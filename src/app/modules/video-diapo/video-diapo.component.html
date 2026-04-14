@@ -3,7 +3,7 @@
     
     <!-- Video Section: Top on mobile, right on desktop -->
     <div 
-      [class]="classVideoContainer() + ' order-1 md:order-2 flex items-center justify-center bg-black min-h-[30vh] md:min-h-0'"
+      [class]="classVideoContainer() + ' order-1 flex items-center justify-center bg-black min-h-[30vh] md:min-h-0'"
     >
       <app-video 
         mode="fill"
@@ -15,7 +15,7 @@
 
     <!-- Diapo Section: Bottom on mobile, left on desktop -->
     <div 
-      [class]="classImgContainer() + ' order-2 md:order-1 h-full min-h-[50vh] md:min-h-0'"
+      [class]="classImgContainer() + ' order-2 h-full min-h-[50vh] md:min-h-0'"
     >
       <app-diapo theme="dark" [showControls]="true" [allowZoom]="!isMobile()"></app-diapo>
     </div>

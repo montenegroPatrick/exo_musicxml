@@ -54,9 +54,7 @@ export class DiapoComponent implements OnInit {
 
       if (lesson && diapoType) {
         untracked(() => {
-          if (this.type() !== diapoType) {
-            this._diapoService.setType(diapoType as any);
-          }
+          this._diapoService.setType(diapoType as any);
           this._diapoService.initVariables(lesson);
         });
       }

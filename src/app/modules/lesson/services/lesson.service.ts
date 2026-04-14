@@ -61,6 +61,7 @@ export class LessonService {
   readonly youtubeId = this._coreDataStore.youtubeId;
   readonly vimeoId = this._coreDataStore.vimeoId;
   readonly xmlUrl = this._coreDataStore.xmlUrl;
+  readonly xmlContent = this._coreDataStore.xmlContent;
 
   private readonly _messageEffect = effect(() => {
     const isMock = this._isMockMode();
@@ -133,16 +134,10 @@ export class LessonService {
     if (data.chapter !== undefined) this._lessonId.set(data.chapter.toString());
     if (data.sequence !== undefined) this._seq.set(data.sequence.toString());
 
-    // -- Reactive XML Loading --
-    if (data.url && (this.diapoType() === 'xml' || data.typeImg === 'xml')) {
-        console.log('[LessonService] Detected XML lesson, fetching file...');
-        this._http.get(data.url, { responseType: 'text' }).subscribe({
-            next: (xml) => {
-                console.log('[LessonService] XML file loaded successfully');
-                this._coreDataStore.setXmlContent(xml);
-            },
-            error: (err) => console.error('[LessonService] XML fetch error:', err)
-        });
+    // -- XML Loading --
+    if (data.url && determineImgType(data) === 'xml') {
+        console.log(`[LessonService] XML Data detected (URL or Content). Setting Store...`);
+        this._coreDataStore.setXmlContent(data.url);
     }
   }
 

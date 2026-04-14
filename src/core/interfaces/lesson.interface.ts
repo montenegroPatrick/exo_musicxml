@@ -118,13 +118,24 @@ export function determineModuleType(lesson: ILesson): LessonModuleType {
  * Determines the diapo (image) type based on lesson data
  */
 export function determineImgType(lesson: ILesson): DiapoType | undefined {
-  if (!lesson.loadImg) return undefined;
   const typeImg = lesson.typeImg?.toLowerCase();
+  const url = lesson.url?.toLowerCase();
   
-  if (typeImg === 'xml' || lesson.sync || lesson.trackList || lesson.TrackList) return 'xml';
-  if (typeImg === 'pdf' || (lesson.url && lesson.url.endsWith('.pdf'))) return 'pdf';
-  if (typeImg === 'html' || (lesson.url && (lesson.url.startsWith('http') || lesson.url.endsWith('.html')))) return 'html';
-  return 'eps';
+  // 1. Détection XML prioritaire (via type, URL ou structure de données)
+  if (typeImg === 'xml' || url?.endsWith('.xml') || lesson.sync || lesson.trackList || lesson.TrackList) {
+    return 'xml';
+  }
+
+  // 2. Détection PDF/HTML via URL ou type
+  if (typeImg === 'pdf' || url?.endsWith('.pdf')) return 'pdf';
+  if (typeImg === 'html' || url?.endsWith('.html') || url?.endsWith('.htm')) return 'html';
+
+  // 3. Fallback EPS (Slideshow d'images) uniquement si loadImg est présent ou s'il y a une liste d'images
+  if (lesson.loadImg || (lesson.imageList && lesson.imageList.length > 0)) {
+    return 'eps';
+  }
+
+  return undefined;
 }
 
 /**

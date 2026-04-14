@@ -15,6 +15,9 @@ import { catchError, map, Observable, tap } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CoreDataService } from '@core/services/core-data.service';
 
+const STORAGE_KEY_LAYOUT = 'ims_diapo_layout_mode';
+const STORAGE_KEY_POSITION = 'ims_diapo_sidebar_position';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -28,7 +31,8 @@ export class DiapoStateService {
   private readonly _type = signal<DiapoType | null>(null);
   private readonly _currentImageListPos = signal<number>(1);
   private readonly _viewMode = signal<'fit' | 'zoom'>('fit');
-  private readonly _layoutMode = signal<'standard' | 'expanded'>('standard');
+  private readonly _layoutMode = signal<'standard' | 'expanded'>((localStorage.getItem(STORAGE_KEY_LAYOUT) as any) || 'standard');
+  private readonly _sidebarPosition = signal<'left' | 'right'>((localStorage.getItem(STORAGE_KEY_POSITION) as any) || 'left');
   private readonly _imageIsReady = signal<boolean>(false);
 
   // -- EPS State Signals --
@@ -55,6 +59,7 @@ export class DiapoStateService {
   readonly currentImageListPos = this._currentImageListPos.asReadonly();
   readonly viewMode = this._viewMode.asReadonly();
   readonly layoutMode = this._layoutMode.asReadonly();
+  readonly sidebarPosition = this._sidebarPosition.asReadonly();
   readonly imageIsReady = this._imageIsReady.asReadonly();
 
   readonly jsonDiapoEps = this._jsonDiapoEps.asReadonly();
@@ -101,6 +106,12 @@ export class DiapoStateService {
 
   setLayoutMode(mode: 'standard' | 'expanded'): void {
     this._layoutMode.set(mode);
+    localStorage.setItem(STORAGE_KEY_LAYOUT, mode);
+  }
+
+  setSidebarPosition(pos: 'left' | 'right'): void {
+    this._sidebarPosition.set(pos);
+    localStorage.setItem(STORAGE_KEY_POSITION, pos);
   }
 
   setPdfTotalPages(count: number): void {
@@ -131,6 +142,10 @@ export class DiapoStateService {
       case 'html':
         this._handleJsonHtml(data as IJsonDiapoHtml);
         break;
+      default:
+        // Fallback pour les leçons standard qui contiennent des images directement
+        this._handleJsonEps(data as ILesson);
+        break;
     }
   }
 
@@ -139,10 +154,11 @@ export class DiapoStateService {
     // Note: FETCH logic is now handled by LessonService/CoreDataService centrally
   }
 
-  private _handleJsonEps(eps: IJsonDiapoEps): void {
+  private _handleJsonEps(eps: IJsonDiapoEps | ILesson): void {
     this._jsonDiapoEps.set(eps as any);
-    if (eps.imageList && eps.imageList.length > 0) {
-      this._currentImageListEps.set(eps.imageList || null);
+    const list = (eps as any).imageList || (eps as any).ImageList;
+    if (list && Array.isArray(list) && list.length > 0) {
+      this._currentImageListEps.set(list || null);
       this._currentImageListPos.set(eps.pos || 1);
     }
   }

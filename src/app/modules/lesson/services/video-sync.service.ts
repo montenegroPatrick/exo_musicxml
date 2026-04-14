@@ -3,6 +3,8 @@ import { JwpService } from '@core/services/jwp.service';
 import { LessonService } from './lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { IVideoSync } from '@core/interfaces/lesson.interface';
+import { FlatService } from '@core/services/flat.service';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +13,73 @@ export class VideoSyncService {
   private readonly _jwpService = inject(JwpService);
   private readonly _lessonService = inject(LessonService);
   private readonly _diapoService = inject(DiapoStateService);
+  private readonly _flatService = inject(FlatService);
+  private readonly _coreData = inject(CoreDataService);
 
   constructor() {
     this._initAutoSync();
+    this._initScoreSync();
+    this._initScoreToVideoInteractivity();
+  }
+
+  /**
+   * Listens to requests coming FROM the score (Flat.io UI) 
+   * to control the Video (JW Player).
+   */
+  private _initScoreToVideoInteractivity(): void {
+    // 1. Seek Request (Inverse Seek)
+    effect(() => {
+      const request = this._coreData.seekRequest();
+      if (request) {
+        untracked(() => {
+          const jwId = this._coreData.jwPlayerId();
+          console.log('%c[VideoSyncService] INTERCEPTED SEEK REQUEST:', 'background: #2196F3; color: white; padding: 2px 5px', {
+            time: request.time,
+            jwId: jwId,
+            jwpReady: this._jwpService.isReady()
+          });
+
+          // La vidéo ne réagit que si un ID JW est présent
+          if (jwId) {
+            console.log(`[VideoSyncService] Executing JW Player Seek to ${request.time}s`);
+            this._jwpService.seek(request.time);
+          } else {
+            console.warn('[VideoSyncService] Seek ignored: No jwPlayerId found in CoreData');
+          }
+        });
+      }
+    });
+
+    // 2. Loop Request
+    effect(() => {
+      const request = this._coreData.loopRangeRequest();
+      if (request) {
+        untracked(() => {
+          if (this._coreData.jwPlayerId()) {
+            console.log(`[VideoSyncService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s]`);
+            this._jwpService.setLoopRange(request.start, request.end);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Synchronizes Flat.io score with video playback time.
+   */
+  private _initScoreSync(): void {
+    effect(() => {
+      const currentTime = this._jwpService.positionMs() / 1000;
+      const isPlaying = this._jwpService.playbackState() === 'playing';
+      const isReady = this._flatService.isReady();
+
+      if (isReady && currentTime > 0) {
+        untracked(() => {
+            // console.log(`[VideoSyncService] Syncing Score with Video Time: ${currentTime}s (Playing: ${isPlaying})`);
+            this._flatService.syncWithAudio(currentTime, isPlaying);
+        });
+      }
+    });
   }
 
   /**

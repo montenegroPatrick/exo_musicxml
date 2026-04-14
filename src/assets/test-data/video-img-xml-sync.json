@@ -8,32 +8,24 @@
   "loadVideo": true,
   "jw": "cLGmQ6rh",
   "subtitles": [],
-  "videoSync": [
+   "videoSync": [
     {
-      "timeCode": 0,
-      "pos": 0
+      "type": "start",
+      "time": 0,
+      "location": {
+        "measureIdx": 0
+      }
     },
     {
-      "timeCode": 80,
-      "pos": 1
+      "type": "end",
+      "time": 80
     }
   ],
   "loadAudio": false,
   "typeImg": "xml",
+  "url": "https://www.imusic-school.tv/app/datas/partitions/68149.xml",
   "printable": true,
   "printExt": "bbGVzc29uL3NsXzQvcGRmLzI2",
   "loadImg": true,
-  "pos": 0,
-  "imageList": [
-    {
-      "pos": 1,
-      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/sl_4\/score\/64372\/",
-      "ext": ".gif"
-    },
-    {
-      "pos": 2,
-      "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/sl_4\/score\/64373\/",
-      "ext": ".gif"
-    }
-  ]
+  "pos": 0
 }

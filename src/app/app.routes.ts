@@ -40,6 +40,11 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/video-diapo/video-diapo.component').then(m => m.VideoDiapoComponent),
       },
       {
+        path: 'video-score',
+        data: { showNavigation: true, controlBar: 'video-xml' },
+        loadComponent: () => import('./modules/video-score/video-score.component').then(m => m.VideoScoreComponent),
+      },
+      {
         path: 'diapo',
         data: { showNavigation: true },
         loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),

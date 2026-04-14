@@ -4,6 +4,7 @@ import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -28,6 +29,7 @@ export class VideoBarComponent {
   protected readonly _jwpService = inject(JwpService);
   private readonly _bridgeService = inject(BridgeService);
   public readonly _lessonService = inject(LessonService);
+  private readonly _diapoService = inject(DiapoStateService);
 
   // -- Inputs --
   showNavigation = input<boolean>(true);
@@ -35,6 +37,7 @@ export class VideoBarComponent {
   // -- Component Local State --
   activeTab = signal<'video' | 'metronome'>('video');
   showInfoPopin = signal(false);
+  showSettingsPopin = signal(false);
   private _popinTimer: any;
 
   // -- Reactive Derived State --
@@ -42,6 +45,8 @@ export class VideoBarComponent {
   durationInSec = computed(() => this._jwpService.duration() / 1000);
   currentTime = this._controlBarService.time;
   isPlaying = this._controlBarService.isPlaying;
+  layoutMode = this._diapoService.layoutMode;
+  sidebarPosition = this._diapoService.sidebarPosition;
   
   // Metadata Signals
   chapterTitle = this._lessonService.chapterTitle;
@@ -114,11 +119,28 @@ export class VideoBarComponent {
       clearTimeout(this._popinTimer);
     }
     
+    this.showSettingsPopin.set(false);
     this.showInfoPopin.set(true);
     
     this._popinTimer = setTimeout(() => {
       this.showInfoPopin.set(false);
       this._popinTimer = null;
     }, 3000);
+  }
+
+  toggleSettingsPopin(): void {
+    this.showInfoPopin.set(false);
+    this.showSettingsPopin.update(v => !v);
+  }
+
+  setLayout(mode: 'standard' | 'expanded'): void {
+    this._diapoService.setLayoutMode(mode);
+    this.showSettingsPopin.set(false);
+  }
+
+  setFullLayout(mode: 'standard' | 'expanded', pos: 'left' | 'right'): void {
+    this._diapoService.setLayoutMode(mode);
+    this._diapoService.setSidebarPosition(pos);
+    this.showSettingsPopin.set(false);
   }
 }

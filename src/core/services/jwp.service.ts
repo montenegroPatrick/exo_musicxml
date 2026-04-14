@@ -40,6 +40,11 @@ export class JwpService {
   private readonly _volume = signal<number>(50);
   private readonly _playbackRate = signal<number>(1);
 
+  // -- Loop State --
+  private readonly _isLooping = signal<boolean>(false);
+  private readonly _loopStart = signal<number | null>(null);
+  private readonly _loopEnd = signal<number | null>(null);
+
   // -- Public Readonly Signals --
   readonly isReady = this._isReady.asReadonly();
   readonly positionMs = this._positionMs.asReadonly();
@@ -47,6 +52,9 @@ export class JwpService {
   readonly playbackState = this._playbackState.asReadonly();
   readonly volume = this._volume.asReadonly();
   readonly playbackRate = this._playbackRate.asReadonly();
+  readonly isLooping = this._isLooping.asReadonly();
+  readonly loopStart = this._loopStart.asReadonly();
+  readonly loopEnd = this._loopEnd.asReadonly();
   
   // Compatibility alias for VideoComponent
   readonly state = this.playbackState;
@@ -110,8 +118,19 @@ export class JwpService {
     if (!this._player) return;
 
     this._player.on('time', (event: any) => {
-      const ms = event.position * 1000;
+      const seconds = event.position;
+      const ms = seconds * 1000;
       this._positionMs.set(ms);
+
+      // -- Loop Logic --
+      if (this._isLooping() && this._loopEnd() !== null) {
+        if (seconds >= this._loopEnd()!) {
+           console.log(`[JwpService] Loop trigger: ${seconds}s >= ${this._loopEnd()}s. Seeking to ${this._loopStart()}s`);
+           this.seek(this._loopStart() || 0);
+           return;
+        }
+      }
+
       this._timeCallbacks.forEach(cb => cb(ms));
     });
 
@@ -186,6 +205,18 @@ export class JwpService {
 
   seek(position: number): void {
     this._player?.seek(position);
+  }
+
+  setLoopRange(start: number | null, end: number | null): void {
+    if (start === null || end === null) {
+      this._isLooping.set(false);
+      this._loopStart.set(null);
+      this._loopEnd.set(null);
+    } else {
+      this._isLooping.set(true);
+      this._loopStart.set(start);
+      this._loopEnd.set(end);
+    }
   }
 
   setVolume(volume: number): void {

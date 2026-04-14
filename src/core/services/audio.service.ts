@@ -98,10 +98,36 @@ export class AudioService {
       }
     });
 
-    // Traceur de signal logic
+    // -- Tracé de signal logic --
     effect(() => {
       const playing = this._isPlaying();
       console.log(`%c[AudioService:Trace] isPlaying changed to: ${playing}`, 'background: #333; color: #FFEB3B; padding: 2px 5px; font-weight: bold');
+    });
+
+    // -- Inverse Interactivity (Score -> Audio) --
+    effect(() => {
+      const request = this._coreData.seekRequest();
+      if (request) {
+        untracked(() => {
+          // L'audio ne réagit que si des pistes sont chargées (mode lesson-playback)
+          if (this._audioTracks().length > 0) {
+            console.log(`[AudioService] Inverse Seek requested via CoreData: ${request.time}s`);
+            this.seek(request.time);
+          }
+        });
+      }
+    });
+
+    effect(() => {
+      const request = this._coreData.loopRangeRequest();
+      if (request) {
+        untracked(() => {
+          if (this._audioTracks().length > 0) {
+             console.log(`[AudioService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s]`);
+             this.setLoopRange(request.start, request.end);
+          }
+        });
+      }
     });
   }
 

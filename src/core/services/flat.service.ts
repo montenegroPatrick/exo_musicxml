@@ -9,7 +9,7 @@ import {
 import { Sync } from '@core/interfaces/lesson.interface';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { CoreDataService } from './core-data.service';
-import { AudioService } from './audio.service';
+
 
 export interface RangeSelection {
   left: any;
@@ -25,7 +25,6 @@ export interface LoopBounds {
 export class FlatService {
   private _lessonService = inject(LessonService);
   private _coreDataStore = inject(CoreDataService);
-  private _audioService = inject(AudioService);
   private embed: any | undefined;
   private readonly TRACK_ID = 'external-1';
   private _lastSyncedTime = 0;
@@ -50,16 +49,11 @@ export class FlatService {
   readonly lessonJson = this._coreDataStore.lessonJson;
   readonly diapoType = computed(() => this._lessonService.diapoType());
   readonly syncPoints = computed(() => {
-    const sync = this._coreDataStore.syncPoints();
-    const speed = this._audioService.playbackRate();
-    if (speed === 1) return sync;
-    return sync.map(p => ({ ...p, time: p.time / speed }));
+    return this._coreDataStore.syncPoints();
   });
   
   readonly totalTime = computed(() => {
-    const totalDuration = this._coreDataStore.totalTime();
-    const speed = this._audioService.playbackRate();
-    return totalDuration / speed;
+    return this._coreDataStore.totalTime();
   });
 
   // Measure tracking
@@ -73,6 +67,10 @@ export class FlatService {
   readonly loopStart = signal<number | null>(null);
   readonly loopEnd = signal<number | null>(null);
 
+  // -- Interaction Requests (Agnostic) --
+  readonly seekRequest = this._coreDataStore.seekRequest;
+  readonly loopRangeRequest = this._coreDataStore.loopRangeRequest;
+
   // Speed management
   private readonly _currentSpeed = signal<number>(1);
   readonly currentSpeed = this._currentSpeed.asReadonly();
@@ -80,19 +78,24 @@ export class FlatService {
   constructor() {
     // 2. Playback Speed Sync
     effect(() => {
-      const rate = this._audioService.playbackRate();
-      if (this.isReady()) {
-        untracked(() => this.setPlaybackSpeed(rate));
-      }
+      // NOTE: Le playback rate est géré dynamiquement par les services de synchro
     });
 
     // 3. Reactive Track Initialization
     effect(() => {
       const sync = this.syncPoints();
       const ready = this.isReady();
-      // console.log(`[FlatService:Effect] Ready: ${ready}, SyncPoints: ${sync.length}`);
       if (ready && sync.length > 0 && this.embed) {
         untracked(() => this.setupTrack());
+      }
+    });
+
+    // 4. Reactive Measure Points Calculation
+    effect(() => {
+      const nb = this.nbMeasures();
+      const sync = this.syncPoints();
+      if (nb > 0 && sync.length >= 2) {
+        untracked(() => this.calculateMeasurePoints());
       }
     });
   }
@@ -137,36 +140,13 @@ export class FlatService {
     }
   }
 
-  onAudioPlay(): void {
-    if (!this.embed) return;
-    
-    const sync = this.syncPoints();
-    const startTime = sync.length > 0 ? sync[0].time : 0;
-    const currentAudioTime = this._audioService.currentTime();
-    
-    // Si on est avant le début des points de synchro, on ne fait rien
-    if (currentAudioTime < startTime) return;
-
-    // On lance la lecture de Flat si on peut, mais on ne bloque rien
-    this._isPlaying.set(true);
-    this.embed.play().catch(() => {
-        // Flat n'est peut-être pas encore prêt, ce n'est pas grave
-    });
-  }
-
-  onAudioPause(): void {
-    if (this.embed) {
-      this._isPlaying.set(false);
-      this.embed.pause().catch(() => {});
-    }
-  }
 
   async initEmbed(container: HTMLElement, customOptions: any = {}): Promise<void> {
     if (this.embed) {
       this.destroyEmbed();
     }
 
-    const layout = 'track';
+    const layout = 'responsive';
     
     this.embed = new Embed(container, {
       layout: layout,
@@ -203,20 +183,53 @@ export class FlatService {
 
   async loadMusicXML(xml: string): Promise<void> {
     if (!this.embed) return;
+    
     try {
-      await this.embed.loadMusicXML(xml);
+      let xmlContent = xml.trim();
+      
+      // 1. Si c'est une URL, on fetch le contenu texte (Logique originale)
+      if (xmlContent.startsWith('http')) {
+        console.log('[FlatService] Fetching MusicXML from URL:', xmlContent);
+        const response = await fetch(xmlContent);
+        if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
+        xmlContent = await response.text();
+      }
+
+      // 2. On s'assure que Flat est prêt pour l'injection
+      if (!this._isReady()) {
+        console.log('[FlatService] Waiting for Flat ready before injection...');
+        await new Promise<void>((resolve) => {
+          this.embed.on('ready', () => resolve());
+          // Timeout de sécurité
+          setTimeout(() => resolve(), 500);
+        });
+      }
+
+      await this.embed.loadMusicXML(xmlContent);
       this._isReady.set(true);
 
-      const uuids = await this.embed.call('getMeasuresUuids');
+      // 3. Récupération robuste des mesures (Attente si nécessaire)
+      let uuids: string[] = [];
+      let retries = 0;
+      while (uuids.length === 0 && retries < 10) {
+        uuids = await this.embed.call('getMeasuresUuids');
+        if (uuids.length === 0) {
+          console.log(`[FlatService] Waiting for measures (Retry ${retries + 1})...`);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          retries++;
+        }
+      }
+
       this.measuresUuids.set(uuids);
-      this.nbMeasures.set(uuids.length - 1);
+      this.nbMeasures.set(uuids.length);
+
+      console.log('%c[FlatService] EXTRACTED UUIDS COUNT:', 'color: #FFEB3B', uuids.length);
 
       const details = await this.embed.call('getMeasureDetails');
+      console.log('%c[FlatService] MEASURE DETAILS DUMP:', 'background: #9C27B0; color: white', details?.[0], '... total:', details?.length);
       this.measureDetails.set(details);
-      
-      this.calculateMeasurePoints();
     } catch (error) {
-      // Silent error
+      console.error('[FlatService] Error loading MusicXML:', error);
     }
   }
 
@@ -232,7 +245,13 @@ export class FlatService {
     const syncPts = this.syncPoints();
     const nbMeasures = this.nbMeasures();
 
-    if (syncPts.length < 2 || nbMeasures === 0) return;
+    console.log('%c[FlatService] NB MEASURES:', 'background: #FFEB3B; color: black; padding: 2px 5px; font-weight: bold', nbMeasures);
+    console.log('%c[FlatService] SYNC POINTS COUNT:', 'background: #FFEB3B; color: black; padding: 2px 5px', syncPts.length);
+
+    if (syncPts.length < 2 || nbMeasures === 0) {
+      console.warn('[FlatService] Cannot calculate measure points: missing data', { syncPts, nbMeasures });
+      return;
+    }
 
     const endTime = syncPts[syncPts.length - 1].time;
 
@@ -246,17 +265,63 @@ export class FlatService {
 
       if (nextSyncPoint.type === 'end') {
         nbMeasureToInsert = nbMeasures - (syncPoint.location?.measureIdx ?? 0);
-        timeOfMeasure = (endTime - syncPoint.time) / nbMeasureToInsert;
+        timeOfMeasure = (endTime - syncPoint.time) / (nbMeasureToInsert || 1);
       } else {
         nbMeasureToInsert = (nextSyncPoint.location?.measureIdx ?? 0) - (syncPoint.location?.measureIdx ?? 0);
-        timeOfMeasure = (nextSyncPoint.time - syncPoint.time) / nbMeasureToInsert;
+        timeOfMeasure = (nextSyncPoint.time - syncPoint.time) / (nbMeasureToInsert || 1);
       }
 
       for (let index = 0; index < nbMeasureToInsert; index++) {
         points.push(timeOfMeasure * index + currentStart);
       }
     }
+
+    // -- Extrapolation Final Phase --
+    // If we have more measures in the score than in the sync points, 
+    // we extrapolate using the remaining time till the end of the video.
+    const lastSyncPoint = syncPts[syncPts.length - 1];
+    if (points.length < nbMeasures && lastSyncPoint) {
+        let durationPerMeasure = 2; // Default fallback
+        const prevSyncPoint = syncPts.length >= 2 ? syncPts[syncPts.length - 2] : null;
+
+        if (prevSyncPoint) {
+            const segDuration = lastSyncPoint.time - prevSyncPoint.time;
+            const segMeasures = (lastSyncPoint.location?.measureIdx ?? 0) - (prevSyncPoint.location?.measureIdx ?? 0);
+            if (segMeasures > 0) durationPerMeasure = segDuration / segMeasures;
+        }
+
+        const remainingMeasures = nbMeasures - (lastSyncPoint.location?.measureIdx ?? 0);
+        const totalDuration = this.totalTime();
+        const remainingTime = totalDuration - lastSyncPoint.time;
+
+        // Si on a encore du temps réel devant nous, on affine
+        if (remainingTime > 0.1 && remainingMeasures > 0) {
+            durationPerMeasure = remainingTime / remainingMeasures;
+            console.log(`[FlatService] Smart Extrapolation: ${remainingMeasures} measures over ${remainingTime.toFixed(2)}s (${durationPerMeasure.toFixed(2)}s/m)`);
+        } else {
+            console.log(`[FlatService] Constant Tempo Extrapolation: ${durationPerMeasure.toFixed(2)}s/m`);
+        }
+
+        const currentPointsCount = points.length;
+        const startMeasureIdx = lastSyncPoint.location?.measureIdx ?? 0;
+        const totalToPush = nbMeasures - currentPointsCount;
+        
+        for (let i = 0; i < totalToPush; i++) {
+            const absoluteMeasureIdx = currentPointsCount + i;
+            const offsetFromLastSync = absoluteMeasureIdx - startMeasureIdx;
+            const calculatedTime = lastSyncPoint.time + (offsetFromLastSync * durationPerMeasure);
+            
+            // On plafonne seulement si on a une vraie durée totale supérieure au dernier point
+            if (totalDuration > lastSyncPoint.time) {
+                points.push(Math.min(calculatedTime, totalDuration));
+            } else {
+                points.push(calculatedTime);
+            }
+        }
+    }
+
     this.measurePoints.set(points);
+    console.log(`[FlatService] Final measurePoints count: ${points.length} (nbMeasures: ${nbMeasures})`);
   }
 
   async play(): Promise<void> {
@@ -297,13 +362,21 @@ export class FlatService {
     this.embed.on('ready', () => { this._isReady.set(true); });
 
     this.embed.on('cursorPosition', (async (position: any) => {
-      if (this.loopMode()) return;
+      console.log('%c[FlatService] CURSOR POSITION EVENT:', 'background: #FF5722; color: white; padding: 2px 5px', position);
+      
+      if (this.loopMode()) {
+        console.log('[FlatService] Seek ignored because LoopMode is active');
+        return;
+      }
+
       const time = await this.findTimeByMeasure(position);
+      console.log(`[FlatService] Measure to Time mapping: ${time}s`);
+
       if (time !== null) {
-        untracked(() => {
-          if (this._isPlaying()) this._audioService.pause();
-          this._audioService.seek(time);
-        });
+        console.log(`[FlatService] DISPATCHING SEEK REQUEST to CoreData: ${time}s`);
+        this._coreDataStore.requestSeek(time);
+      } else {
+        console.warn('[FlatService] Could not map measure to time. measurePoints length:', this.measurePoints().length);
       }
       this.cursorPositionCallbacks.forEach(cb => cb(position));
     }) as any);
@@ -313,18 +386,21 @@ export class FlatService {
         this.loopMode.set(false);
         this.loopStart.set(null);
         this.loopEnd.set(null);
-        this._audioService.setLoopRange(null, null);
+        this._coreDataStore.requestLoopRange(null, null);
         this.rangeSelectionCallbacks.forEach(cb => cb(null));
         return;
       }
+
+      // 3. Application logique du temps
       this.loopMode.set(true);
       const startTime = await this.findTimeByMeasure(selection.left, false);
       const endTime = await this.findTimeByMeasure(selection.right, true);
+      
       if (startTime !== null && endTime !== null) {
+        console.log(`[FlatService] Range selection detected. Requesting Loop: [${startTime}s - ${endTime}s]`);
         this.loopStart.set(startTime);
         this.loopEnd.set(endTime);
-        this._audioService.setLoopRange(startTime, endTime);
-        this._audioService.seek(startTime);
+        this._coreDataStore.requestLoopRange(startTime, endTime);
         this.rangeSelectionCallbacks.forEach(cb => cb(selection));
       }
     }) as any);
@@ -332,9 +408,29 @@ export class FlatService {
 
   async findTimeByMeasure(position: any, isEnd = false): Promise<number | null> {
     const { measureUuid } = position;
-    const measureIndex = this.measuresUuids().findIndex(e => e === measureUuid);
-    if (measureIndex === -1 || this.measurePoints().length === 0) return null;
-    return this.measurePoints()[measureIndex];
+    const uuids = this.measuresUuids();
+    const points = this.measurePoints();
+    
+    const measureIndex = uuids.findIndex(e => e === measureUuid);
+    
+    if (measureIndex === -1 || points.length === 0) {
+      console.warn('[FlatService] findTimeByMeasure failed:', { measureIndex, pointsLength: points.length });
+      return null;
+    }
+    
+    if (isEnd) {
+      // Pour une fin de sélection, on veut inclure la mesure complète
+      // On prend donc le point de départ de la mesure suivante.
+      const targetIndex = measureIndex + 1;
+      if (targetIndex < points.length) {
+        return points[targetIndex];
+      } else {
+        // C'est la toute dernière mesure de la partition
+        return this.totalTime();
+      }
+    }
+    
+    return points[measureIndex] ?? null;
   }
 
   async getNbMeasures(): Promise<number> {
@@ -373,7 +469,7 @@ export class FlatService {
   }
 
   async reinitializeTrackWithSpeed(speed: number): Promise<void> {
-    this._audioService.setPlaybackRate(speed);
+    this._currentSpeed.set(speed);
     await this.setupTrack();
     await this.embed.call('setPlaybackSpeed', { speed });
   }

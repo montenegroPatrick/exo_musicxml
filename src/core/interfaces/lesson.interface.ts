@@ -1,4 +1,4 @@
-export type LessonModuleType = 'video' | 'video-diapo' | 'diapo';
+export type LessonModuleType = 'video' | 'video-diapo' | 'diapo' | 'audio-mixer' | 'video-xml';
 export type DiapoType = 'xml' | 'eps' | 'pdf' | 'html';
 export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer';
 

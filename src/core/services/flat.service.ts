@@ -469,9 +469,44 @@ export class FlatService {
   }
 
   async reinitializeTrackWithSpeed(speed: number): Promise<void> {
+    // 1. Capture de l'état actuel et activation de l'overlay
+    const wasPlaying = this._isPlaying();
+    this._coreDataStore.setSyncing(true, 'Synchronisation de la partition...');
+    
+    // 2. Mise en pause immédiate de tous les moteurs
+    this._coreDataStore.requestPause();
     this._currentSpeed.set(speed);
-    await this.setupTrack();
-    await this.embed.call('setPlaybackSpeed', { speed });
+
+    try {
+      // 3. Réinitialisation technique de l'Embed Flat.io
+      console.log(`[FlatService] Starting re-sync for speed: ${speed}x`);
+      await this.setupTrack();
+      await this.embed.call('setPlaybackSpeed', { speed });
+
+      // 4. Délai de stabilisation minimal (presque imperceptible)
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 5. Recalage visuel immédiat
+      // On force l'embed à se caler au dernier temps connu pour synchroniser l'affichage
+      await this.embed.call('seekTrackTo', { time: this._lastSyncedTime });
+
+      // 6. Mise à jour de la vitesse du moteur audio via le bus de commande
+      this._coreDataStore.requestRate(speed);
+
+    } catch (err) {
+      console.error('[FlatService] Error during speed reinitialization:', err);
+    } finally {
+      // 7. Retrait de l'overlay
+      this._coreDataStore.setSyncing(false);
+      
+      // 8. Reprise automatique si la lecture était en cours
+      if (wasPlaying) {
+        // Petit délai pour laisser l'interface s'effacer proprement
+        setTimeout(() => {
+          this._coreDataStore.requestPlay();
+        }, 150);
+      }
+    }
   }
 
   private async setupTrack(): Promise<void> {

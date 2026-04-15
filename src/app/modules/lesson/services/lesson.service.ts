@@ -141,6 +141,27 @@ export class LessonService {
     }
   }
 
+  /**
+   * Decide which route to navigate to based on the lesson metadata
+   */
+  getTargetRoute(): string {
+    const type = this.moduleType();
+    const ctrlType = this.controlBarType();
+    
+    // Si c'est une leçon avec mixeur audio
+    if (type === 'audio-mixer' || ctrlType === 'audio-mixer') {
+        return 'lesson-playback';
+    }
+    
+    // Si c'est une leçon vidéo + partition synchronisée
+    if (type === 'video-xml' || ctrlType === 'video-xml') {
+        return 'video-score';
+    }
+
+    // Par défaut, on va sur la vue vidéo simple
+    return 'video';
+  }
+
   clearLesson(): void {
     this._coreDataStore.clear();
     this._lessonId.set('');

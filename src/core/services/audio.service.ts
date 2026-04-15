@@ -8,8 +8,9 @@ import {
   untracked,
 } from '@angular/core';
 import { CoreDataService } from './core-data.service';
-import { TrackList } from '@core/interfaces/lesson.interface'; // Just for typing if needed, but we use signals
+import { TrackList } from '@core/interfaces/lesson.interface';
 import { environment } from '@environments/environment';
+import { FlatService } from './flat.service';
 
 export interface ITimeListener {
   syncWithAudio(time: number, isPlaying: boolean): void;
@@ -22,6 +23,7 @@ interface AudioTrack {
   label: string;
   buffer: AudioBuffer;
   sourceNode: AudioBufferSourceNode | null;
+  stretchNode: AudioWorkletNode | null; // <-- Nouveau nœud
   pannerNode: StereoPannerNode;
   analyserNode: AnalyserNode;
   gainNode: GainNode;
@@ -36,6 +38,7 @@ interface AudioTrack {
 })
 export class AudioService {
   private _coreData = inject(CoreDataService);
+  private _flatService = inject(FlatService);
 
   private _lessonJson = this._coreData.lessonJson;
   private _audioContext: AudioContext = new AudioContext();
@@ -59,6 +62,7 @@ export class AudioService {
   private _pausedAt = 0;
   private _animationFrameId: number | null = null;
   private _isInitializing = false;
+  private _isWorkletLoaded = false;
   
   // -- Time Synchronization Listeners --
   private _listeners: ITimeListener[] = [];
@@ -129,6 +133,49 @@ export class AudioService {
         });
       }
     });
+
+    // -- Global Pause Coordination --
+    effect(() => {
+      const request = this._coreData.pauseRequest();
+      if (request) {
+        untracked(() => {
+          console.log('[AudioService] Global Pause requested for synchronization');
+          this.pause();
+        });
+      }
+    });
+
+    effect(() => {
+      const request = this._coreData.playRequest();
+      if (request) {
+        untracked(() => {
+          console.log('[AudioService] Global Play requested');
+          this.play();
+        });
+      }
+    });
+
+    effect(() => {
+      const request = this._coreData.rateRequest();
+      if (request) {
+        untracked(() => {
+          console.log(`[AudioService] Global Rate Change requested: ${request.rate}`);
+          this.internalSetRate(request.rate);
+        });
+      }
+    });
+  }
+
+  private async _ensureWorkletLoaded(): Promise<void> {
+    if (this._isWorkletLoaded) return;
+    try {
+      // Le chemin pointe vers le fichier copié dans public/workers/
+      await this._audioContext.audioWorklet.addModule('/workers/SignalsmithStretch.js');
+      this._isWorkletLoaded = true;
+      console.log('%c[AudioService] SignalsmithStretch Worklet loaded successfully!', 'color: #4CAF50');
+    } catch (e) {
+      console.error('[AudioService] Failed to load SignalsmithStretch Worklet:', e);
+    }
   }
 
   async init(): Promise<void> {
@@ -136,6 +183,7 @@ export class AudioService {
     this._isInitializing = true;
 
     try {
+      await this._ensureWorkletLoaded();
       const trackList = this.tracks();
       const folder = this.folderSound();
       
@@ -190,6 +238,7 @@ export class AudioService {
             label: track.label ?? track.name,
             buffer,
             sourceNode: null,
+            stretchNode: null,
             pannerNode,
             analyserNode,
             gainNode,
@@ -234,13 +283,44 @@ export class AudioService {
   private _createSourceNodes(): void {
     const tracks = this._audioTracks();
     const playbackRate = this._playbackRate();
+    const useCheaper = tracks.length > 4;
     
     tracks.forEach((track) => {
+      // 1. Source
       const sourceNode = this._audioContext.createBufferSource();
       sourceNode.buffer = track.buffer;
       sourceNode.playbackRate.value = playbackRate;
-      // Connect Source to Panner
-      sourceNode.connect(track.pannerNode);
+      
+      // 2. Stretch Node (si chargé)
+      if (this._isWorkletLoaded) {
+        try {
+          track.stretchNode = new AudioWorkletNode(this._audioContext, 'signalsmith-stretch', {
+            outputChannelCount: [2]
+          });
+          // Appliquer le preset si besoin
+          if (useCheaper) {
+            track.stretchNode.port.postMessage([0, 'configure', { preset: 'cheaper' }]);
+          }
+          
+          // Calculer le transposeFactor pour compenser le playbackRate
+          // Si on ralentit par 0.5, on doit monter le pitch par 2.0 pour rester stable
+          const transpose = 1 / (playbackRate || 1);
+          track.stretchNode.port.postMessage([1, 'start', { 
+            active: true, 
+            rate: 1, // On laisse la vitesse à la source, on ne fait que du pitch shifting ici
+            semitones: 12 * Math.log2(transpose) 
+          }]);
+
+          sourceNode.connect(track.stretchNode);
+          track.stretchNode.connect(track.pannerNode);
+        } catch (e) {
+          console.warn('[AudioService] Could not create StretchNode, falling back to direct connection', e);
+          sourceNode.connect(track.pannerNode);
+        }
+      } else {
+        sourceNode.connect(track.pannerNode);
+      }
+
       track.sourceNode = sourceNode;
     });
   }
@@ -404,11 +484,13 @@ export class AudioService {
       if (track.sourceNode) {
         try {
           track.sourceNode.stop();
-        } catch {
-          // Source may already be stopped
-        }
+        } catch {}
         track.sourceNode.disconnect();
         track.sourceNode = null;
+      }
+      if (track.stretchNode) {
+        track.stretchNode.disconnect();
+        track.stretchNode = null;
       }
     });
   }
@@ -510,11 +592,26 @@ export class AudioService {
   }
 
   setPlaybackRate(rate: number): void {
+    // On déclenche le processus complet de recalage via FlatService
+    this._flatService.reinitializeTrackWithSpeed(rate);
+  }
+
+  /** Internal method to actually apply the rate once synchronized */
+  internalSetRate(rate: number): void {
     this._playbackRate.set(rate);
     const tracks = this._audioTracks();
+    const transpose = 1 / (rate || 1);
+    const semitones = 12 * Math.log2(transpose);
+
     tracks.forEach((track) => {
       if (track.sourceNode) {
-        track.sourceNode.playbackRate.value = rate;
+        track.sourceNode.playbackRate.setTargetAtTime(rate, this._audioContext.currentTime, 0.015);
+      }
+      if (track.stretchNode) {
+        track.stretchNode.port.postMessage([Date.now(), 'schedule', { 
+          semitones: semitones,
+          outputTime: this._audioContext.currentTime 
+        }]);
       }
     });
   }

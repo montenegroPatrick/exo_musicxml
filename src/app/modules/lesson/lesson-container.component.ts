@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { LessonService } from './services/lesson.service';
 import { ControlBarComponent } from '../control-bar/control-bar.component';
 import { ControlBarService } from '../control-bar/services/control-bar.service';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Component({
   selector: 'app-lesson-container',
@@ -96,9 +97,12 @@ export class LessonContainerComponent implements OnInit {
   private readonly _router = inject(Router);
   private readonly _lessonService = inject(LessonService);
   private readonly _controlBarService = inject(ControlBarService);
+  private readonly _coreData = inject(CoreDataService);
 
   // -- Reactive Mappings --
   readonly isLoading = this._lessonService.isLoading;
+  readonly isSyncing = this._coreData.isSyncing;
+  readonly syncMessage = this._coreData.syncMessage;
   readonly error = this._lessonService.error;
   readonly lessonJson = this._lessonService.lessonJson;
   readonly moduleType = this._lessonService.moduleType;

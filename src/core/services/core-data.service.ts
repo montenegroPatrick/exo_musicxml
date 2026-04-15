@@ -13,6 +13,12 @@ export class CoreDataService {
   // -- Interaction Requests (Agnostic Command Store) --
   private readonly _seekRequest = signal<{ time: number, timestamp: number } | null>(null);
   private readonly _loopRangeRequest = signal<{ start: number | null, end: number | null, timestamp: number } | null>(null);
+  private readonly _pauseRequest = signal<{ timestamp: number } | null>(null);
+  private readonly _playRequest = signal<{ timestamp: number } | null>(null);
+  private readonly _rateRequest = signal<{ rate: number, timestamp: number } | null>(null);
+
+  private readonly _isSyncing = signal<boolean>(false);
+  private readonly _syncMessage = signal<string>('Optimisation de la partition...');
 
   // -- Public Readonly Accessors --
   readonly lessonJson = this._lessonJson.asReadonly();
@@ -20,6 +26,32 @@ export class CoreDataService {
   readonly exercisePayload = this._exercisePayload.asReadonly();
   readonly seekRequest = this._seekRequest.asReadonly();
   readonly loopRangeRequest = this._loopRangeRequest.asReadonly();
+  readonly pauseRequest = this._pauseRequest.asReadonly();
+  readonly playRequest = this._playRequest.asReadonly();
+  readonly rateRequest = this._rateRequest.asReadonly();
+  readonly isSyncing = this._isSyncing.asReadonly();
+  readonly syncMessage = this._syncMessage.asReadonly();
+
+  /** Set the syncing state with an optional message */
+  setSyncing(value: boolean, message: string = 'Optimisation...'): void {
+    this._syncMessage.set(message);
+    this._isSyncing.set(value);
+  }
+
+  /** Request a global audio/video pause */
+  requestPause(): void {
+    this._pauseRequest.set({ timestamp: Date.now() });
+  }
+
+  /** Request a global audio/video play */
+  requestPlay(): void {
+    this._playRequest.set({ timestamp: Date.now() });
+  }
+
+  /** Request a change in playback rate */
+  requestRate(rate: number): void {
+    this._rateRequest.set({ rate, timestamp: Date.now() });
+  }
 
   // -- Metadata Computeds --
   readonly chapter = computed(() => this.lessonJson()?.chapter ?? this.lessonJson()?.Chapter);

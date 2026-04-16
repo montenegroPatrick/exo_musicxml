@@ -99,14 +99,6 @@ export class DiapoComponent implements OnInit {
     }
   }
 
-  toggleViewMode(): void {
-    this._diapoService.setViewMode(this.viewMode() === 'fit' ? 'zoom' : 'fit');
-  }
-
-  toggleLayoutMode(): void {
-    this._diapoService.setLayoutMode(this.layoutMode() === 'standard' ? 'expanded' : 'standard');
-  }
-
   printPdf(): void {
     if (this.type() === 'xml') return;
     

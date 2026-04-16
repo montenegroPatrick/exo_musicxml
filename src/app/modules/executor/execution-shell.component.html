@@ -49,15 +49,13 @@
   <!-- Dynamic Control Bar -->
   @if (showControlBar()) {
     <footer class="w-full h-20 overflow-visible z-50 bg-[#FA5E46] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
-      @if (controlBarType() === 'audiomixer') {
-        <app-audiomixer-control-bar-v2 
-          class="w-full h-full relative block"
-          [showNavigation]="showNavigation()">
-        </app-audiomixer-control-bar-v2>
+      @if (controlBarType() === 'audio-mixer') {
+        <app-audiomixer-control-bar 
+          class="w-full h-full relative block">
+        </app-audiomixer-control-bar>
       } @else {
         <app-control-bar 
-          class="w-full h-full relative block"
-          [showNavigation]="showNavigation()">
+          class="w-full h-full relative block">
         </app-control-bar>
       }
     </footer>

@@ -16,57 +16,47 @@ export const routes: Routes = [
     children: [
       {
         path: 'lesson-playback',
-        data: { showNavigation: true, controlBar: 'audiomixer' },
-        loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
-      },
-      {
-        path: 'score-playback',
-        data: { showNavigation: true, controlBar: 'audiomixer' },
-        loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
-      },
-      {
-        path: 'playback',
-        data: { showNavigation: true, controlBar: 'audiomixer' },
+        data: { controlBar: 'audiomixer' },
         loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
       },
       {
         path: 'video',
-        data: { showNavigation: true },
+        data: { },
         loadComponent: () => import('./modules/video/video-page.component').then(m => m.VideoPageComponent),
       },
       {
         path: 'video-diapo',
-        data: { showNavigation: true },
+        data: { },
         loadComponent: () => import('./modules/video-diapo/video-diapo.component').then(m => m.VideoDiapoComponent),
       },
       {
         path: 'video-score',
-        data: { showNavigation: true, controlBar: 'video-xml' },
+        data: { controlBar: 'video-xml' },
         loadComponent: () => import('./modules/video-score/video-score.component').then(m => m.VideoScoreComponent),
       },
       {
         path: 'diapo',
-        data: { showNavigation: true },
+        data: { },
         loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'tap-rythm',
-        data: { showNavigation: true },
+        data: { },
         loadComponent: () => import('./modules/tap-rythm/tap-rythm.component').then(m => m.TapRythmPageComponent),
       },
       {
         path: 'music-xml',
-        data: { showNavigation: true },
+        data: { },
         loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
       },
       {
         path: 'drummachine',
-        data: { showNavigation: false, controlBar: 'drummachine' },
+        data: { controlBar: 'drummachine' },
         loadComponent: () => import('./modules/video/video-page.component').then(m => m.VideoPageComponent),
       },
       {
         path: 'metronome',
-        data: { showNavigation: false, hideControlBar: true },
+        data: { hideControlBar: true },
         loadComponent: () => import('./modules/metronome/metronome-page.component').then(m => m.MetronomePageComponent),
       },
       // Root redirect

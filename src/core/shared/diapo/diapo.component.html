@@ -25,28 +25,6 @@
         ></p-button>
       }
 
-      <p-button
-        (onClick)="toggleLayoutMode()"
-        [text]="true"
-        [plain]="true"
-        [icon]="layoutMode() === 'standard' ? 'pi pi-window-maximize' : 'pi pi-window-minimize'"
-        [pTooltip]="layoutMode() === 'standard' ? 'Élargir la partition' : 'Réduire la partition'"
-        tooltipPosition="right"
-        styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
-      ></p-button>
-
-      @if (allowZoom()) {
-        <p-button
-          (onClick)="toggleViewMode()"
-          [text]="true"
-          [plain]="true"
-          [icon]="viewMode() === 'fit' ? 'pi pi-search-plus' : 'pi pi-search-minus'"
-          [pTooltip]="viewMode() === 'fit' ? 'Zoomer l\'image' : 'Adapter l\'image'"
-          tooltipPosition="right"
-          styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
-        ></p-button>
-      }
-      
       @if (canNavigate() && (pdfTotalPages() > 1 || (imageList()?.length ?? 0) > 1)) {
         <div class="flex flex-col gap-3 items-center mt-4 px-1">
           <p-button
@@ -85,8 +63,10 @@
   >
     <div 
       class="absolute inset-0 custom-scrollbar" 
-      [class.overflow-hidden]="viewMode() === 'fit'"
-      [class.overflow-auto]="viewMode() === 'zoom'"
+      [ngClass]="{
+        'py-2.5 overflow-hidden': layoutMode() === 'standard',
+        'py-1.5 overflow-y-auto': layoutMode() !== 'standard'
+      }"
     >
       @switch (type()) {
         @case ("xml") {

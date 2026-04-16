@@ -31,7 +31,7 @@ export class DiapoStateService {
   private readonly _type = signal<DiapoType | null>(null);
   private readonly _currentImageListPos = signal<number>(1);
   private readonly _viewMode = signal<'fit' | 'zoom'>('fit');
-  private readonly _layoutMode = signal<'standard' | 'expanded'>((localStorage.getItem(STORAGE_KEY_LAYOUT) as any) || 'standard');
+  private readonly _layoutMode = signal<'standard' | 'expanded' | 'half'>((localStorage.getItem(STORAGE_KEY_LAYOUT) as any) || 'standard');
   private readonly _sidebarPosition = signal<'left' | 'right'>((localStorage.getItem(STORAGE_KEY_POSITION) as any) || 'left');
   private readonly _imageIsReady = signal<boolean>(false);
 
@@ -104,7 +104,7 @@ export class DiapoStateService {
     this._viewMode.set(mode);
   }
 
-  setLayoutMode(mode: 'standard' | 'expanded'): void {
+  setLayoutMode(mode: 'standard' | 'expanded' | 'half'): void {
     this._layoutMode.set(mode);
     localStorage.setItem(STORAGE_KEY_LAYOUT, mode);
   }

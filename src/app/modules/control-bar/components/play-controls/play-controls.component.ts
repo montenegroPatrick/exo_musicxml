@@ -1,65 +1,24 @@
-import { Component, computed, inject, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, output, ChangeDetectionStrategy } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ControlBarService } from '../../services/control-bar.service';
+import { LessonService } from '../../../lesson/services/lesson.service';
 
 @Component({
   selector: 'app-play-controls',
   standalone: true,
   imports: [ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section class="flex gap-1 text-white rounded-lg">
-      @if (showNavigation()) {
-        <p-button
-          icon="pi pi-angle-left"
-          size="small"
-          [text]="true"
-          variant="text"
-          styleClass="text-white!"
-          (onClick)="previous.emit()"
-        />
-      }
-      <p-button
-        icon="pi pi-step-backward"
-        size="small"
-        [text]="true"
-        variant="text"
-        styleClass="text-white!"
-        (onClick)="stepBackward.emit()"
-      />
-      <p-button
-        size="small"
-        [icon]="isPlaying() ? 'pi pi-pause' : 'pi pi-play'"
-        [text]="true"
-        styleClass="text-white!"
-        (onClick)="togglePlay.emit()"
-      />
-      <p-button
-        size="small"
-        icon="pi pi-step-forward"
-        [text]="true"
-        styleClass="text-white!"
-        (onClick)="stepForward.emit()"
-      />
-      @if (showNavigation()) {
-        <p-button
-          icon="pi pi-angle-right"
-          size="small"
-          [text]="true"
-          variant="text"
-          styleClass="text-white!"
-          (onClick)="next.emit()"
-        />
-      }
-    </section>
-  `,
+  templateUrl: './play-controls.component.html'
 })
 export class PlayControlsComponent {
   private _controlBarService = inject(ControlBarService);
+  private _lessonService = inject(LessonService);
 
+  // -- Signals mapping --
   isPlaying = this._controlBarService.isPlaying;
-  showNavigation = input<boolean>(true);
+  isDirectMode = this._lessonService.isDirectMode;
 
+  // -- Event Emitters --
   togglePlay = output<void>();
   stepBackward = output<void>();
   stepForward = output<void>();

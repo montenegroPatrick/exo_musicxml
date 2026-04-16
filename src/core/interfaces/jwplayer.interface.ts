@@ -166,10 +166,16 @@ export interface JWPlayerInstance {
   getPlaylistIndex(): number;
   setCaptions(options: Partial<JWPlayerCaptions>): void;
   remove(): void;
+  getQualityLevels(): any[];
+  getCurrentQuality(): number;
+  setCurrentQuality(index: number): void;
   getCaptionsList(): any[];
+  getCurrentCaptions(): number;
   setCurrentCaptions(index: number): void;
   getFullscreen(): boolean;
   setFullscreen(fullscreen: boolean): void;
+  getPip(): boolean;
+  setPip(pip: boolean): void;
   resize(width: number | string, height: number | string): void;
   on(event: JWPlayerEvent, callback: JWPlayerEventCallback): JWPlayerInstance;
   off(event: JWPlayerEvent, callback?: Function): JWPlayerInstance;
@@ -193,6 +199,11 @@ export type JWPlayerEvent =
   | 'playbackRateChanged'
   | 'resize'
   | 'fullscreen'
+  | 'levels'
+  | 'levelsChanged'
+  | 'captionsList'
+  | 'captionsChanged'
+  | 'pip'
   | 'playlistItem'
   | 'playlistComplete';
 

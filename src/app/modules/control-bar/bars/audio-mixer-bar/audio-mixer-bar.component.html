@@ -1,16 +1,34 @@
-<div class="flex flex-row gap-4 justify-between px-4 items-center h-full">
+<div class="flex flex-row gap-4 justify-between px-4 items-center h-full relative">
+  <!-- Info Popin (XS only) -->
+  @if (showInfoPopin()) {
+    <div class="info-popin absolute bottom-[calc(100%+8px)] left-4 right-4 bg-black/95 backdrop-blur-md border border-white/20 p-4 rounded-xl z-50 shadow-2xl">
+      <app-lesson-metadata layout="popin" />
+    </div>
+  }
+
   <!-- Play Controls: Step backward, Play/Pause, Step forward -->
-  <app-play-controls
-    (togglePlay)="handleTogglePlay()"
-    (stepBackward)="handleStepBackward()"
-    (stepForward)="handleStepForward()"
-    (previous)="handlePrevious()"
-    (next)="handleNext()"
-    [showNavigation]="showNavigation()"
-  />
+  <div class="flex items-center">
+    <app-play-controls
+      (togglePlay)="handleTogglePlay()"
+      (stepBackward)="handleStepBackward()"
+      (stepForward)="handleStepForward()"
+      (previous)="handlePrevious()"
+      (next)="handleNext()"
+    />
+
+    <!-- Mobile Info Button (XS only) -->
+    <button 
+      (click)="toggleInfoPopin()"
+      class="sm:hidden ml-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 active:bg-white/20"
+    >
+      <i class="fa-solid fa-circle-info text-sm"></i>
+    </button>
+  </div>
+
+  <app-lesson-metadata layout="inline" />
 
   <!-- Timeline: Progress slider with time display -->
-  <div class="flex-grow h-full">
+  <div class="flex-grow h-full pt-4">
     <app-timeline-slider [duration]="duration()" (seek)="seekTo($event)" />
   </div>
 

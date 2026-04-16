@@ -5,6 +5,8 @@ import {
   signal,
   WritableSignal,
   Signal,
+  effect,
+  untracked,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
@@ -15,6 +17,7 @@ import {
   IJWPlayerOptions,
 } from '@core/interfaces/jwplayer.interface';
 import { environment } from '../../environments/environment';
+import { CoreDataService } from './core-data.service';
 
 export type JWPlaybackStatus =
   | 'idle'
@@ -38,7 +41,13 @@ export class JwpService {
   private readonly _durationMs = signal<number>(0);
   private readonly _playbackState = signal<JWPlaybackStatus>('idle');
   private readonly _volume = signal<number>(50);
+  private readonly _isMuted = signal<boolean>(false);
   private readonly _playbackRate = signal<number>(1);
+  private readonly _qualityLevels = signal<any[]>([]);
+  private readonly _currentQuality = signal<number>(0);
+  private readonly _captionsList = signal<any[]>([]);
+  private readonly _currentCaptions = signal<number>(0);
+  private readonly _isPip = signal<boolean>(false);
 
   // -- Loop State --
   private readonly _isLooping = signal<boolean>(false);
@@ -51,7 +60,13 @@ export class JwpService {
   readonly duration = this._durationMs.asReadonly(); // Keep alias 'duration' for compatibility
   readonly playbackState = this._playbackState.asReadonly();
   readonly volume = this._volume.asReadonly();
+  readonly isMuted = this._isMuted.asReadonly();
   readonly playbackRate = this._playbackRate.asReadonly();
+  readonly qualityLevels = this._qualityLevels.asReadonly();
+  readonly currentQuality = this._currentQuality.asReadonly();
+  readonly captionsList = this._captionsList.asReadonly();
+  readonly currentCaptions = this._currentCaptions.asReadonly();
+  readonly isPip = this._isPip.asReadonly();
   readonly isLooping = this._isLooping.asReadonly();
   readonly loopStart = this._loopStart.asReadonly();
   readonly loopEnd = this._loopEnd.asReadonly();
@@ -61,10 +76,31 @@ export class JwpService {
   
   readonly isXml = computed(() => this._diapoService.type() === 'xml');
 
+  private readonly _coreDataStore = inject(CoreDataService);
   private _timeCallbacks: ((ms: number) => void)[] = [];
   private _stateCallbacks: ((state: JWPlaybackStatus) => void)[] = [];
 
-  constructor() {}
+  constructor() {
+    // Sync Loop from global request (e.g. from Flat.io selection)
+    effect(() => {
+      const req = this._coreDataStore.loopRangeRequest();
+      if (req) {
+        untracked(() => {
+          this.setLoopRange(req.start, req.end);
+        });
+      }
+    });
+
+    // Global Rate Sync
+    effect(() => {
+        const req = this._coreDataStore.rateRequest();
+        if (req) {
+            untracked(() => {
+                this.setPlaybackRate(req.rate);
+            });
+        }
+    });
+  }
 
   async initPlayer(
     containerId: string,
@@ -158,6 +194,26 @@ export class JwpService {
       this._playbackState.set('complete');
       this._stateCallbacks.forEach(cb => cb('complete'));
     });
+
+    this._player.on('levels' as any, (event: any) => {
+      this._qualityLevels.set(event.levels || []);
+    });
+
+    this._player.on('levelsChanged' as any, (event: any) => {
+      this._currentQuality.set(event.currentQuality);
+    });
+
+    this._player.on('captionsList' as any, (event: any) => {
+      this._captionsList.set(event.tracks || []);
+    });
+
+    this._player.on('captionsChanged' as any, (event: any) => {
+      this._currentCaptions.set(event.track);
+    });
+
+    this._player.on('pip' as any, (event: any) => {
+      this._isPip.set(event.pip);
+    });
   }
 
   loadMedia(mediaId: string, autostart: boolean = true): void {
@@ -226,11 +282,26 @@ export class JwpService {
 
   setMute(mute: boolean): void {
     this._player?.setMute(mute);
+    this._isMuted.set(mute);
+  }
+
+  toggleMute(): void {
+    this.setMute(!this._isMuted());
   }
 
   setPlaybackRate(rate: number): void {
     this._player?.setPlaybackRate(rate);
     this._playbackRate.set(rate);
+  }
+
+  setCurrentQuality(index: number): void {
+    this._player?.setCurrentQuality(index);
+    this._currentQuality.set(index);
+  }
+
+  setCurrentCaptions(index: number): void {
+    this._player?.setCurrentCaptions(index);
+    this._currentCaptions.set(index);
   }
 
   enterFullscreen(): void {
@@ -245,6 +316,18 @@ export class JwpService {
     if (this._player) {
       const isFs = this._player.getFullscreen();
       this._player.setFullscreen(!isFs);
+    }
+  }
+
+  setPip(pip: boolean): void {
+    this._player?.setPip(pip);
+    this._isPip.set(pip);
+  }
+
+  togglePip(): void {
+    if (this._player) {
+      const isPip = this._player.getPip();
+      this.setPip(!isPip);
     }
   }
 

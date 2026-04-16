@@ -13,16 +13,16 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
     <div class="relative bg-black/40 backdrop-blur-2xl border-t border-white/5 h-auto w-full shadow-2xl">
       @switch (typeControlBar()) {
         @case ('video') {
-          <app-video-bar [showNavigation]="showNavigation()"></app-video-bar>
+          <app-video-bar></app-video-bar>
         }
         @case ('video-xml') {
-          <app-video-bar [showNavigation]="showNavigation()"></app-video-bar>
+          <app-video-bar></app-video-bar>
         }
         @case ('audio-mixer') {
-          <app-audio-mixer-bar [showNavigation]="showNavigation()"></app-audio-mixer-bar>
+          <app-audio-mixer-bar></app-audio-mixer-bar>
         }
         @default {
-          <app-video-bar [showNavigation]="showNavigation()"></app-video-bar>
+          <app-video-bar></app-video-bar>
         }
       }
     </div>
@@ -40,7 +40,4 @@ export class ControlBarComponent {
   
   /** Reactive source of truth for the active control bar type */
   readonly typeControlBar = this._controlBarService.controlBar;
-  
-  /** Input to toggle next/prev global navigation buttons */
-  showNavigation = input<boolean>(true);
 }

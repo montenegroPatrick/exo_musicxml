@@ -38,15 +38,6 @@ export class LessonService {
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
 
-  // -- Computed metadata Proxies --
-  readonly chapter = this._coreDataStore.chapter;
-  readonly sequence = this._coreDataStore.sequence;
-  readonly chapterTitle = this._coreDataStore.chapterTitle;
-  readonly subChapterTitle = this._coreDataStore.subChapterTitle;
-  readonly sequenceTitle = this._coreDataStore.sequenceTitle;
-  readonly courseTitle = this._coreDataStore.courseTitle;
-  readonly navigationTitle = this._coreDataStore.navigationTitle;
-  
   readonly titre = this._coreDataStore.titre;
   readonly compositeur = this._coreDataStore.compositeur;
   readonly producteur = this._coreDataStore.producteur;
@@ -55,6 +46,22 @@ export class LessonService {
   readonly moduleType = this._coreDataStore.moduleType;
   readonly controlBarType = this._coreDataStore.controlBarType;
   readonly diapoType = this._coreDataStore.diapoType;
+
+  // -- Unified Metadata for UI --
+  readonly isDirectMode = this._coreDataStore.isDirectMode;
+  
+  // RAW Metadata for precise UI control
+  readonly chapter = this._coreDataStore.chapter;
+  readonly subChapter = this._coreDataStore.subChapter;
+  readonly sequence = this._coreDataStore.sequence;
+  readonly chapterTitle = this._coreDataStore.chapterTitle;
+  readonly subChapterTitle = this._coreDataStore.subChapterTitle;
+  readonly sequenceTitle = this._coreDataStore.sequenceTitle;
+
+  // Direct Lines
+  readonly dirLine1 = this._coreDataStore.dirLine1;
+  readonly dirLine2 = this._coreDataStore.dirLine2;
+  readonly dirLine3 = this._coreDataStore.dirLine3;
   
   // -- Media Proxies --
   readonly jwPlayerId = this._coreDataStore.jwPlayerId;

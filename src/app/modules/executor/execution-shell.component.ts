@@ -15,30 +15,8 @@ import { CoreDataService } from '@core/services/core-data.service';
   selector: 'app-execution-shell',
   standalone: true,
   imports: [CommonModule, RouterOutlet, ControlBarComponent, AudioMixerControlBarComponent],
-  template: `
-    <div class="relative w-screen h-screen overflow-hidden flex flex-col">
-       <main class="relative overflow-hidden bg-black w-full flex-1 min-h-0">
-          <router-outlet></router-outlet>
-       </main>
-       
-       <!-- Dynamic Control Bar -->
-       @if (showControlBar()) {
-         <footer class="w-full h-20 overflow-visible z-50 bg-[#FA5E46] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
-           @if (controlBarType() === 'audio-mixer') {
-             <app-audiomixer-control-bar-v2 
-               class="w-full h-full relative block"
-               [showNavigation]="showNavigation()">
-             </app-audiomixer-control-bar-v2>
-           } @else {
-             <app-control-bar 
-               class="w-full h-full relative block"
-               [showNavigation]="showNavigation()">
-             </app-control-bar>
-           }
-         </footer>
-       }
-    </div>
-  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './execution-shell.component.html',
 })
 export class ExecutionShellComponent {
   private readonly _coreData = inject(CoreDataService);
@@ -68,11 +46,6 @@ export class ExecutionShellComponent {
   );
 
   /** Logic to determine if we show navigation buttons based on route data */
-  readonly showNavigation = computed(() => {
-    this._navigationEnd(); // Re-evaluate on navigation
-    const data = this._getDeepestRouteData();
-    return data['showNavigation'] !== false;
-  });
 
   /** Logic to determine the visibility of the control bar */
   readonly showControlBar = computed(() => {

@@ -1,0 +1,25 @@
+<div [class]="layout() === 'popin' ? 'flex flex-col gap-0' : 'lesson-info min-w-0 flex flex-col justify-center px-4 border-l border-white/5 w-full gap-0'">
+  @if (chapterTitle() || sequenceTitle()) {
+    <!-- MODE NAVIGATION : Affiché si on a des titres de navigation -->
+    <span class="chapitre uppercase font-bold tracking-[0.2em] truncate text-white/50 text-[12px] leading-[1.1]">
+       {{ chapter() }}. {{ chapterTitle() }}
+    </span>
+    <span class="sous-chapitre font-semibold uppercase tracking-wider truncate text-white/40 text-[12px] leading-[1.1]">
+         {{ subChapter() }}. {{ subChapterTitle() }}
+    </span>
+    <span class="sequence font-bold text-white truncate filter drop-shadow-sm text-[14px] leading-[1.1]">
+      {{ sequence() }}. {{ sequenceTitle() }}
+    </span>
+  } @else {
+    <!-- MODE DIRECT (TITRES) : Affiché par défaut si pas de navigation -->
+    <span class="sequence font-bold text-white truncate filter drop-shadow-sm text-[14px] leading-[1.1]">
+      {{ dirLine1() }}
+    </span>
+    <span class="auteur uppercase font-bold tracking-[0.2em] truncate text-white/50 text-[12px] leading-[1.1]">
+       {{ dirLine2() }}
+    </span>
+    <span class="infos italic truncate text-white/40 text-[12px] leading-[1.1]">
+      {{ dirLine3() }}
+    </span>
+  }
+</div>

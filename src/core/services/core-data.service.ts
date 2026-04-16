@@ -55,10 +55,12 @@ export class CoreDataService {
 
   // -- Metadata Computeds --
   readonly chapter = computed(() => this.lessonJson()?.chapter ?? this.lessonJson()?.Chapter);
+  readonly subChapter = computed(() => this.lessonJson()?.subChapter ?? this.lessonJson()?.SubChapter);
   readonly sequence = computed(() => this.lessonJson()?.sequence ?? this.lessonJson()?.Sequence);
-  readonly chapterTitle = computed(() => this.lessonJson()?.chapterTitle ?? this.lessonJson()?.ChapterTitle);
-  readonly subChapterTitle = computed(() => this.lessonJson()?.subChapterTitle ?? this.lessonJson()?.SubChapterTitle);
-  readonly sequenceTitle = computed(() => this.lessonJson()?.sequenceTitle ?? this.lessonJson()?.SequenceTitle);
+  
+  readonly chapterTitle = computed(() => this.lessonJson()?.chapterTitle ?? this.lessonJson()?.ChapterTitle ?? '');
+  readonly subChapterTitle = computed(() => this.lessonJson()?.subChapterTitle ?? this.lessonJson()?.SubChapterTitle ?? '');
+  readonly sequenceTitle = computed(() => this.lessonJson()?.sequenceTitle ?? this.lessonJson()?.SequenceTitle ?? '');
   readonly courseTitle = computed(() => this.lessonJson()?.courseTitle ?? this.lessonJson()?.CourseTitle);
   readonly navigationTitle = computed(() => this.lessonJson()?.navigationTitle ?? this.lessonJson()?.NavigationTitle);
 
@@ -96,6 +98,50 @@ export class CoreDataService {
     const lesson = this.lessonJson();
     return lesson ? determineImgType(lesson) : undefined;
   });
+
+  readonly hasAuxiliaryContent = computed(() => {
+    const lesson = this.lessonJson();
+    if (!lesson) return false;
+    // Presence of XML/Score
+    if (this.diapoType() === 'xml' || this.xmlUrl()) return true;
+    // Presence of Images (loadImg flag)
+    if ((lesson as any).loadImg === true || (lesson as any).imageList?.length > 0) return true;
+    return false;
+  });
+
+  // -- Mode Detection --
+  readonly isDirectMode = computed(() => {
+    // Si on n'a pas de titre de chapitre ou de navigation, on est forcément en mode Direct
+    return !this.chapterTitle() && !this.navigationTitle();
+  });
+
+  // -- Unified Metadata Signals --
+  
+  // 1. Navigation Mode Lines
+  readonly navLine1 = computed(() => {
+    const num = this.chapter();
+    const title = this.chapterTitle() || '';
+    if (!title) return '';
+    return num !== undefined ? `${num}. ${title}` : title;
+  });
+
+  readonly navLine2 = computed(() => {
+    const num = this.subChapter();
+    const title = this.subChapterTitle() || '';
+    if (!title) return '';
+    return num !== undefined ? `${num}. ${title}` : title;
+  });
+
+  readonly navLine3 = computed(() => {
+    const num = this.sequence();
+    const title = this.sequenceTitle() || '';
+    if (!title) return '';
+    return num !== undefined ? `${num}. ${title}` : title;
+  });
+
+  readonly dirLine1 = computed(() => this.lessonJson()?.title || '');
+  readonly dirLine2 = computed(() => this.lessonJson()?.author || '');
+  readonly dirLine3 = computed(() => this.lessonJson()?.infos || '');
 
   // -- Synchronization Logic --
   readonly syncPoints = computed<Sync[]>(() => {

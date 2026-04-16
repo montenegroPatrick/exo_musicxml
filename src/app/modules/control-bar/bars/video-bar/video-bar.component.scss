@@ -1,16 +1,16 @@
 // Colors
-$primary-red: #FA5E46; 
-$primary-red-dark: #FA5E46; 
+$primary-red: #E63946; // A more vibrant, premium red
+$primary-red-dark: #C1121F; 
 $white-overlay-10: rgba(255, 255, 255, 0.1);
 $white-overlay-20: rgba(255, 255, 255, 0.2);
 
 .control-bar {
-  background: $primary-red;
+  background: linear-gradient(135deg, $primary-red 0%, $primary-red-dark 100%);
   position: relative;
   z-index: 50;
   animation: slideUp 0.4s ease-out;
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
-  height: 72px !important; // YouTube Music height
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+  height: 80px !important; 
 }
 
 // Info Popin (XS)
@@ -61,8 +61,73 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
 
 // Handle
 .progress-handle {
-  transform: translate(-50%, -50%);
   pointer-events: none;
+  z-index: 30;
+}
+
+// Loop Markers (Rectangle Handles - Pro Design)
+.loop-marker {
+  width: 12px;
+  height: 18px; 
+  background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+  position: absolute;
+  top: 50%;
+  pointer-events: auto;
+  cursor: ew-resize;
+  z-index: 25;
+  border-radius: 3px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8);
+  transition: transform 0.1s ease, background 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Visual Grip (2 vertical lines)
+  &::before {
+    content: '';
+    width: 4px;
+    height: 8px;
+    border-left: 1px solid rgba(0,0,0,0.15);
+    border-right: 1px solid rgba(0,0,0,0.15);
+    opacity: 0.6;
+  }
+
+  &:hover {
+    background: #FFD54F; // Warm Amber
+    height: 20px;
+    box-shadow: 0 0 10px rgba(255, 213, 79, 0.4);
+    &::before { opacity: 1; }
+  }
+
+  // Large invisible hit zone for touch/mouse
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 36px;
+    background: transparent;
+  }
+}
+
+.loop-marker-a {
+  // Logic position shifted in HTML (0% translate)
+}
+
+.loop-marker-b {
+  // Logic position shifted in HTML (-100% translate)
+}
+
+// Active Range
+.progress-active-range {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  z-index: 10;
 }
 
 // Buttons
@@ -92,14 +157,14 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
 }
 
 .icon-button {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
   display: inline-flex !important;
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.8);
-  transition: all 0.2s;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     color: white;
@@ -174,6 +239,28 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
   }
 }
 
+// Active States for Settings Buttons
+button.bg-white\/20 {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+.text-orange-400 {
+  color: #fb923c !important;
+  filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.4));
+}
+
+// Popin Enhancements
+.settings-popin {
+  background: rgba(10, 10, 10, 0.98) !important;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  
+  h3 {
+    user-select: none;
+  }
+}
+
 // Volume Slider
 .volume-slider {
   input[type="range"] {
@@ -181,5 +268,52 @@ $white-overlay-20: rgba(255, 255, 255, 0.2);
     height: 4px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
+  }
+}
+
+// Custom Scrollbar
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}
+
+// Animations
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  animation: fadeIn 0.2s ease-out;
+}
+
+.slide-in-from-bottom-2 {
+  @keyframes slideInFromBottom {
+    from { transform: translateY(8px); }
+    to { transform: translateY(0); }
+  }
+  animation: slideInFromBottom 0.2s ease-out;
+}
+
+.settings-popin {
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+  
+  button {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
 }

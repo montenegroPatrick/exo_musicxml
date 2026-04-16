@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { PlayControlsComponent } from '../../components/play-controls/play-controls.component';
@@ -9,6 +9,7 @@ import { VolumeControlComponent } from '../volume-control/volume-control.compone
 import { FlatService } from '@core/services/flat.service';
 import { ControlBarService } from '../../services/control-bar.service';
 import { AudioService } from '@core/services/audio.service';
+import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
 
 @Component({
   selector: 'app-audio-mixer-bar',
@@ -19,6 +20,7 @@ import { AudioService } from '@core/services/audio.service';
     VolumeControlComponent,
     TrackMixerComponent,
     TimelineSliderComponent,
+    LessonMetadataComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audio-mixer-bar.component.html',
@@ -29,9 +31,9 @@ export class AudioMixerBarComponent {
   private _flatService = inject(FlatService);
   private _audioService = inject(AudioService);
   private _bridgeService = inject(BridgeService);
+  private _lessonService = inject(LessonService);
 
   // -- Inputs --
-  showNavigation = input<boolean>(true);
 
   // -- Derived Signals --
   typeControlBar = this._controlBarService.controlBar;
@@ -40,6 +42,11 @@ export class AudioMixerBarComponent {
   currentTime = this._controlBarService.time;
   
   tracks = this._audioService.tracks;
+  
+  showInfoPopin = signal(false);
+  private _popinTimer: any;
+
+  isDirectMode = this._lessonService.isDirectMode;
 
   ready = computed(
     () => this._audioService.isReady() && this._flatService.isReady(),
@@ -93,5 +100,18 @@ export class AudioMixerBarComponent {
 
     this._audioService.setPlaybackRate(speed);
     await this._flatService.reinitializeTrackWithSpeed(speed);
+  }
+
+  toggleInfoPopin(): void {
+    if (this._popinTimer) {
+      clearTimeout(this._popinTimer);
+    }
+    
+    this.showInfoPopin.set(true);
+    
+    this._popinTimer = setTimeout(() => {
+      this.showInfoPopin.set(false);
+      this._popinTimer = null;
+    }, 3000);
   }
 }

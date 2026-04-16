@@ -63,12 +63,14 @@ export class VideoDiapoComponent implements OnInit {
 
   // -- Dynamic Classes --
   readonly classImgContainer = computed(() => {
-    // Position : sidebarPosition() ('left' ou 'right')
-    // Ratio : layoutMode() ('standard' = 1/3, 'expanded' = 2/3)
-    const ratio = this.layoutMode() === 'standard' ? 'md:w-1/3' : 'md:w-2/3';
+    // Ratio : layoutMode() ('standard' = 1/3, 'half' = 1/2, 'expanded' = 2/3)
+    let ratio = 'md:w-1/3';
+    if (this.layoutMode() === 'half') ratio = 'md:w-1/2';
+    if (this.layoutMode() === 'expanded') ratio = 'md:w-2/3';
+
     const order = this.sidebarPosition() === 'left' ? 'md:order-1' : 'md:order-2';
     
-    return `w-full ${ratio} ${order} flex-shrink-0 min-w-[510px] h-full transition-all duration-300 relative bg-white`;
+    return `w-full ${ratio} ${order} flex-shrink-0 md:min-w-[400px] h-full transition-all duration-300 relative bg-white`;
   });
 
   readonly classVideoContainer = computed(() => {

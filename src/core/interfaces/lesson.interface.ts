@@ -39,6 +39,11 @@ export interface ILesson {
   sequenceTitle?: string;
   courseTitle?: string;
   navigationTitle?: string;
+  
+  // Direct View (Song Mode)
+  title?: string;
+  author?: string;
+  infos?: string;
 
   // Media Loading Flags
   loadVideo?: boolean;

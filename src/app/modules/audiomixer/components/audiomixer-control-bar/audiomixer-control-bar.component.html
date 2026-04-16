@@ -1,0 +1,139 @@
+<!-- MAIN CONTAINER: Red Background -->
+<div class="audiomixer-control-bar relative flex flex-row items-center justify-between px-6 w-full text-white h-full shadow-[0_-4px_12px_rgba(0,0,0,0.2)]">
+  
+  <!-- SEEK BAR -->
+  <div class="progress-bar-container group absolute top-0 left-0 w-full h-[3px] bg-white/20 cursor-pointer overflow-visible z-[100]"
+       (mousemove)="handleProgressBarMove($event)"
+       (touchmove)="handleProgressBarMove($event)"
+       (mouseup)="stopDrag()"
+       (touchend)="stopDrag()"
+       (mouseleave)="stopDrag()">
+    <input type="range"
+           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+           [min]="0"
+           [max]="duration() || 100"
+           step="0.1"
+           [(ngModel)]="seekbarValue"
+           (mousedown)="startDragging()"
+           (mouseup)="onSeekEnd()"
+           (touchstart)="startDragging()"
+           (touchend)="onSeekEnd()">
+    
+    <!-- Active Loop Range Highlight -->
+    @if (loopStart() !== null && loopEnd() !== null) {
+      <div class="progress-active-range absolute top-0 h-full bg-white/20 pointer-events-none z-10"
+           [style.left.%]="(loopStart()! / (duration() || 1)) * 100"
+           [style.width.%]="((loopEnd()! - loopStart()!) / (duration() || 1)) * 100">
+      </div>
+    }
+
+    <!-- Progress Fill -->
+    <div class="progress-fill absolute top-0 left-0 h-full bg-white transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+         [style.width.%]="(currentTime() / (duration() || 1)) * 100">
+    </div>
+
+    <!-- Loop Marker A -->
+    @if (loopStart() !== null) {
+      <div class="loop-marker loop-marker-a"
+           [style.left.%]="(loopStart()! / (duration() || 1)) * 100"
+           (mousedown)="startDrag('A', $event)"
+           (touchstart)="startDrag('A', $event)">
+      </div>
+    }
+
+    <!-- Loop Marker B -->
+    @if (loopEnd() !== null) {
+      <div class="loop-marker loop-marker-b"
+           [style.left.%]="(loopEnd()! / (duration() || 1)) * 100"
+           (mousedown)="startDrag('B', $event)"
+           (touchstart)="startDrag('B', $event)">
+      </div>
+    }
+    
+    <!-- Progress Handle -->
+    <div class="progress-handle absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+         [style.left.%]="(currentTime() / (duration() || 1)) * 100">
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 items-center w-full h-full px-6 gap-6">
+    
+    <!-- LEFT ZONE: Navigation & Metadata (Balanced) -->
+    <div class="flex items-center flex-1 min-w-0">
+      @if (!isDirectMode()) {
+        <div class="nav-group flex items-center gap-6 pr-6 border-r border-white/30 h-10">
+          <button class="hover:scale-110 active:scale-90 transition-transform text-white bg-transparent border-none p-0 flex items-center" (click)="handlePrevious()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="hover:scale-110 active:scale-90 transition-transform text-white bg-transparent border-none p-0 flex items-center" (click)="handleNext()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+          </button>
+        </div>
+      }
+
+      <div class="flex items-center min-w-0 flex-1 pl-6">
+        <app-lesson-metadata layout="inline" />
+      </div>
+    </div>
+
+    <!-- CENTER ZONE: Playback Controls (Absolute Center) -->
+    <div class="controls-center flex items-center gap-6 flex-shrink-0 justify-center">
+      
+      <!-- Mixer Toggle Button (YouTube Style Position) -->
+      <button class="mixer-btn w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/20 transition-all bg-transparent border-none p-0 text-white"
+              [class.bg-white/20]="mixerVisible()"
+              (click)="toggleMixer()"
+              title="Table de mixage">
+         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+           <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>
+         </svg>
+      </button>
+
+      <!-- Step Backward -->
+      <button class="text-white/70 hover:text-white transition-colors bg-transparent border-none p-0" (click)="handleStep(-10)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
+      </button>
+
+      <!-- Play / Pause -->
+      <button class="play-button flex items-center justify-center w-14 h-14 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all border-none p-0 cursor-pointer backdrop-blur-md" 
+              (click)="togglePlay()">
+        @if (isPlaying()) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        }
+      </button>
+
+      <!-- Step Forward -->
+      <button class="text-white/70 hover:text-white transition-colors bg-transparent border-none p-0" (click)="handleStep(10)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+      </button>
+
+      <!-- Time Display -->
+      <div class="time-display flex items-center gap-1.5 text-sm font-medium tabular-nums min-w-[120px]">
+        <span class="text-white">{{ currentTime() | trackTime }}</span>
+        <span class="text-white/40">/</span>
+        <span class="text-white/60">{{ duration() | trackTime }}</span>
+      </div>
+    </div>
+
+    <!-- RIGHT ZONE: Speed & Loop (Balanced) -->
+    <div class="flex items-center gap-4 flex-1 justify-end">
+      
+      <!-- Loop Button (Toggle) -->
+      <button (click)="toggleLoopActive()" 
+              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
+              [class.bg-white/20]="isLooping()"
+              [class.text-orange-400]="isLooping()"
+              title="Boucle A-B (Activer/Désactiver)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+
+      <button class="speed-btn flex items-center justify-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all text-xs font-bold border-none text-white ring-1 ring-white/10"
+              (click)="cycleSpeed()">
+        <span class="uppercase tracking-tighter opacity-70">Speed</span>
+        <span class="w-8">{{ playbackRate() }}x</span>
+      </button>
+    </div>
+  </div>
+</div>

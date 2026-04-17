@@ -31,7 +31,7 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
 @Component({
   selector: 'app-video-diapo',
   standalone: true,
-  imports: [CommonModule, NgStyle, VideoComponent, DiapoComponent, ControlBarComponent, ButtonModule],
+  imports: [CommonModule, NgStyle, VideoComponent, DiapoComponent, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-diapo.component.html',
 })

@@ -1,10 +1,10 @@
-<div class="control-bar-wrapper group relative select-none">
+<div class="control-bar-wrapper group relative select-none z-[100]">
   <!-- Click outside backdrop to close popins -->
   @if (activePopin() !== 'none') {
-    <div class="fixed inset-0 z-[60] bg-black/[0.01] cursor-default" (click)="closePopins()"></div>
+    <div class="fixed inset-0 z-[10] bg-black/[0.01] cursor-default" (click)="closePopins()"></div>
   }
 
-  <div class="control-bar relative flex flex-col w-full text-white overflow-visible transition-all duration-300 h-20 z-[70]">
+  <div class="control-bar relative flex flex-col w-full text-white overflow-visible transition-all duration-300 h-20 z-[70]" (click)="closePopins()">
   
   <!-- Info Popin (XS only) -->
   @if (showInfoPopin()) {
@@ -15,7 +15,7 @@
 
   <!-- Layout Popin -->
   @if (activePopin() === 'settings' && activeMenu() === 'layout') {
-    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-72 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden">
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-72 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden" (click)="startInactivityTimer(); $event.stopPropagation()">
       <div class="flex items-center gap-2 p-2 mb-1 border-b border-white/10">
         <button (click)="navigateMenu('main')" class="p-1 hover:bg-white/10 rounded-md transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -111,7 +111,7 @@
 
   <!-- Speed Popin -->
   @if (activePopin() === 'speed') {
-    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-40 bg-black/95 backdrop-blur-md border border-white/20 p-1 rounded-xl z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-40 bg-black/95 backdrop-blur-md border border-white/20 p-1 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200" (click)="startInactivityTimer(); $event.stopPropagation()">
       <div class="flex flex-col gap-1 p-1">
         @for (rate of playbackRates; track rate) {
           <button (click)="setPlaybackRate(rate)" 
@@ -131,7 +131,7 @@
 
   <!-- Loop Popin -->
   @if (activePopin() === 'loop') {
-    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-48 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-48 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200" (click)="startInactivityTimer(); $event.stopPropagation()">
       <div class="flex flex-col gap-2 p-1">
         <h3 class="text-[9px] font-bold text-white/40 uppercase tracking-wider mb-1">Boucle A-B</h3>
         
@@ -158,7 +158,7 @@
 
   <!-- Main Settings Popin (Quality, Captions, PiP) -->
   @if (activePopin() === 'settings' && activeMenu() !== 'layout') {
-    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-64 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-50 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden">
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-64 bg-black/95 backdrop-blur-md border border-white/20 p-2 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden" (click)="startInactivityTimer(); $event.stopPropagation()">
       
       <!-- Popin Header -->
       <div class="flex items-center gap-2 p-2 mb-1 border-b border-white/10">
@@ -421,7 +421,7 @@
       
       <!-- 1. Layout Button (Conditional) -->
       @if (hasLayoutSettings()) {
-        <button (click)="navigateMenu('layout')" 
+        <button (click)="navigateMenu('layout'); $event.stopPropagation()" 
                 class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
                 [class.bg-white/20]="activePopin() === 'settings' && activeMenu() === 'layout'"
                 title="Mise en page">
@@ -430,7 +430,7 @@
       }
 
       <!-- 2. Speed Button -->
-      <button (click)="toggleSpeedPopin()" 
+      <button (click)="toggleSpeedPopin(); $event.stopPropagation()" 
               class="h-9 px-2 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white gap-1"
               [class.bg-white/20]="activePopin() === 'speed'"
               title="Vitesse de lecture">
@@ -438,8 +438,8 @@
       </button>
 
       <!-- 3. Loop Button (Toggle Activity) -->
-      <button (click)="toggleLoopActive()" 
-              (contextmenu)="toggleLoopPopin(); $event.preventDefault()"
+      <button (click)="toggleLoopActive(); $event.stopPropagation()" 
+              (contextmenu)="toggleLoopPopin(); $event.preventDefault(); $event.stopPropagation()"
               class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all relative text-white/70 hover:text-white"
               [class.bg-white/20]="isLooping()"
               [class.text-orange-400]="isLooping()"
@@ -452,7 +452,7 @@
       </button>
 
       <!-- 4. Settings (Plus) -->
-      <button (click)="toggleSettingsPopin()" 
+      <button (click)="toggleSettingsPopin(); $event.stopPropagation()" 
               class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
               [class.bg-white/20]="activePopin() === 'settings' && activeMenu() !== 'layout'"
               title="Plus de réglages">

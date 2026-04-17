@@ -29,7 +29,6 @@ import { TooltipModule } from 'primeng/tooltip';
   imports: [
     ButtonModule,
     SplitButtonModule,
-    L10nTranslatePipe,
     OverlayBadgeModule,
     SelectButtonModule,
     CommonModule,

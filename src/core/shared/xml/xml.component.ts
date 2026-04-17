@@ -36,7 +36,6 @@ private diapoService = inject(DiapoStateService);
   effect(() => {
     // Cette fonction s'exécutera AUTOMATIQUEMENT à chaque fois que layoutMode() change
     const mode = this.diapoService.layoutMode(); 
-    // alert("MODE " + mode);
     untracked(() => {
         this.flatService.switchLayout();
     });

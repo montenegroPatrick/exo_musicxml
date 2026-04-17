@@ -1,29 +1,30 @@
-import { Component, computed, inject, input, signal, ChangeDetectionStrategy, HostListener, ElementRef } from '@angular/core';
-import { ControlBarService } from '../../services/control-bar.service';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, HostListener, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ControlBarService } from '../../../services/control-bar.service';
 import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
-import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { LessonMetadataComponent } from '../../../components/lesson-metadata/lesson-metadata.component';
 
 @Component({
-  selector: 'app-video-bar',
+  selector: 'app-video-bar-mobile',
   standalone: true,
   imports: [CommonModule, FormsModule, LessonMetadataComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './video-bar.component.html',
+  templateUrl: './video-bar-mobile.component.html',
+  styleUrls: ['./video-bar-mobile.component.scss'],
   styles: [`
     :host {
       display: block;
       width: 100%;
+      background: linear-gradient(to right, #D83A2E, #FA5E46);
     }
-  `],
-  styleUrls: ['./video-bar.component.scss'],
+  `]
 })
-export class VideoBarComponent {
+export class VideoBarMobileComponent {
   // Services
   protected readonly _controlBarService = inject(ControlBarService);
   protected readonly _flatService = inject(FlatService);
@@ -33,17 +34,12 @@ export class VideoBarComponent {
   private readonly _diapoService = inject(DiapoStateService);
   private readonly _elementRef = inject(ElementRef);
 
-  // -- Inputs --
-
-  // -- Component Local State --
-  activeTab = signal<'video' | 'metronome'>('video');
+  // -- Component Local State (Identical to Desktop for logic parity) --
   showInfoPopin = signal(false);
   activePopin = signal<'none' | 'settings' | 'speed' | 'loop'>('none');
   activeMenu = signal<'main' | 'quality' | 'speed' | 'captions' | 'layout'>('main');
-  private _popinTimer: any;
-
-  // -- Draggable Loop State --
   draggingMarker = signal<'A' | 'B' | null>(null);
+  private _popinTimer: any;
 
   // -- Reactive Derived State --
   typeControlBar = this._controlBarService.controlBar;
@@ -57,7 +53,6 @@ export class VideoBarComponent {
   isMuted = this._jwpService.isMuted;
   videoVolume = this._jwpService.volume;
   
-  // JWPlayer Advanced Settings
   playbackRate = this._jwpService.playbackRate;
   qualityLevels = this._jwpService.qualityLevels;
   currentQuality = this._jwpService.currentQuality;
@@ -72,11 +67,8 @@ export class VideoBarComponent {
   hasLayoutSettings = computed(() => {
     const lesson = this._lessonService.lessonJson();
     if (!lesson) return false;
-    
     const hasImg = (lesson as any).loadImg === true;
     const isXml = this._lessonService.diapoType() === 'xml';
-    
-    console.log('[VideoBar] hasLayoutSettings check:', { hasImg, isXml, loadImg: (lesson as any).loadImg });
     return hasImg || isXml;
   });
 
@@ -119,7 +111,7 @@ export class VideoBarComponent {
   seekTo(time: number): void {
     if (time === undefined) return;
     this._jwpService.seek(time);
-    if (this.typeControlBar() === 'video-xml') {
+    if (this.typeControlBar()?.includes('xml')) {
       this._flatService.seekTrackTo(time);
     }
   }
@@ -140,42 +132,21 @@ export class VideoBarComponent {
     this._jwpService.toggleMute();
   }
 
-  toggleFullscreen(): void {
-    if (document.fullscreenElement) {
-      this._jwpService.exitFullscreen();
-    } else {
-      this._jwpService.enterFullscreen();
-    }
-  }
-
-  setTab(tab: 'video' | 'metronome'): void {
-    this.activeTab.set(tab);
-  }
-
   toggleInfoPopin(): void {
-    if (this._popinTimer) {
-      clearTimeout(this._popinTimer);
-    }
-    
+    if (this._popinTimer) clearTimeout(this._popinTimer);
     this.closePopins();
     this.showInfoPopin.set(true);
-    
     this._popinTimer = setTimeout(() => {
       this.showInfoPopin.set(false);
       this._popinTimer = null;
     }, 3000);
   }
 
-  // --- Click Outside Logic ---
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     if (this.activePopin() === 'none') return;
-    
-    // Check if the click is outside the control bar component
     const clickedInside = this._elementRef.nativeElement.contains(event.target);
-    if (!clickedInside) {
-      this.closePopins();
-    }
+    if (!clickedInside) this.closePopins();
   }
 
   toggleSettingsPopin(): void {
@@ -194,10 +165,8 @@ export class VideoBarComponent {
   toggleLoopPopin(): void {
     this.showInfoPopin.set(false);
     this.activePopin.update(v => v === 'loop' ? 'none' : 'loop');
-    
     if (!this.loopStart() && !this.loopEnd()) {
-        const current = this.currentTime();
-        this._jwpService.setLoopRange(current, this.durationInSec());
+      this._jwpService.setLoopRange(this.currentTime(), this.durationInSec());
     }
     this.startInactivityTimer();
   }
@@ -212,15 +181,10 @@ export class VideoBarComponent {
 
   toggleLoopActive(): void {
     if (this.isLooping()) {
-        this.clearLoop();
+      this.clearLoop();
     } else {
-        // A. Pause the video first as requested
-        this._jwpService.pause();
-        
-        // B. Set pointers: A at current position, B at the very end
-        const start = this.currentTime();
-        const end = this.durationInSec();
-        this._jwpService.setLoopRange(start, end);
+      this._jwpService.pause();
+      this._jwpService.setLoopRange(this.currentTime(), this.durationInSec());
     }
   }
 
@@ -229,22 +193,15 @@ export class VideoBarComponent {
   }
 
   setLocalLayout(mode: any): void {
-    console.log("SET LAYOUT TEST POINT", mode);
     this._diapoService.setLayoutMode(mode);
     this.closePopins();
   }
 
   setLocalFullLayout(mode: any, pos: any): void {
-    if (this.layoutMode() === mode && this.sidebarPosition() === pos) return;
-    
-     console.log("SET FULL LAYOUT TEST POINT", mode);
-     this._diapoService.setLayoutMode(mode);
+    this._diapoService.setLayoutMode(mode);
     this._diapoService.setSidebarPosition(pos);
-    // On ne ferme plus forcément la popin ici si on veut rester dans les réglages
   }
 
-  // -- Advanced Settings Methods --
-  
   setPlaybackRate(rate: number): void {
     this._jwpService.setPlaybackRate(rate);
     this.closePopins();
@@ -252,7 +209,6 @@ export class VideoBarComponent {
 
   setQuality(index: number): void {
     this._jwpService.setCurrentQuality(index);
-    // On peut rester dans le menu ou fermer selon le goût. Ici on ferme pour le moment.
     this.closePopins();
   }
 
@@ -265,10 +221,8 @@ export class VideoBarComponent {
     this._jwpService.togglePip();
   }
 
-  // -- Loop Methods --
   setLoopA(): void {
-    const current = this.currentTime();
-    this._jwpService.setLoopRange(current, this.loopEnd());
+    this._jwpService.setLoopRange(this.currentTime(), this.loopEnd());
   }
 
   setLoopB(): void {
@@ -285,7 +239,7 @@ export class VideoBarComponent {
   navigateMenu(menu: 'main' | 'quality' | 'speed' | 'captions' | 'layout'): void {
     this.showInfoPopin.set(false);
     
-    // Toggle logic: if already on this menu and settings is open, close it
+    // Toggle logic
     if (this.activePopin() === 'settings' && this.activeMenu() === menu) {
       this.closePopins();
       return;
@@ -295,13 +249,11 @@ export class VideoBarComponent {
       this.activeMenu.set('main');
       return;
     }
-    
     this.activeMenu.set(menu);
     this.activePopin.set('settings');
     this.startInactivityTimer();
   }
 
-  // -- Drag & Drop Logic --
   startDrag(marker: 'A' | 'B', event: MouseEvent | TouchEvent): void {
     event.stopPropagation();
     event.preventDefault();
@@ -311,13 +263,11 @@ export class VideoBarComponent {
   handleProgressBarMove(event: MouseEvent | TouchEvent): void {
     const marker = this.draggingMarker();
     if (!marker) return;
-
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
     const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
     const percentage = x / rect.width;
     const time = percentage * this.durationInSec();
-
     if (marker === 'A') {
       this._jwpService.setLoopRange(time, this.loopEnd());
     } else {
@@ -328,6 +278,4 @@ export class VideoBarComponent {
   stopDrag(): void {
     this.draggingMarker.set(null);
   }
-
- 
 }

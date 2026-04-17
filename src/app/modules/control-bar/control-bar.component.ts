@@ -3,25 +3,39 @@ import { ControlBarService } from './services/control-bar.service';
 import { CommonModule } from '@angular/common';
 import { AudioMixerBarComponent } from './bars/audio-mixer-bar/audio-mixer-bar.component';
 import { VideoBarComponent } from './bars/video-bar/video-bar.component';
+import { VideoBarMobileComponent } from './bars/video-bar/mobile/video-bar-mobile.component';
+import { HostListener, signal } from '@angular/core';
 
 @Component({
   selector: 'app-control-bar',
   standalone: true,
-  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent],
+  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent],
   template: `
-    <div class="relative bg-blue-600 backdrop-blur-2xl border-t border-white/5 h-auto w-full shadow-2xl">
+    <div class="relative bg-transparent h-auto w-full shadow-2xl">
       @switch (typeControlBar()) {
         @case ('video') {
-          <app-video-bar></app-video-bar>
+          @if (isMobile()) {
+            <app-video-bar-mobile></app-video-bar-mobile>
+          } @else {
+            <app-video-bar></app-video-bar>
+          }
         }
         @case ('video-xml') {
-          <app-video-bar></app-video-bar>
+          @if (isMobile()) {
+            <app-video-bar-mobile></app-video-bar-mobile>
+          } @else {
+            <app-video-bar></app-video-bar>
+          }
         }
         @case ('audio-mixer') {
           <app-audio-mixer-bar></app-audio-mixer-bar>
         }
         @default {
-          <app-video-bar></app-video-bar>
+          @if (isMobile()) {
+            <app-video-bar-mobile></app-video-bar-mobile>
+          } @else {
+            <app-video-bar></app-video-bar>
+          }
         }
       }
     </div>
@@ -39,4 +53,12 @@ export class ControlBarComponent {
   
   /** Reactive source of truth for the active control bar type */
   readonly typeControlBar = this._controlBarService.controlBar;
+
+  // -- Responsive Logic --
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 }

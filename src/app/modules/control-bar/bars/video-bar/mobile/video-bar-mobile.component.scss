@@ -1,0 +1,67 @@
+.control-bar-mobile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 20px));
+  min-height: 90px;
+}
+
+.capsule {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.play-button-large {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  color: white;
+  transition: all 0.2s ease;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  
+  &:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
+.progress-fill {
+  background: white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+}
+
+// Animations
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-in {
+  animation: slideInFromBottom 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(250, 94, 70, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(250, 94, 70, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(250, 94, 70, 0); }
+}
+
+.play-button-active {
+  animation: pulse-red 2s infinite;
+}

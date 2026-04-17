@@ -54,7 +54,6 @@ import { FlatService } from '@core/services/flat.service';
     ButtonModule,
     L10nTranslatePipe,
     HelpbuttonComponent,
-    ToggleSwitch,
     BottomButtonsComponent,
     FormsModule,
   ],

@@ -91,13 +91,13 @@ export class VideoScoreComponent implements OnInit {
     // Ratios par défaut (Standard : 1/3 Score, 2/3 Vidéo -> Vidéo = 66.66%)
     let width = '66.66%';
     let height = '100%';
-    let order = this.sidebarPosition() === 'left' ? '2' : '1';
+    let order = (this.isMobile() || this.sidebarPosition() === 'right') ? '1' : '2';
 
     if (isTrackTop || isTrackBottom) {
       // MODE VERTICAL 40/60
       height = '40%';
       width = '100%';
-      order = isTrackBottom ? '2' : '1';
+      order = isTrackBottom ? '1' : '2';
     } else {
       // MODE CÔTE À CÔTE
       if (isHalf) width = '50%';
@@ -130,13 +130,13 @@ export class VideoScoreComponent implements OnInit {
     // Ratios par défaut (Standard : 1/3 Score -> 33.33%)
     let width = '33.33%';
     let height = '100%';
-    let order = this.sidebarPosition() === 'left' ? '1' : '2';
+    let order = (this.isMobile() || this.sidebarPosition() === 'right') ? '2' : '1';
 
     if (isTrackTop || isTrackBottom) {
       // MODE VERTICAL 40/60
       height = '60%';
       width = '100%';
-      order = isTrackTop ? '2' : '1';
+      order = isTrackTop ? '1' : '2';
     } else {
       // MODE CÔTE À CÔTE
       if (isHalf) width = '50%';

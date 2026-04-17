@@ -145,10 +145,13 @@ export class FlatService {
     if (this.embed) {
       this.destroyEmbed();
     }
+    let zoom = 1
+    if(window.innerWidth < 768) {
+      zoom = 0.7
+    }
 
     // On vide physiquement le conteneur pour supprimer l'ancienne iFrame
     container.innerHTML = '';
-    alert("INIT EMBED " + this._diapoService.getFlatLayout());
     let layout = 'responsive';
     if (this._diapoService.getFlatLayout() == 'track') layout = 'track';
     this.embed = new Embed(container, {
@@ -172,7 +175,7 @@ export class FlatService {
         themeIconsPrimary: '#afc638',
         themeSelection: 'transparent',
         systemBorders: 'none',
-        zoom: 1,
+        zoom: zoom,
         hideminimalheader: true,
         hideTempo: true,
         allowNotationEdit: false,

@@ -146,6 +146,9 @@ export class FlatService {
       this.destroyEmbed();
     }
 
+    // On vide physiquement le conteneur pour supprimer l'ancienne iFrame
+    container.innerHTML = '';
+    alert("INIT EMBED " + this._diapoService.getFlatLayout());
     let layout = 'responsive';
     if (this._diapoService.getFlatLayout() == 'track') layout = 'track';
     this.embed = new Embed(container, {
@@ -181,29 +184,27 @@ export class FlatService {
     this.setupEventListeners();
   }
   async switchLayout(): Promise<void> {
-    if (!this.embed) return;
-    
-    // On récupère le layout via le service Diapo
-    const mode = this._diapoService.getFlatLayout();
-    let newLayout = 'responsive';
-    if (mode == 'track' || mode == 'page') {
-      newLayout = mode;
-    }
-newLayout = 'track';
-    // 1. On récupère le XML actuel si on veut garder les modifs
-    // Ou on utilise celui stocké dans ton service
+    if (!this.embed || !this.embed.element || !this.embed.element.parentElement) return;
+
+    // 1. Sauvegarde de l'état actuel (Temps et XML)
+    const container = this.embed.element.parentElement;
+    const currentTime = this._lastSyncedTime;
     const currentXml = await this.embed.getMusicXML();
     
-    // alert("UPDATE LAYOUT " + newLayout);
-    await this.embed.loadMusicXML(currentXml, {
+    console.log('[FlatService] Force Re-init for layout change at:', currentTime);
 
-      embedParams: {
-        layout: newLayout,
-        appId: environment.FLAT_APP_ID,
-      }
-    });
+    // 2. Destruction et Création de l'iFrame (Reload complet)
+    await this.initEmbed(container);
 
-    (this as any)._currentFlatLayout = newLayout;
+    // 3. Chargement du XML
+    await this.loadMusicXML(currentXml);
+
+    // 4. Repositionnement (Seek)
+    // On laisse un petit délai pour que l'iFrame soit totalement opérationnelle
+    setTimeout(async () => {
+      await this.seekTrackTo(currentTime);
+      console.log('[FlatService] Repositioning done at:', currentTime);
+    }, 800);
   }
 
   async loadMusicXML(xml: string): Promise<void> {

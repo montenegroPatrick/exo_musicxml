@@ -15,7 +15,12 @@ export const routes: Routes = [
     resolve: { data: executorResolver },
     children: [
       {
-        path: 'lesson-playback',
+        path: 'playback-score',
+        data: { controlBar: 'audiomixer' },
+        loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
+      },
+      {
+        path: 'playback-diapo',
         data: { controlBar: 'audiomixer' },
         loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
       },

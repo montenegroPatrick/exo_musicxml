@@ -2,13 +2,12 @@ import { computed, effect, inject, Injectable, signal, untracked } from '@angula
 import { environment } from '@environments/environment';
 import Embed from 'flat-embed';
 import {
-  EmbedOptions,
   MeasureDetails,
-  Part,
 } from '@core/interfaces/playback.interface';
-import { Sync } from '@core/interfaces/lesson.interface';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { CoreDataService } from './core-data.service';
+
+import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 
 
 export interface RangeSelection {
@@ -25,6 +24,7 @@ export interface LoopBounds {
 export class FlatService {
   private _lessonService = inject(LessonService);
   private _coreDataStore = inject(CoreDataService);
+  private _diapoService = inject(DiapoStateService);
   private embed: any | undefined;
   private readonly TRACK_ID = 'external-1';
   private _lastSyncedTime = 0;
@@ -146,8 +146,8 @@ export class FlatService {
       this.destroyEmbed();
     }
 
-    const layout = 'responsive';
-    
+    let layout = 'responsive';
+    if (this._diapoService.getFlatLayout() == 'track') layout = 'track';
     this.embed = new Embed(container, {
       layout: layout,
       embedParams: {
@@ -179,6 +179,31 @@ export class FlatService {
     });
 
     this.setupEventListeners();
+  }
+  async switchLayout(): Promise<void> {
+    if (!this.embed) return;
+    
+    // On récupère le layout via le service Diapo
+    const mode = this._diapoService.getFlatLayout();
+    let newLayout = 'responsive';
+    if (mode == 'track' || mode == 'page') {
+      newLayout = mode;
+    }
+newLayout = 'track';
+    // 1. On récupère le XML actuel si on veut garder les modifs
+    // Ou on utilise celui stocké dans ton service
+    const currentXml = await this.embed.getMusicXML();
+    
+    // alert("UPDATE LAYOUT " + newLayout);
+    await this.embed.loadMusicXML(currentXml, {
+
+      embedParams: {
+        layout: newLayout,
+        appId: environment.FLAT_APP_ID,
+      }
+    });
+
+    (this as any)._currentFlatLayout = newLayout;
   }
 
   async loadMusicXML(xml: string): Promise<void> {

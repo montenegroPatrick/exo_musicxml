@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, signal, HostListener } from '@angular/core';
 import { EpsComponent } from '@core/shared/eps/eps.component';
 import { IJsonDiapoEps } from '../../interfaces/diapo.interface';
 import { CommonModule } from '@angular/common';
@@ -8,11 +8,14 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, EpsComponent],
   template: `
-    <div class="w-full h-full flex items-center justify-center">
+    <div 
+      class="w-full flex items-start justify-center px-4 py-2.5 overflow-hidden"
+      [ngClass]="isMobile() ? 'h-auto' : 'h-full'"
+    >
       @if (eps()) {
         <app-eps [eps]="eps()!"></app-eps>
       } @else {
-        <div class="flex items-center justify-center h-full text-muted-foreground italic">
+        <div class="flex items-start justify-center h-full text-muted-foreground italic">
           Aucune image à afficher.
         </div>
       }
@@ -28,4 +31,11 @@ import { CommonModule } from '@angular/common';
 })
 export class EpsViewerComponent {
   eps = input.required<IJsonDiapoEps>();
+  
+  readonly isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 }

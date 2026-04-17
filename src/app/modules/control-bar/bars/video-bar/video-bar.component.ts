@@ -216,13 +216,17 @@ export class VideoBarComponent {
     this.activePopin.set('none');
   }
 
-  setLayout(mode: 'standard' | 'expanded' | 'half'): void {
+  setLocalLayout(mode: any): void {
+    console.log("SET LAYOUT TEST POINT", mode);
     this._diapoService.setLayoutMode(mode);
     this.closePopins();
   }
 
-  setFullLayout(mode: 'standard' | 'expanded' | 'half', pos: 'left' | 'right'): void {
-    this._diapoService.setLayoutMode(mode);
+  setLocalFullLayout(mode: any, pos: any): void {
+    if (this.layoutMode() === mode && this.sidebarPosition() === pos) return;
+    
+     console.log("SET FULL LAYOUT TEST POINT", mode);
+     this._diapoService.setLayoutMode(mode);
     this._diapoService.setSidebarPosition(pos);
     // On ne ferme plus forcément la popin ici si on veut rester dans les réglages
   }
@@ -305,4 +309,6 @@ export class VideoBarComponent {
   stopDrag(): void {
     this.draggingMarker.set(null);
   }
+
+ 
 }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, signal, HostListener } from '@angular/core';
 import { IJsonDiapoEps } from '@core/shared/diapo/interfaces/diapo.interface';
 import { CommonModule } from '@angular/common';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
@@ -8,15 +8,15 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-center justify-center w-full h-full p-4 overflow-hidden">
+    <div class="flex items-center justify-center w-full h-full px-4 py-2.5 overflow-hidden">
       @for (img of [currentImage()]; track img?.fullUrl) {
         @if (img) {
           <img 
             [src]="img.fullUrl" 
             class="shadow-lg rounded transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95"
             [ngClass]="{
-              'max-w-full max-h-full object-contain': viewMode() === 'fit',
-              'w-full h-auto': viewMode() === 'zoom'
+              'max-w-full max-h-full object-contain': viewMode() === 'fit' && !isMobile(),
+              'w-full h-auto object-top': isMobile() || viewMode() === 'zoom'
             }"
             alt="Diapo Image"
           >
@@ -32,6 +32,13 @@ export class EpsComponent {
   viewMode = computed(() => this._diapoService.viewMode());
   currentPos = computed(() => this._diapoService.currentImageListPos());
   eps = input.required<IJsonDiapoEps>();
+
+  readonly isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   /**
    * Calculates the image folder based on screen ratio and resolution,

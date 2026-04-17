@@ -1,10 +1,9 @@
 <div class="relative w-full h-full bg-zinc-950 overflow-hidden">
-  <div class="flex flex-col md:flex-row h-full overflow-y-auto md:overflow-hidden custom-scrollbar">
+  <div class="w-full h-full flex overflow-hidden" 
+       [ngClass]="isVerticalMode() ? 'flex-col' : 'flex-col md:flex-row'">
     
-    <!-- Video Section: Top on mobile, right on desktop -->
-    <div 
-      [class]="classVideoContainer() + ' order-1 flex items-center justify-center bg-black min-h-[30vh] md:min-h-0'"
-    >
+    <!-- Video Section -->
+    <div [ngStyle]="videoStyles()" class="bg-black flex items-center justify-center overflow-hidden">
       <app-video 
         mode="fill"
         class="w-full h-full"
@@ -13,10 +12,8 @@
       ></app-video>
     </div>
 
-    <!-- Diapo Section: Bottom on mobile, left on desktop -->
-    <div 
-      [class]="classImgContainer() + ' order-2 h-full min-h-[50vh] md:min-h-0'"
-    >
+    <!-- Diapo Section -->
+    <div [ngStyle]="scoreStyles()" class="bg-white relative overflow-hidden shadow-2xl">
       <app-diapo theme="dark" [showControls]="true" [allowZoom]="!isMobile()"></app-diapo>
     </div>
 

@@ -14,18 +14,20 @@ import { FlatService } from '@core/services/flat.service';
 import { LessonService } from '../lesson/services/lesson.service';
 import { VideoSyncService } from '../lesson/services/video-sync.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
+import { CommonModule, NgClass, NgStyle } from '@angular/common';
 
 @Component({
   selector: 'app-video-score',
   standalone: true,
-  imports: [VideoComponent, XmlComponent],
+  imports: [CommonModule, NgClass, NgStyle, VideoComponent, XmlComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="relative w-full h-full bg-zinc-950 overflow-hidden">
-      <div class="flex flex-col md:flex-row h-full overflow-y-auto md:overflow-hidden custom-scrollbar">
+      <div class="w-full h-full flex overflow-hidden" 
+           [ngClass]="isVerticalMode() ? 'flex-col' : 'flex-col md:flex-row'">
         
         <!-- Video Section -->
-        <div [class]="classVideoContainer()">
+        <div [ngStyle]="videoStyles()" class="bg-black flex items-center justify-center overflow-hidden">
           <app-video 
             mode="fill"
             class="w-full h-full"
@@ -35,7 +37,7 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
         </div>
 
         <!-- Score (Flat.io) Section -->
-        <div [class]="classScoreContainer()">
+        <div [ngStyle]="scoreStyles()" class="bg-white relative overflow-hidden shadow-2xl">
              @if (xmlContent()) {
                 <app-xml [xml]="xmlContent()!"></app-xml>
              } @else {
@@ -74,18 +76,86 @@ export class VideoScoreComponent implements OnInit {
     // Les réglages de layout sont désormais persistés via DiapoStateService
   }
 
-  readonly classScoreContainer = computed(() => {
-    // Position : sidebarPosition() ('left' ou 'right')
-    // Ratio : layoutMode() ('standard' = 1/3, 'expanded' = 2/3)
-    const ratio = this.layoutMode() === 'standard' ? 'md:w-1/3' : 'md:w-2/3';
-    const order = this.sidebarPosition() === 'left' ? 'md:order-1' : 'md:order-2';
-    
-    return `w-full ${ratio} ${order} flex-shrink-0 min-w-[510px] h-full transition-all duration-300 relative bg-white`;
+  readonly isVerticalMode = computed(() => {
+    const mode = this.layoutMode();
+    return (mode === 'track-top' || mode === 'track-bottom');
   });
 
-  readonly classVideoContainer = computed(() => {
-    // La vidéo prend l'espace restant
-    const order = this.sidebarPosition() === 'left' ? 'md:order-2' : 'md:order-1';
-    return `w-full md:flex-1 ${order} min-w-0 overflow-hidden bg-black flex items-center justify-center min-h-[30vh] md:min-h-0`;
+  readonly videoStyles = computed(() => {
+    const mode = this.layoutMode();
+    const isHalf = mode === 'half';
+    const isTrackTop = mode === 'track-top';
+    const isTrackBottom = mode === 'track-bottom';
+    const isExpanded = mode === 'expanded';
+
+    // Ratios par défaut (Standard : 1/3 Score, 2/3 Vidéo -> Vidéo = 66.66%)
+    let width = '66.66%';
+    let height = '100%';
+    let order = this.sidebarPosition() === 'left' ? '2' : '1';
+
+    if (isTrackTop || isTrackBottom) {
+      // MODE VERTICAL 40/60
+      height = '40%';
+      width = '100%';
+      order = isTrackBottom ? '2' : '1';
+    } else {
+      // MODE CÔTE À CÔTE
+      if (isHalf) width = '50%';
+      else if (isExpanded) width = '33.33%';
+      else width = '66.66%';
+      
+      if (this.isMobile()) {
+         width = '100%';
+         height = 'auto';
+      }
+    }
+
+    return {
+      width: width,
+      height: height,
+      order: order,
+      display: 'flex',
+      'flex-shrink': '0',
+      'min-width': (isTrackTop || isTrackBottom) ? '100%' : '0'
+    };
+  });
+
+  readonly scoreStyles = computed(() => {
+    const mode = this.layoutMode();
+    const isHalf = mode === 'half';
+    const isTrackTop = mode === 'track-top';
+    const isTrackBottom = mode === 'track-bottom';
+    const isExpanded = mode === 'expanded';
+
+    // Ratios par défaut (Standard : 1/3 Score -> 33.33%)
+    let width = '33.33%';
+    let height = '100%';
+    let order = this.sidebarPosition() === 'left' ? '1' : '2';
+
+    if (isTrackTop || isTrackBottom) {
+      // MODE VERTICAL 40/60
+      height = '60%';
+      width = '100%';
+      order = isTrackTop ? '2' : '1';
+    } else {
+      // MODE CÔTE À CÔTE
+      if (isHalf) width = '50%';
+      else if (isExpanded) width = '66.66%';
+      else width = '33.33%';
+
+      if (this.isMobile()) {
+        width = '100%';
+        height = 'auto';
+      }
+    }
+
+    return {
+      width: width,
+      height: height,
+      order: order,
+      'flex-shrink': '0',
+      'transition': 'all 0.3s ease',
+      'min-width': (isTrackTop || isTrackBottom) ? '100%' : '0'
+    };
   });
 }

@@ -8,9 +8,8 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
   selector: 'app-control-bar',
   standalone: true,
   imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="relative bg-black/40 backdrop-blur-2xl border-t border-white/5 h-auto w-full shadow-2xl">
+    <div class="relative bg-blue-600 backdrop-blur-2xl border-t border-white/5 h-auto w-full shadow-2xl">
       @switch (typeControlBar()) {
         @case ('video') {
           <app-video-bar></app-video-bar>

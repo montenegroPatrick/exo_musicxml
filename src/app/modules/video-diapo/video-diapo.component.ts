@@ -21,6 +21,7 @@ import {
 } from './interfaces/video-diapo.interface';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { ButtonModule } from 'primeng/button';
+import { CommonModule, NgStyle } from '@angular/common';
 
 export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   imageRatio: '1/2',
@@ -30,7 +31,7 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
 @Component({
   selector: 'app-video-diapo',
   standalone: true,
-  imports: [VideoComponent, DiapoComponent, ControlBarComponent, ButtonModule],
+  imports: [CommonModule, NgStyle, VideoComponent, DiapoComponent, ControlBarComponent, ButtonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-diapo.component.html',
 })
@@ -62,21 +63,87 @@ export class VideoDiapoComponent implements OnInit {
   }
 
   // -- Dynamic Classes --
-  readonly classImgContainer = computed(() => {
-    // Ratio : layoutMode() ('standard' = 1/3, 'half' = 1/2, 'expanded' = 2/3)
-    let ratio = 'md:w-1/3';
-    if (this.layoutMode() === 'half') ratio = 'md:w-1/2';
-    if (this.layoutMode() === 'expanded') ratio = 'md:w-2/3';
-
-    const order = this.sidebarPosition() === 'left' ? 'md:order-1' : 'md:order-2';
-    
-    return `w-full ${ratio} ${order} flex-shrink-0 md:min-w-[400px] h-full transition-all duration-300 relative bg-white`;
+  readonly isVerticalMode = computed(() => {
+    const mode = this.layoutMode();
+    const isXml = this.typeImg() === 'xml';
+    return isXml && (mode === 'track-top' || mode === 'track-bottom');
   });
 
-  readonly classVideoContainer = computed(() => {
-    // La vidéo prend l'espace restant
-    const order = this.sidebarPosition() === 'left' ? 'md:order-2' : 'md:order-1';
-    return `w-full md:flex-1 ${order} min-w-0 overflow-hidden bg-black flex items-center justify-center min-h-[30vh] md:min-h-0`;
+  readonly videoStyles = computed(() => {
+    const mode = this.layoutMode();
+    const isXml = this.typeImg() === 'xml';
+    const isHalf = mode === 'half';
+    const isTrackTop = mode === 'track-top';
+    const isTrackBottom = mode === 'track-bottom';
+    const isExpanded = mode === 'expanded';
+
+    // Ratios
+    let width = '100%';
+    let height = '100%';
+    let order = this.sidebarPosition() === 'left' ? '2' : '1';
+
+    if (isXml && (isTrackTop || isTrackBottom)) {
+      // MODE VERTICAL 40/60
+      height = '40%';
+      order = isTrackBottom ? '2' : '1';
+    } else {
+      // MODE CÔTE À CÔTE
+      if (isHalf) width = '50%';
+      else if (isExpanded) width = '33.33%';
+      else width = '66.66%';
+      
+      if (this.isMobile()) {
+         width = '100%';
+         height = 'auto';
+      }
+    }
+
+    return {
+      width: width,
+      height: height,
+      order: order,
+      display: 'flex',
+      'flex-shrink': '0',
+      'min-width': isXml && (isHalf || isTrackTop || isTrackBottom) ? '100%' : '0'
+    };
+  });
+
+  readonly scoreStyles = computed(() => {
+    const mode = this.layoutMode();
+    const isXml = this.typeImg() === 'xml';
+    const isHalf = mode === 'half';
+    const isTrackTop = mode === 'track-top';
+    const isTrackBottom = mode === 'track-bottom';
+    const isExpanded = mode === 'expanded';
+
+    let width = '100%';
+    let height = '100%';
+    let order = this.sidebarPosition() === 'left' ? '1' : '2';
+
+    if (isXml && (isHalf || isTrackTop || isTrackBottom)) {
+      // MODE VERTICAL 40/60
+      height = '60%';
+      order = isTrackTop ? '2' : '1';
+    } else {
+      // MODE CÔTE À CÔTE
+      if (isHalf) width = '50%';
+      else if (isExpanded) width = '66.66%';
+      else width = '33.33%';
+
+      if (this.isMobile()) {
+        width = '100%';
+        height = 'auto';
+      }
+    }
+
+    return {
+      width: width,
+      height: height,
+      order: order,
+      'flex-shrink': '0',
+      'transition': 'all 0.3s ease',
+      'min-width': (isXml && (isTrackTop || isTrackBottom)) ? '100%' : width
+    };
   });
 
   // -- Layout Actions (Obsolètes, gérées par VideoBarComponent via le service global) --

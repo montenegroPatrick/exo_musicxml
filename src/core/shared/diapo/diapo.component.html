@@ -62,11 +62,10 @@
     [ngClass]="theme() === 'light' ? 'bg-white' : 'bg-zinc-900'"
   >
     <div 
-      class="absolute inset-0 custom-scrollbar" 
-      [ngClass]="{
-        'py-2.5 overflow-hidden': layoutMode() === 'standard',
-        'py-1.5 overflow-y-auto': layoutMode() !== 'standard'
-      }"
+      class="custom-scrollbar"
+      [ngClass]="isMobile() ? 'relative w-full' : 'absolute inset-0'"
+      [class.overflow-hidden]="layoutMode() === 'standard'"
+      [class.overflow-y-auto]="layoutMode() !== 'standard'"
     >
       @switch (type()) {
         @case ("xml") {

@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, OnInit, ChangeDetectionStrategy, effect, untracked } from '@angular/core';
+import { Component, computed, inject, input, OnInit, ChangeDetectionStrategy, effect, untracked, signal, HostListener } from '@angular/core';
 import { DiapoStateService } from './services/diapo.service';
 import { ButtonModule } from 'primeng/button';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
@@ -46,6 +46,13 @@ export class DiapoComponent implements OnInit {
   readonly currentPdfUrl = this._diapoService.currentPdfUrl;
   
   readonly pdfTotalPages = this._diapoService.currentPdfTotalPages;
+
+  readonly isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   constructor() {
     effect(() => {

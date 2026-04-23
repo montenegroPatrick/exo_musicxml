@@ -6,7 +6,6 @@
     </div>
   }
 
-  <!-- Play Controls: Step backward, Play/Pause, Step forward -->
   <div class="flex items-center">
     <app-play-controls
       (togglePlay)="handleTogglePlay()"
@@ -34,6 +33,19 @@
 
   <!-- Right side controls -->
   <section class="flex items-center gap-2 rounded-lg">
+    <!-- MODE SWITCHER (Icons) -->
+    @if (hasVideo()) {
+      <div class="flex items-center bg-white/5 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-white/10 shrink-0">
+        <button (click)="navigateToMode('video')" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg text-white/40 hover:text-white/60 transition-all">
+          <i class="pi pi-video text-[10px] sm:text-xs"></i>
+        </button>
+        <button class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg bg-white/20 text-white shadow-lg">
+          <i class="pi pi-volume-up text-[10px] sm:text-xs"></i>
+        </button>
+      </div>
+      <div class="w-px h-6 bg-white/10 mx-1 hidden sm:block"></div>
+    }
+
     <!-- Volume Control -->
     <app-volume-control (volumeChange)="handleVolumeChange($event)" />
 

@@ -1,0 +1,21 @@
+{
+ "Chapter": 1,
+  "SubChapter": 2,
+  "Sequence": 4,
+  "ChapterTitle": "TEST VIDEO PDF",
+  "SubChapterTitle": "TEST VIDEO PDF NO SYNC",
+  "SequenceTitle": "TEST VIDEO PDF NO SYNC",
+  "loadVideo": true,
+  "extM3U8": "",
+  "intM3U8": "",
+  "jw": "jmBRp84G",
+  "videoName": "jc_0321_p03_12b",
+  "subtitles": [],
+  "videoSync": null,
+  "loadAudio": false,
+  "typeImg": "pdf",
+  "loadImg": true,
+  "url": "https:\/\/www.imusic-school.tv\/app\/datas\/\/partitions\/59030.pdf",
+  "pos": 1,
+  "printable": true
+}

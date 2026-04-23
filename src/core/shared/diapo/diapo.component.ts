@@ -96,8 +96,13 @@ export class DiapoComponent implements OnInit {
   });
 
   canNavigate = computed(() => {
+    if (this.type() === 'pdf') {
+      // Pour le PDF, on affiche les contrôles si on a plus d'une page
+      // ou si le PDF est en cours de chargement (totalPages === 0)
+      return this.pdfTotalPages() === 0 || this.pdfTotalPages() > 1;
+    }
     const len = this.imageList()?.length ?? 0;
-    return len > 1 || this.type() === 'pdf';
+    return len > 1;
   });
 
   nextPage(): void {

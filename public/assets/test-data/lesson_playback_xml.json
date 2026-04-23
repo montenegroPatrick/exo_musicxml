@@ -1,6 +1,5 @@
 {
-    "mock": true,
-    "chapter": 2,
+ "chapter": 2,
   "subChapter": 8,
   "sequence": 1,
   "chapterTitle": "Blues mineur",
@@ -37,6 +36,7 @@
     ],
     "typeImg": "xml",
     "loadImg": true,
+    "loadAudio": true,
     "url": "https://www.imusic-school.tv/app/datas//partitions/67975.xml",
     "pos": 1
 }

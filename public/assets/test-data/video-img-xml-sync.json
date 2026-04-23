@@ -8,14 +8,17 @@
   "loadVideo": true,
   "jw": "cLGmQ6rh",
   "subtitles": [],
-  "videoSync": [
+   "videoSync": [
     {
-      "timeCode": 0,
-      "pos": 0
+      "type": "start",
+      "time": 0,
+      "location": {
+        "measureIdx": 0
+      }
     },
     {
-      "timeCode": 80,
-      "pos": 1
+      "type": "end",
+      "time": 80
     }
   ],
   "loadAudio": false,

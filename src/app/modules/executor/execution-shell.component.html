@@ -55,6 +55,7 @@
         </app-audiomixer-control-bar>
       } @else {
         <app-control-bar 
+          [type]="controlBarType()"
           class="w-full h-full relative block">
         </app-control-bar>
       }

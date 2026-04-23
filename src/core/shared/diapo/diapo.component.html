@@ -1,3 +1,6 @@
+<style>
+  app-pdf-viewer,app-eps-viewer{background-color:#FFF; display: block; height: 100%; width: 100%;}
+</style>
 <div 
   class="flex w-full h-full transition-colors duration-300 relative" 
   [ngClass]="{
@@ -7,50 +10,51 @@
 >
   @if (showControls()) {
     <div 
-      class="h-full flex-none gap-4 flex flex-col items-center py-4 z-10 w-[45px] transition-all duration-300 overflow-hidden border-r shadow-sm backdrop-blur-md"
+      class="h-full flex-none gap-6 flex flex-col items-center py-6 z-10 w-[50px] transition-all duration-300 overflow-hidden border-r shadow-md backdrop-blur-lg"
       [ngClass]="{
-        'text-zinc-500 bg-white/60 border-zinc-200': theme() === 'light',
-        'text-zinc-100 bg-black/40 border-white/10': theme() === 'dark'
+        'text-zinc-800 bg-white/80 border-zinc-200': theme() === 'light',
+        'text-zinc-100 bg-black/60 border-white/10': theme() === 'dark'
       }"
     >
       @if (printable()) {
         <p-button
           (onClick)="printPdf()"
           [text]="true"
-          [plain]="true"
           icon="pi pi-print"
           pTooltip="Imprimer"
           tooltipPosition="right"
-          styleClass="p-0 text-xl hover:scale-110 transition-transform text-inherit"
+          styleClass="p-2 text-2xl hover:bg-zinc-200/50 dark:hover:bg-white/10 rounded-full transition-all text-inherit"
         ></p-button>
       }
 
-      @if (canNavigate() && (pdfTotalPages() > 1 || (imageList()?.length ?? 0) > 1)) {
-        <div class="flex flex-col gap-3 items-center mt-4 px-1">
+      @if (canNavigate()) {
+        <div class="flex flex-col gap-4 items-center mt-2 px-1">
           <p-button
-            [disabled]="(imageList()?.length ?? 0) === 1 || imageListPos() === 1"
+            [disabled]="imageListPos() === 1"
             (onClick)="previousPage()"
             [text]="true"
-            [plain]="true"
             icon="pi pi-arrow-up"
-            styleClass="text-inherit"
+            styleClass="p-2 text-xl hover:bg-zinc-200/50 dark:hover:bg-white/10 rounded-full transition-all text-inherit"
           ></p-button>
           
-          <div class="text-[9px] font-black uppercase text-center leading-none tracking-tighter">
-            {{ imageListPos() }}<br/>
-            <span class="opacity-30">—</span><br/>
-            {{ pdfTotalPages() || (imageList()?.length ?? 0) }}
+          <div class="flex flex-col items-center gap-1 py-2">
+            <span class="text-sm font-bold tracking-tight">{{ imageListPos() }}</span>
+            <div class="w-4 h-[1px]" [ngClass]="theme() === 'light' ? 'bg-zinc-300' : 'bg-zinc-700'"></div>
+            <span class="text-[11px] font-medium opacity-60">
+              {{ type() === 'pdf' ? (pdfTotalPages() || '?') : (imageList()?.length ?? 0) }}
+            </span>
           </div>
           
           <p-button
             [disabled]="
-              imageListPos() === (pdfTotalPages() || (imageList()?.length ?? 0))
+              type() === 'pdf' 
+                ? (pdfTotalPages() > 0 && imageListPos() === pdfTotalPages())
+                : (imageListPos() === (imageList()?.length ?? 0))
             "
             (onClick)="nextPage()"
             [text]="true"
-            [plain]="true"
             icon="pi pi-arrow-down"
-            styleClass="text-inherit"
+            styleClass="p-2 text-xl hover:bg-zinc-200/50 dark:hover:bg-white/10 rounded-full transition-all text-inherit"
           ></p-button>
         </div>
       }
@@ -64,8 +68,8 @@
     <div 
       class="custom-scrollbar"
       [ngClass]="isMobile() ? 'relative w-full h-auto overflow-visible' : 'absolute inset-0'"
-      [class.overflow-hidden]="!isMobile() && layoutMode() === 'standard'"
-      [class.overflow-y-auto]="!isMobile() && layoutMode() !== 'standard'"
+      [class.overflow-hidden]="!isMobile() && (layoutMode() === 'standard' || viewMode() === 'fit')"
+      [class.overflow-y-auto]="!isMobile() && layoutMode() !== 'standard' && viewMode() !== 'fit'"
     >
       @switch (type()) {
         @case ("xml") {

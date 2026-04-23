@@ -174,18 +174,17 @@ export class DiapoStateService {
 
   private _handleJsonPdf(pdf: IJsonDiapoPdf): void {
     this._jsonDiapoPdf.set(pdf as any);
+    
+    // Position initiale (page)
     if (pdf.pos) {
       this._currentImageListPos.set(pdf.pos);
+    } else {
+      this._currentImageListPos.set(1);
     }
+
+    // URL directe pour le viewer PDF (plus robuste que le Blob pour le CORS)
     if (pdf.url) {
-      this._imgApiService.getPdfBlob(pdf.url).pipe(
-        map((blob: Blob) => {
-          this._currentPdfBlob.set(blob);
-          const blobUrl = URL.createObjectURL(blob);
-          this._currentPdfUrl.set(`${blobUrl}#toolbar=0`);
-          return blob;
-        })
-      ).subscribe();
+      this._currentPdfUrl.set(pdf.url);
     }
   }
 

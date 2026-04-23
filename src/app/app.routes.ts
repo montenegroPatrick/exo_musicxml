@@ -10,6 +10,10 @@ export const routes: Routes = [
     component: UnauthorizedComponent,
   },
   {
+    path: 'debug',
+    loadComponent: () => import('./modules/debug/debug-page.component').then(m => m.DebugPageComponent),
+  },
+  {
     path: '',
     component: ExecutionShellComponent,
     resolve: { data: executorResolver },
@@ -43,6 +47,16 @@ export const routes: Routes = [
         path: 'diapo',
         data: { },
         loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),
+      },
+      {
+        path: 'metronome-diapo',
+        data: { controlBar: 'metronome' },
+        loadComponent: () => import('./modules/metronome-diapo/metronome-diapo.component').then(m => m.MetronomeDiapoComponent),
+      },
+      {
+        path: 'playback-diapo',
+        data: { controlBar: 'audio-mixer' },
+        loadComponent: () => import('./modules/playback-diapo/playback-diapo.component').then(m => m.PlaybackDiapoComponent),
       },
       {
         path: 'tap-rythm',

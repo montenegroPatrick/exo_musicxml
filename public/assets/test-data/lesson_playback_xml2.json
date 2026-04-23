@@ -15,7 +15,7 @@
         }
     ],
     "timeline": [],
-    "sync": [{"type":"start","time":0,"location":{"measureIdx":0}},{"type":"measure","time":97.82485260770972,"location":{"measureIdx":65}},{"type":"end","time":104.9}],
+    "sync": [{"type":"measure","time":0,"location":{"measureIdx":0}},{"type":"measure","time":30.39591836734695,"location":{"measureIdx":5}},{"type":"measure","time":32.17650793650796,"location":{"measureIdx":22}},{"type":"measure","time":45.318911564625836,"location":{"measureIdx":30}},{"type":"measure","time":81.4838095238095,"location":{"measureIdx":54}},{"type":"measure","time":97.82485260770972,"location":{"measureIdx":65}},{"type":"end","time":104.9}],
     "typeImg": "xml",
     "loadImg": true,
     "loadAudio": true,

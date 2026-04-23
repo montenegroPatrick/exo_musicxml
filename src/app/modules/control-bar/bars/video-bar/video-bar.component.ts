@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, signal, ChangeDetectionStrategy, HostListener, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { ControlBarService } from '../../services/control-bar.service';
 import { FlatService } from '@core/services/flat.service';
 import { JwpService } from '@core/services/jwp.service';
@@ -38,8 +39,12 @@ export class VideoBarComponent {
   public readonly _lessonService = inject(LessonService);
   private readonly _diapoService = inject(DiapoStateService);
   private readonly _elementRef = inject(ElementRef);
+  private readonly _router = inject(Router);
 
-  // -- Inputs --
+  // -- Reactive Data Sources --
+  readonly hasVideo = this._lessonService.hasVideo;
+  readonly hasAudio = this._lessonService.hasAudio;
+  readonly useMetronome = this._lessonService.useMetronome;
 
   // -- Component Local State --
   activeTab = signal<'video' | 'metronome'>('video');
@@ -163,6 +168,12 @@ export class VideoBarComponent {
 
   setTab(tab: 'video' | 'metronome'): void {
     this.activeTab.set(tab);
+  }
+
+  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    this._router.navigate([route], { queryParams: { mock } });
   }
 
   toggleInfoPopin(): void {

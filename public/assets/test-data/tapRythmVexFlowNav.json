@@ -1,0 +1,16 @@
+  {
+    "chapter": 2,
+    "subChapter": 8,
+    "sequence": 1,
+    "chapterTitle": "Blues mineur",
+    "subChapterTitle": "A vous de jouer",
+    "sequenceTitle": "Playback multipistes",
+    "noteErrorMarge": "dc",
+    "mesureDivision": "44",
+    "id": "bise_10",
+    "title": "Exercice : taper le rythme",
+    "tempo": "60",
+    "mesureSize": "150",
+    "mesureList": ["s,n,n,s", "n,n,s,n", "n,n,dp", "n,dp,n"]
+}
+

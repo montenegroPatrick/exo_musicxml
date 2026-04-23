@@ -1,0 +1,45 @@
+{
+      "chapter": 1,
+  "subChapter": 2,
+  "sequence": 4,
+  "chapterTitle": "Vos premiers pas",
+  "subChapterTitle": "La guitare et ses accessoires",
+  "sequenceTitle": "Le métronome",
+    "loadVideo": true,
+    "jw": "TGEuFbuB",
+    "videoName": "dg_0714_p02_06e",
+    "subtitles": [],
+    "videoSync": [
+        {
+            "timeCode": 0,
+            "pos": 0
+        },
+        {
+            "timeCode": 25.664197,
+            "pos": 1
+        },
+        {
+            "timeCode": 50.48,
+            "pos": 0
+        }
+    ],
+    "loadAudio": true,
+    "audioUrl": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/dg\/sound\/dg_26_sunshine.mp3",
+    "typeImg": "eps",
+    "printable": true,
+    "printExt": "nbGVzc29uL2RnL3BkZi8xMzA3",
+    "loadImg": true,
+    "pos": 1,
+    "imageList": [
+        {
+            "pos": 1,
+            "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/dg\/score\/36297\/",
+            "ext": ".gif"
+        },
+        {
+            "pos": 2,
+            "url": "https:\/\/www.imusic-school.tv\/app\/datas\/lesson\/dg\/score\/36298\/",
+            "ext": ".gif"
+        }
+    ]
+}

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal, ChangeDetectionStrategy, HostListener, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ControlBarService } from '../../../services/control-bar.service';
@@ -32,8 +33,18 @@ export class VideoBarMobileComponent {
   public readonly _lessonService = inject(LessonService);
   private readonly _diapoService = inject(DiapoStateService);
   private readonly _elementRef = inject(ElementRef);
+  private readonly _router = inject(Router);
 
-  // -- Component Local State (Identical to Desktop for logic parity) --
+  // -- Reactive Data Sources --
+  readonly hasVideo = this._lessonService.hasVideo;
+  readonly hasAudio = this._lessonService.hasAudio;
+  readonly useMetronome = this._lessonService.useMetronome;
+
+  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    this._router.navigate([route], { queryParams: { mock } });
+  }
   showInfoPopin = signal(false);
   activePopin = signal<'none' | 'settings' | 'speed' | 'loop'>('none');
   activeMenu = signal<'main' | 'quality' | 'speed' | 'captions' | 'layout'>('main');

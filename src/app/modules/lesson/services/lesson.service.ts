@@ -57,6 +57,14 @@ export class LessonService {
   readonly chapterTitle = this._coreDataStore.chapterTitle;
   readonly subChapterTitle = this._coreDataStore.subChapterTitle;
   readonly sequenceTitle = this._coreDataStore.sequenceTitle;
+  
+  // -- Audio Capabilities --
+  readonly hasVideo = computed(() => !!this.jwPlayerId());
+  readonly hasAudio = computed(() => {
+    const lesson = this.lessonJson();
+    return !!(lesson?.loadAudio && lesson?.audioUrl);
+  });
+  readonly useMetronome = computed(() => !this.hasAudio());
 
   // Direct Lines
   readonly dirLine1 = this._coreDataStore.dirLine1;

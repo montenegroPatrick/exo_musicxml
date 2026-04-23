@@ -1,4 +1,5 @@
 import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Router } from '@angular/router';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { PlayControlsComponent } from '../../components/play-controls/play-controls.component';
@@ -32,6 +33,18 @@ export class AudioMixerBarComponent {
   private _audioService = inject(AudioService);
   private _bridgeService = inject(BridgeService);
   private _lessonService = inject(LessonService);
+  private _router = inject(Router);
+
+  // -- Audio Capabilities --
+  readonly hasVideo = this._lessonService.hasVideo;
+  readonly hasAudio = this._lessonService.hasAudio;
+  readonly useMetronome = this._lessonService.useMetronome;
+
+  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    this._router.navigate([route], { queryParams: { mock } });
+  }
 
   // -- Inputs --
 

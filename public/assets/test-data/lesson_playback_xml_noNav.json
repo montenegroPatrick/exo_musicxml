@@ -1,8 +1,7 @@
 {
-    "mock": true,
   "title": "Blues mineur",
-  "author": "Fanou Torracinta",
-  "infos": "Gm - Swing Jazz - 12 mesures - 120 bpm",
+  "subtitle": "Fanou Torracinta",
+  "description": "Gm - Swing Jazz - 12 mesures - 120 bpm",
     "folder": "https://www.imusic-school.tv/app/datas/playback/ft_blues_min_full/",
     "trackList": [
         {

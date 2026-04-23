@@ -3,6 +3,7 @@ import { RouterOutlet, ActivatedRoute, Router, NavigationEnd } from '@angular/ro
 import { filter, startWith } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { ControlBarType } from '@core/interfaces/lesson.interface';
 import { LessonService } from '../lesson/services/lesson.service';
 import { ControlBarComponent } from '../control-bar/control-bar.component';
 import { ControlBarService } from '../control-bar/services/control-bar.service';
@@ -55,7 +56,12 @@ export class ExecutionShellComponent {
   });
 
   /** Logic to determine the type of control bar to render */
-  readonly controlBarType = this._coreData.controlBarType;
+  readonly controlBarType = computed(() => {
+    this._navigationEnd();
+    const data = this._getDeepestRouteData();
+    // Priorité à la route, sinon on prend la valeur du store (JSON)
+    return (data['controlBar'] as ControlBarType) || this._coreData.controlBarType();
+  });
 
   constructor() {
     // Synchronize control bar state whenever a new lesson is loaded

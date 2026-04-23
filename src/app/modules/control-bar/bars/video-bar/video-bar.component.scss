@@ -293,19 +293,21 @@ button.bg-white\/20 {
   animation-fill-mode: both;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(8px); }
+  to { transform: translateY(0); }
+}
+
 .fade-in {
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
   animation: fadeIn 0.2s ease-out;
 }
 
 .slide-in-from-bottom-2 {
-  @keyframes slideInFromBottom {
-    from { transform: translateY(8px); }
-    to { transform: translateY(0); }
-  }
   animation: slideInFromBottom 0.2s ease-out;
 }
 

@@ -27,6 +27,12 @@ export class VideoBarComponent {
   // Services
   protected readonly _controlBarService = inject(ControlBarService);
   protected readonly _flatService = inject(FlatService);
+  protected  readonly isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+  }
   protected readonly _jwpService = inject(JwpService);
   private readonly _bridgeService = inject(BridgeService);
   public readonly _lessonService = inject(LessonService);
@@ -70,6 +76,7 @@ export class VideoBarComponent {
   loopEnd = this._jwpService.loopEnd;
   
   hasLayoutSettings = computed(() => {
+    if (this.isMobile()) return false;
     const lesson = this._lessonService.lessonJson();
     if (!lesson) return false;
     
@@ -78,6 +85,12 @@ export class VideoBarComponent {
     
     console.log('[VideoBar] hasLayoutSettings check:', { hasImg, isXml, loadImg: (lesson as any).loadImg });
     return hasImg || isXml;
+  });
+
+  isVerticalLayoutAllowed = computed(() => {
+    // On n'autorise le layout vertical QUE si c'est du XML
+    // Cela l'isole automatiquement de la route video-diapo (qui est EPS/IMG)
+    return this._lessonService.diapoType() === 'xml';
   });
 
   readonly playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];

@@ -153,7 +153,9 @@ export class FlatService {
     // On vide physiquement le conteneur pour supprimer l'ancienne iFrame
     container.innerHTML = '';
     let layout = 'responsive';
-    if (this._diapoService.getFlatLayout() == 'track') layout = 'track';
+    if (this._diapoService.getFlatLayout() === 'track' || window.innerWidth < 768) {
+      layout = 'track';
+    }
     this.embed = new Embed(container, {
       layout: layout,
       embedParams: {

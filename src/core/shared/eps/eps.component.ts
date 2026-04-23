@@ -8,14 +8,15 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="flex items-center justify-center w-full h-full px-4 py-2.5 overflow-hidden">
+    <div class="flex items-center justify-center w-full" 
+         [ngClass]="isMobile() ? 'h-auto overflow-visible py-4' : 'h-full p-0 overflow-hidden'">
       @for (img of [currentImage()]; track img?.fullUrl) {
         @if (img) {
           <img 
             [src]="img.fullUrl" 
             class="shadow-lg rounded transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95"
             [ngClass]="{
-              'max-w-full max-h-full object-contain': viewMode() === 'fit' && !isMobile(),
+              'h-full w-auto max-w-full object-contain': viewMode() === 'fit' && !isMobile(),
               'w-full h-auto object-top': isMobile() || viewMode() === 'zoom'
             }"
             alt="Diapo Image"
@@ -26,6 +27,13 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
       }
     </div>
   `,
+  styles: [`
+    :host {
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+  `]
 })
 export class EpsComponent {
   private _diapoService = inject(DiapoStateService);

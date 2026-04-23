@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   imports: [CommonModule, EpsComponent],
   template: `
     <div 
-      class="w-full flex items-start justify-center px-4 py-2.5 overflow-hidden"
+      class="w-full flex items-center justify-center overflow-hidden"
       [ngClass]="isMobile() ? 'h-auto' : 'h-full'"
     >
       @if (eps()) {
@@ -26,6 +26,11 @@ import { CommonModule } from '@angular/common';
       display: block;
       width: 100%;
       height: 100%;
+    }
+    @media (max-width: 767px) {
+      :host {
+        height: auto;
+      }
     }
   `]
 })

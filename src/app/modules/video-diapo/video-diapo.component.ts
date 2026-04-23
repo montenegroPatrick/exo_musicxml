@@ -63,88 +63,72 @@ export class VideoDiapoComponent implements OnInit {
   }
 
   // -- Dynamic Classes --
-  readonly isVerticalMode = computed(() => {
-    const mode = this.layoutMode();
-    const isXml = this.typeImg() === 'xml';
-    return isXml && (mode === 'track-top' || mode === 'track-bottom');
-  });
 
   readonly videoStyles = computed(() => {
     const mode = this.layoutMode();
-    const isXml = this.typeImg() === 'xml';
     const isHalf = mode === 'half';
-    const isTrackTop = mode === 'track-top';
-    const isTrackBottom = mode === 'track-bottom';
     const isExpanded = mode === 'expanded';
+    const isMobile = this.isMobile();
 
-    // Ratios
-    let width = '100%';
-    let height = '100%';
+    let width = isHalf ? '50%' : (isExpanded ? '33.33%' : '66.66%');
     let order = this.sidebarPosition() === 'left' ? '2' : '1';
 
-    if (isXml && (isTrackTop || isTrackBottom)) {
-      // MODE VERTICAL 40/60
-      height = '40%';
-      order = isTrackBottom ? '2' : '1';
-    } else {
-      // MODE CÔTE À CÔTE
-      if (isHalf) width = '50%';
-      else if (isExpanded) width = '33.33%';
-      else width = '66.66%';
-      
-      if (this.isMobile()) {
-         width = '100%';
-         height = 'auto';
-      }
+    if (isMobile) {
+      return {
+        width: '100%',
+        height: 'auto',
+        order: '1',
+        'flex-shrink': '0',
+        'aspect-ratio': '16/9'
+      };
     }
 
     return {
       width: width,
-      height: height,
+      height: '100%',
       order: order,
       display: 'flex',
-      'flex-shrink': '0',
-      'min-width': isXml && (isHalf || isTrackTop || isTrackBottom) ? '100%' : '0'
+      'flex-shrink': '1',
+      'min-width': '0'
     };
   });
 
   readonly scoreStyles = computed(() => {
     const mode = this.layoutMode();
-    const isXml = this.typeImg() === 'xml';
     const isHalf = mode === 'half';
-    const isTrackTop = mode === 'track-top';
-    const isTrackBottom = mode === 'track-bottom';
     const isExpanded = mode === 'expanded';
+    const isMobile = this.isMobile();
 
-    let width = '100%';
-    let height = '100%';
+    let width = isHalf ? '50%' : (isExpanded ? '66.66%' : '33.33%');
     let order = this.sidebarPosition() === 'left' ? '1' : '2';
 
-    if (isXml && (isHalf || isTrackTop || isTrackBottom)) {
-      // MODE VERTICAL 40/60
-      height = '60%';
-      order = isTrackTop ? '2' : '1';
-    } else {
-      // MODE CÔTE À CÔTE
-      if (isHalf) width = '50%';
-      else if (isExpanded) width = '66.66%';
-      else width = '33.33%';
-
-      if (this.isMobile()) {
-        width = '100%';
-        height = 'auto';
-      }
+    if (isMobile) {
+      return {
+        width: '100%',
+        height: 'auto',
+        order: '2',
+        'flex-shrink': '0',
+        'background-color': '#FFF',
+        'display': 'block',
+        'overflow': 'visible'
+      };
     }
+
+    // DESKTOP LOGIC
+    const isOneThird = !isHalf && !isExpanded;
+    let minWidth = isOneThird ? '470px' : '0px';
 
     return {
       width: width,
-      height: height,
+      height: '100%',
       order: order,
+      padding: '0px',
       'flex-shrink': '0',
       'transition': 'all 0.3s ease',
-      'min-width': (isXml && (isTrackTop || isTrackBottom)) ? '100%' : width
+      'min-width': minWidth,
+      'background-color': '#FFF',
+      'display': 'block',
+      'overflow': 'hidden'
     };
   });
-
-  // -- Layout Actions (Obsolètes, gérées par VideoBarComponent via le service global) --
 }

@@ -1,6 +1,6 @@
-<div class="relative w-full h-full bg-zinc-950 overflow-hidden">
-  <div class="w-full h-full flex overflow-hidden" 
-       [ngClass]="isVerticalMode() ? 'flex-col' : 'flex-col md:flex-row'">
+<div class="relative w-full h-full bg-zinc-950" [ngClass]="isMobile() ? 'overflow-y-auto' : 'overflow-hidden'">
+  <div class="w-full flex" 
+       [ngClass]="isMobile() ? 'flex-col h-auto' : 'h-full flex-col md:flex-row overflow-hidden'">
     
     <!-- Video Section -->
     <div [ngStyle]="videoStyles()" class="bg-black flex items-center justify-center overflow-hidden">
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Diapo Section -->
-    <div [ngStyle]="scoreStyles()" class="bg-white relative overflow-hidden shadow-2xl">
+    <div [ngStyle]="scoreStyles()" class="relative shadow-2xl" [ngClass]="isMobile() ? 'overflow-visible' : 'overflow-hidden'">
       <app-diapo theme="dark" [showControls]="true" [allowZoom]="!isMobile()"></app-diapo>
     </div>
 

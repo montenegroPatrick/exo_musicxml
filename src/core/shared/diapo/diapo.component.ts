@@ -22,6 +22,13 @@ import { TooltipModule } from 'primeng/tooltip';
     TooltipModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [`
+    :host {
+      display: block;
+      height: 100%;
+      width: 100%;
+    }
+  `],
   templateUrl: './diapo.component.html',
 })
 export class DiapoComponent implements OnInit {

@@ -5,7 +5,7 @@ $white-overlay-10: rgba(255, 255, 255, 0.1);
 $white-overlay-20: rgba(255, 255, 255, 0.2);
 
 .control-bar {
-  background: linear-gradient(135deg, $primary-red 0%, $primary-red-dark 100%);
+  background: var(--control-bar-bg);
   position: relative;
   z-index: 50;
   animation: slideUp 0.4s ease-out;

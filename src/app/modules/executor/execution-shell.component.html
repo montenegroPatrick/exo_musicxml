@@ -48,7 +48,7 @@
 
   <!-- Dynamic Control Bar -->
   @if (showControlBar()) {
-    <footer class="w-full h-20 overflow-visible z-50 bg-[#FA5E46] shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+    <footer class="w-full h-20 overflow-visible z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.3)]" style="background: var(--control-bar-bg)">
       @if (controlBarType() === 'audio-mixer') {
         <app-audiomixer-control-bar 
           class="w-full h-full relative block">

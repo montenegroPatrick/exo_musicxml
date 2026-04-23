@@ -11,7 +11,7 @@ import { HostListener, signal } from '@angular/core';
   standalone: true,
   imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent],
   template: `
-    <div class="relative bg-transparent h-auto w-full shadow-2xl">
+    <div class="relative bg-transparent h-auto w-full">
       @switch (typeControlBar()) {
         @case ('video') {
           @if (isMobile()) {

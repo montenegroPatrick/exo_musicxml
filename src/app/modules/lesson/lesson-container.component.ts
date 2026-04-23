@@ -71,7 +71,7 @@ import { CoreDataService } from '@core/services/core-data.service';
           </main>
           
           @if (showControlBar()) {
-            <footer class="flex-shrink-0 z-40 w-full">
+            <footer class="flex-shrink-0 z-40 w-full" style="background: var(--control-bar-bg)">
               <app-control-bar></app-control-bar>
             </footer>
           }

@@ -20,7 +20,6 @@ import { LessonMetadataComponent } from '../../../components/lesson-metadata/les
     :host {
       display: block;
       width: 100%;
-      background: linear-gradient(to right, #D83A2E, #FA5E46);
     }
   `]
 })

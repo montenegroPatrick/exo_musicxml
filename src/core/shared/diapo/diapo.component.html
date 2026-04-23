@@ -63,9 +63,9 @@
   >
     <div 
       class="custom-scrollbar"
-      [ngClass]="isMobile() ? 'relative w-full' : 'absolute inset-0'"
-      [class.overflow-hidden]="layoutMode() === 'standard'"
-      [class.overflow-y-auto]="layoutMode() !== 'standard'"
+      [ngClass]="isMobile() ? 'relative w-full h-auto overflow-visible' : 'absolute inset-0'"
+      [class.overflow-hidden]="!isMobile() && layoutMode() === 'standard'"
+      [class.overflow-y-auto]="!isMobile() && layoutMode() !== 'standard'"
     >
       @switch (type()) {
         @case ("xml") {

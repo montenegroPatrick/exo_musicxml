@@ -4,7 +4,7 @@
     <div class="fixed inset-0 z-[10] bg-black/[0.01] cursor-default" (click)="closePopins()"></div>
   }
 
-  <div class="control-bar relative flex flex-col w-full text-white overflow-visible transition-all duration-300 h-20 z-[70]" (click)="closePopins()">
+  <div class="control-bar relative flex flex-col w-full text-white overflow-visible transition-all duration-300 h-16 sm:h-20 z-[70]" (click)="closePopins()">
   
   <!-- Info Popin (XS only) -->
   @if (showInfoPopin()) {
@@ -85,26 +85,28 @@
         </button>
 
         <!-- NOUVEAU: Mode Vertical (Track Top) -->
-        <button (click)="setLocalLayout('track-top')" 
-                [class.ring-2]="layoutMode() === 'track-top'" 
-                class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-[#FA5E46]/5 hover:bg-[#FA5E46]/10 border border-[#FA5E46]/20 transition-all ring-white ring-offset-2 ring-offset-black group/layout">
-          <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg border border-white/10">
-            <div class="h-[40%] bg-white/10 rounded-md"></div>
-            <div class="flex-1 bg-[#FA5E46]/40 rounded-md"></div>
-          </div>
-          <span class="text-[9px] font-bold uppercase tracking-tight text-[#FA5E46]">Vertical (Haut)</span>
-        </button>
-
-        <!-- NOUVEAU: Mode Vertical (Track Bottom) -->
-        <button (click)="setLocalLayout('track-bottom')" 
-                [class.ring-2]="layoutMode() === 'track-bottom'" 
-                class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-[#FA5E46]/5 hover:bg-[#FA5E46]/10 border border-[#FA5E46]/20 transition-all ring-white ring-offset-2 ring-offset-black group/layout">
-          <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg border border-white/10">
-            <div class="flex-1 bg-[#FA5E46]/40 rounded-md"></div>
-            <div class="h-[40%] bg-white/10 rounded-md"></div>
-          </div>
-          <span class="text-[9px] font-bold uppercase tracking-tight text-[#FA5E46]">Vertical (Bas)</span>
-        </button>
+        @if (isVerticalLayoutAllowed()) {
+          <button (click)="setLocalLayout('track-top')" 
+                  [class.ring-2]="layoutMode() === 'track-top'" 
+                  class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-[#FA5E46]/5 hover:bg-[#FA5E46]/10 border border-[#FA5E46]/20 transition-all ring-white ring-offset-2 ring-offset-black group/layout">
+            <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg border border-white/10">
+              <div class="h-[40%] bg-white/10 rounded-md"></div>
+              <div class="flex-1 bg-[#FA5E46]/40 rounded-md"></div>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-tight text-[#FA5E46]">Vertical (Haut)</span>
+          </button>
+  
+          <!-- NOUVEAU: Mode Vertical (Track Bottom) -->
+          <button (click)="setLocalLayout('track-bottom')" 
+                  [class.ring-2]="layoutMode() === 'track-bottom'" 
+                  class="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-[#FA5E46]/5 hover:bg-[#FA5E46]/10 border border-[#FA5E46]/20 transition-all ring-white ring-offset-2 ring-offset-black group/layout">
+            <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg border border-white/10">
+              <div class="flex-1 bg-[#FA5E46]/40 rounded-md"></div>
+              <div class="h-[40%] bg-white/10 rounded-md"></div>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-tight text-[#FA5E46]">Vertical (Bas)</span>
+          </button>
+        }
       </div>
     </div>
   }
@@ -255,32 +257,34 @@
                 </button>
 
                 <!-- Mode Vertical (Track Top) -->
-                <button (click)="setLocalLayout('track-top')" 
-                        class="flex flex-col gap-2 p-2 rounded-xl border transition-all group"
-                        [class.bg-[#FA5E46]/10]="layoutMode() === 'track-top'"
-                        [class.border-[#FA5E46]/30]="layoutMode() === 'track-top'"
-                        [class.bg-white/5]="layoutMode() !== 'track-top'"
-                        [class.border-white/5]="layoutMode() !== 'track-top'">
-                  <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg group-hover:bg-black/60 transition-all">
-                    <div class="h-[40%] bg-white/10 rounded-[4px]"></div>
-                    <div class="flex-1 bg-[#FA5E46]/40 rounded-[4px]"></div>
-                  </div>
-                  <span class="text-[10px] font-bold text-center uppercase tracking-tight" [class.text-[#FA5E46]]="layoutMode() === 'track-top'" [class.text-white/40]="layoutMode() !== 'track-top'">Vertical (Haut)</span>
-                </button>
-
-                <!-- Mode Vertical (Track Bottom) -->
-                <button (click)="setLocalLayout('track-bottom')" 
-                        class="flex flex-col gap-2 p-2 rounded-xl border transition-all group overflow-hidden"
-                        [class.bg-[#FA5E46]/10]="layoutMode() === 'track-bottom'"
-                        [class.border-[#FA5E46]/30]="layoutMode() === 'track-bottom'"
-                        [class.bg-white/5]="layoutMode() !== 'track-bottom'"
-                        [class.border-white/5]="layoutMode() !== 'track-bottom'">
-                  <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg group-hover:bg-black/60 transition-all">
-                    <div class="flex-1 bg-[#FA5E46]/40 rounded-[4px]"></div>
-                    <div class="h-[40%] bg-white/10 rounded-[4px]"></div>
-                  </div>
-                  <span class="text-[10px] font-bold text-center uppercase tracking-tight" [class.text-[#FA5E46]]="layoutMode() === 'track-bottom'" [class.text-white/40]="layoutMode() !== 'track-bottom'">Vertical (Bas)</span>
-                </button>
+                @if (isVerticalLayoutAllowed()) {
+                  <button (click)="setLocalLayout('track-top')" 
+                          class="flex flex-col gap-2 p-2 rounded-xl border transition-all group"
+                          [class.bg-[#FA5E46]/10]="layoutMode() === 'track-top'"
+                          [class.border-[#FA5E46]/30]="layoutMode() === 'track-top'"
+                          [class.bg-white/5]="layoutMode() !== 'track-top'"
+                          [class.border-white/5]="layoutMode() !== 'track-top'">
+                    <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg group-hover:bg-black/60 transition-all">
+                      <div class="h-[40%] bg-white/10 rounded-[4px]"></div>
+                      <div class="flex-1 bg-[#FA5E46]/40 rounded-[4px]"></div>
+                    </div>
+                    <span class="text-[10px] font-bold text-center uppercase tracking-tight" [class.text-[#FA5E46]]="layoutMode() === 'track-top'" [class.text-white/40]="layoutMode() !== 'track-top'">Vertical (Haut)</span>
+                  </button>
+  
+                  <!-- Mode Vertical (Track Bottom) -->
+                  <button (click)="setLocalLayout('track-bottom')" 
+                          class="flex flex-col gap-2 p-2 rounded-xl border transition-all group overflow-hidden"
+                          [class.bg-[#FA5E46]/10]="layoutMode() === 'track-bottom'"
+                          [class.border-[#FA5E46]/30]="layoutMode() === 'track-bottom'"
+                          [class.bg-white/5]="layoutMode() !== 'track-bottom'"
+                          [class.border-white/5]="layoutMode() !== 'track-bottom'">
+                    <div class="flex flex-col h-12 w-full gap-1 p-1 bg-black/40 rounded-lg group-hover:bg-black/60 transition-all">
+                      <div class="flex-1 bg-[#FA5E46]/40 rounded-[4px]"></div>
+                      <div class="h-[40%] bg-white/10 rounded-[4px]"></div>
+                    </div>
+                    <span class="text-[10px] font-bold text-center uppercase tracking-tight" [class.text-[#FA5E46]]="layoutMode() === 'track-bottom'" [class.text-white/40]="layoutMode() !== 'track-bottom'">Vertical (Bas)</span>
+                  </button>
+                }
               </div>
             </div>
           }
@@ -342,10 +346,10 @@
     </div>
   </div>
 
-  <div class="grid grid-cols-3 items-center w-full h-full px-4 gap-4">
+  <div class="flex items-center justify-between w-full h-full px-2 sm:px-4 gap-2 sm:gap-4">
     
-    <!-- LEFT ZONE: Navigation & Metadata (Balanced) -->
-    <div class="flex items-center flex-1 min-w-0">
+    <!-- LEFT ZONE: Navigation & Metadata -->
+    <div class="flex items-center gap-1 sm:gap-2 flex-1">
       @if (!isDirectMode()) {
         <div class="nav-group flex items-center gap-1">
           <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="handlePrevious()">
@@ -360,13 +364,13 @@
         <div class="nav-separator mx-4 hidden sm:block h-8 w-px bg-white/20"></div>
       }
 
-      <app-lesson-metadata layout="inline" />
+      <app-lesson-metadata layout="inline" class="hidden sm:block" />
     </div>
 
-    <!-- CENTER ZONE: Playback Controls (Absolute Center) -->
-    <div class="controls-center flex items-center gap-4 flex-shrink-0 justify-center">
-      <!-- YouTube Style Audio Group -->
-      <div class="flex items-center group/volume">
+    <!-- CENTER ZONE: Playback Controls -->
+    <div class="controls-center flex items-center gap-2 sm:gap-6">
+      <!-- YouTube Style Audio Group (Hidden on mobile) -->
+      <div class="hidden sm:flex items-center group/volume">
         <button class="text-white/70 hover:text-white transition-colors p-2" (click)="toggleMute()">
           @if (isMuted() || videoVolume() === 0) {
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
@@ -388,41 +392,41 @@
         </div>
       </div>
 
-      <!-- Step Backward -->
-      <button class="text-white/70 hover:text-white transition-colors" (click)="handleStepBackward()">
+      <!-- Step Backward (Hidden on mobile) -->
+      <button class="hidden sm:block text-white/70 hover:text-white transition-colors" (click)="handleStepBackward()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/></svg>
       </button>
 
       <!-- Play / Pause -->
-      <button class="flex items-center justify-center w-12 h-12 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all backdrop-blur-md border border-white/10" 
+      <button class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all backdrop-blur-md border border-white/10" 
               (click)="handleTogglePlay()">
         @if (isPlaying()) {
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         } @else {
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
         }
       </button>
 
-      <!-- Step Forward -->
-      <button class="text-white/70 hover:text-white transition-colors" (click)="handleStepForward()">
+      <!-- Step Forward (Hidden on mobile) -->
+      <button class="hidden sm:block text-white/70 hover:text-white transition-colors" (click)="handleStepForward()">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
       </button>
 
-      <!-- Time Display -->
-      <div class="time-display hidden md:flex items-center gap-1.5 text-xs font-medium text-white/80 tabular-nums min-w-[100px]">
+      <!-- Time Display (Compact on mobile) -->
+      <div class="time-display flex items-center gap-1 text-[10px] sm:text-xs font-medium text-white/80 tabular-nums">
         <span>{{ formatTime(currentTime()) }}</span>
-        <span class="text-white/40">/</span>
-        <span class="text-white/60">{{ formatTime(durationInSec()) }}</span>
+        <span class="text-white/20 sm:text-white/40">/</span>
+        <span class="text-white/40 sm:text-white/60">{{ formatTime(durationInSec()) }}</span>
       </div>
     </div>
 
     <!-- RIGHT ZONE: Options & Settings (Balanced) -->
     <div class="flex items-center gap-1.5 sm:gap-3 flex-1 justify-end min-w-0">
       
-      <!-- 1. Layout Button (Conditional) -->
+      <!-- 1. Layout Button -->
       @if (hasLayoutSettings()) {
         <button (click)="navigateMenu('layout'); $event.stopPropagation()" 
-                class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
+                class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
                 [class.bg-white/20]="activePopin() === 'settings' && activeMenu() === 'layout'"
                 title="Mise en page">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/></svg>
@@ -431,29 +435,29 @@
 
       <!-- 2. Speed Button -->
       <button (click)="toggleSpeedPopin(); $event.stopPropagation()" 
-              class="h-9 px-2 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white gap-1"
+              class="h-8 sm:h-9 px-1.5 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white gap-0.5 sm:gap-1"
               [class.bg-white/20]="activePopin() === 'speed'"
               title="Vitesse de lecture">
-        <span class="text-[10px] font-bold tabular-nums">{{ playbackRate() }}x</span>
+        <span class="text-[9px] sm:text-[10px] font-bold tabular-nums">{{ playbackRate() }}x</span>
       </button>
 
-      <!-- 3. Loop Button (Toggle Activity) -->
+      <!-- 3. Loop Button -->
       <button (click)="toggleLoopActive(); $event.stopPropagation()" 
               (contextmenu)="toggleLoopPopin(); $event.preventDefault(); $event.stopPropagation()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all relative text-white/70 hover:text-white"
+              class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all relative text-white/70 hover:text-white"
               [class.bg-white/20]="isLooping()"
               [class.text-orange-400]="isLooping()"
               [class.shadow-inner]="isLooping()"
-              title="Boucle A-B (Clic gauche: Activer/Désactiver, Clic droit: Réglages)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+              title="Boucle A-B">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         @if (activePopin() === 'loop') {
-          <div class="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full"></div>
+          <div class="absolute -top-1 -right-1 w-1.5 h-1.5 bg-white rounded-full"></div>
         }
       </button>
 
       <!-- 4. Settings (Plus) -->
       <button (click)="toggleSettingsPopin(); $event.stopPropagation()" 
-              class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
+              class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white"
               [class.bg-white/20]="activePopin() === 'settings' && activeMenu() !== 'layout'"
               title="Plus de réglages">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.64 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>

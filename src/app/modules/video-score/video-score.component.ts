@@ -93,7 +93,11 @@ export class VideoScoreComponent implements OnInit {
     let height = '100%';
     let order = (this.isMobile() || this.sidebarPosition() === 'right') ? '1' : '2';
 
-    if (isTrackTop || isTrackBottom) {
+    if (this.isMobile()) {
+       width = '100%';
+       height = '50%';
+       order = '1';
+    } else if (isTrackTop || isTrackBottom) {
       // MODE VERTICAL 40/60
       height = '40%';
       width = '100%';
@@ -103,11 +107,6 @@ export class VideoScoreComponent implements OnInit {
       if (isHalf) width = '50%';
       else if (isExpanded) width = '33.33%';
       else width = '66.66%';
-      
-      if (this.isMobile()) {
-         width = '100%';
-         height = 'auto';
-      }
     }
 
     return {
@@ -116,7 +115,7 @@ export class VideoScoreComponent implements OnInit {
       order: order,
       display: 'flex',
       'flex-shrink': '0',
-      'min-width': (isTrackTop || isTrackBottom) ? '100%' : '0'
+      'min-width': (isTrackTop || isTrackBottom || this.isMobile()) ? '100%' : '0'
     };
   });
 
@@ -132,7 +131,11 @@ export class VideoScoreComponent implements OnInit {
     let height = '100%';
     let order = (this.isMobile() || this.sidebarPosition() === 'right') ? '2' : '1';
 
-    if (isTrackTop || isTrackBottom) {
+    if (this.isMobile()) {
+      width = '100%';
+      height = '50%';
+      order = '2';
+    } else if (isTrackTop || isTrackBottom) {
       // MODE VERTICAL 40/60
       height = '60%';
       width = '100%';
@@ -142,11 +145,6 @@ export class VideoScoreComponent implements OnInit {
       if (isHalf) width = '50%';
       else if (isExpanded) width = '66.66%';
       else width = '33.33%';
-
-      if (this.isMobile()) {
-        width = '100%';
-        height = 'auto';
-      }
     }
 
     return {
@@ -155,7 +153,7 @@ export class VideoScoreComponent implements OnInit {
       order: order,
       'flex-shrink': '0',
       'transition': 'all 0.3s ease',
-      'min-width': (isTrackTop || isTrackBottom) ? '100%' : '0'
+      'min-width': (isTrackTop || isTrackBottom || this.isMobile()) ? '100%' : '0'
     };
   });
 }

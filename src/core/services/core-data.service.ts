@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { ILesson, Sync, IVideoSync, determineControlBarType, determineModuleType, determineImgType } from '@core/interfaces/lesson.interface';
+import { ILesson, Sync, IVideoSync, TrackList, determineControlBarType, determineModuleType, determineImgType } from '@core/interfaces/lesson.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -77,7 +77,23 @@ export class CoreDataService {
 
   // -- Audio Paths --
   readonly folderSound = computed(() => this.lessonJson()?.folder ?? this.lessonJson()?.Folder ?? '');
-  readonly trackList = computed(() => this.lessonJson()?.trackList ?? this.lessonJson()?.TrackList ?? []);
+  readonly trackList = computed(() => {
+    const lesson = this.lessonJson();
+    const tracks = lesson?.trackList ?? lesson?.TrackList;
+    
+    if (tracks && tracks.length > 0) return tracks;
+    
+    // Support for mono-track playback (audioUrl fallback)
+    if (lesson?.audioUrl) {
+      console.log('[CoreDataService] Creating virtual track for mono-audio playback');
+      return [{
+        name: lesson.audioUrl,
+        label: 'AUDIO'
+      }] as TrackList[];
+    }
+    
+    return [];
+  });
 
   // -- Module Configuration --
   readonly moduleType = computed(() => {

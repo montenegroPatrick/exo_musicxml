@@ -1,0 +1,125 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #FFF;
+  overflow: hidden;
+
+  &.view-mode-zoom {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+}
+
+.pdf-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #FFF;
+  display: flex;
+  justify-content: center;
+
+  &.view-mode-fit {
+    align-items: center;
+    overflow: hidden;
+  }
+
+  &.view-mode-zoom {
+    align-items: flex-start;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+}
+
+.pdf-viewer-element {
+  display: block;
+  margin: 0 auto;
+  
+  &.view-mode-fit {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
+
+    ::ng-deep {
+      .ng2-pdf-viewer-container {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+      canvas {
+        max-width: 100% !important;
+        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        display: block !important;
+        margin: 0 auto !important;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      }
+    }
+  }
+
+  &.view-mode-zoom {
+    width: 100% !important;
+    height: auto !important;
+    
+    ::ng-deep {
+      .ng2-pdf-viewer-container {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        margin: 0 auto !important;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      }
+    }
+  }
+}
+
+// Mobile Responsive
+@media (max-width: 767px) {
+  :host {
+    height: auto !important;
+    min-height: 770px !important;
+    overflow: visible !important;
+  }
+  .pdf-container {
+    height: auto !important;
+    min-height: 770px !important;
+    display: block !important;
+    overflow: visible !important;
+    position: relative !important;
+    align-items: flex-start !important;
+  }
+  .pdf-viewer-element {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    
+    ::ng-deep {
+      .ng2-pdf-viewer-container {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100% !important;
+        display: block !important;
+      }
+    }
+  }
+}

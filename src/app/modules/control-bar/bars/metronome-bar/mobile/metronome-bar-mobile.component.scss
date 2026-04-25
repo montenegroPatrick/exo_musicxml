@@ -1,0 +1,73 @@
+.control-bar-mobile-wrapper {
+  height: auto;
+  min-height: 80px;
+}
+
+.control-bar-mobile {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+  background: var(--control-bar-bg);
+}
+
+.capsule {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.play-button-large {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  color: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.animate-in {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Icon Fonts compatibility
+@font-face {
+  font-family: 'icomusic';
+  src: url('/assets/fonts/icomusic.woff2') format('woff2');
+}
+
+.ico {
+  font-family: 'icomusic' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ico-noires:before { content: "\e90e"; }
+.ico-croches:before { content: "\e90f"; }
+.ico-doubles:before { content: "\e910"; }
+.ico-triolets:before { content: "\e911"; }
+.ico-shuffle:before { content: "\e912"; }

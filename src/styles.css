@@ -25,6 +25,16 @@
     scrollbar-width: none;  /* Firefox */
 }
   }
+  .full-diapo, 
+  .full-diapo app-pdf-viewer, 
+  .full-diapo app-eps-viewer,
+  .full-diapo .pdf-container,
+  .full-diapo .eps-container,
+  .full-diapo app-pdf,
+  .full-diapo app-eps {
+    height: 100% !important;
+    min-height: 100% !important;
+  }
 }
 @theme {
   --font-family: 'Raleway', 'Helvetica Neue', Helvetica,Arial, sans-serif;

@@ -98,6 +98,8 @@ export class VideoBarComponent {
     return this._lessonService.diapoType() === 'xml';
   });
 
+  readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+
   readonly playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   formatTime(seconds: number): string {

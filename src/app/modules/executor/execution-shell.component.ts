@@ -1,4 +1,4 @@
-import { Component, inject, computed, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, effect, ChangeDetectionStrategy, HostListener, signal } from '@angular/core';
 import { RouterOutlet, ActivatedRoute, Router, NavigationEnd } from '@angular/router';
 import { filter, startWith } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -27,6 +27,13 @@ export class ExecutionShellComponent {
   private readonly _audioService = inject(AudioService);
   private readonly _route = inject(ActivatedRoute);
   private readonly _router = inject(Router);
+
+  readonly isMobile = signal<boolean>(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   // -- State Signals (Direct from CoreData) --
   readonly isLoading = this._lessonService.isLoading;

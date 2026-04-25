@@ -1,19 +1,20 @@
-<style>
-  app-pdf-viewer,app-eps-viewer{background-color:#FFF; display: block; height: 100%; width: 100%;}
-</style>
 <div 
-  class="flex w-full h-full transition-colors duration-300 relative" 
+  class="flex w-full relative h-full" 
   [ngClass]="{
     'bg-neutral-50': theme() === 'light',
-    'bg-zinc-950': theme() === 'dark'
+    'bg-zinc-950': theme() === 'dark',
+    'h-auto': isMobile(),
+    'h-full': !isMobile()
   }"
 >
   @if (showControls()) {
     <div 
-      class="h-full flex-none gap-6 flex flex-col items-center py-6 z-10 w-[50px] transition-all duration-300 overflow-hidden border-r shadow-md backdrop-blur-lg"
+      class="flex-none gap-6 flex flex-col items-center py-6 z-10 w-10 md:w-[50px] overflow-hidden border-r shadow-md backdrop-blur-lg"
       [ngClass]="{
         'text-zinc-800 bg-white/80 border-zinc-200': theme() === 'light',
-        'text-zinc-100 bg-black/60 border-white/10': theme() === 'dark'
+        'text-zinc-100 bg-black/60 border-white/10': theme() === 'dark',
+        'h-auto': isMobile(),
+        'h-full': !isMobile()
       }"
     >
       @if (printable()) {
@@ -25,6 +26,33 @@
           tooltipPosition="right"
           styleClass="p-2 text-2xl hover:bg-zinc-200/50 dark:hover:bg-white/10 rounded-full transition-all text-inherit"
         ></p-button>
+      }
+
+      <!-- VIEW MODE SWITCHER -->
+      @if (!isMobile()) {
+        <div class="flex flex-col items-center gap-2 mt-4">
+          <button 
+            (click)="toggleViewMode()"
+            class="flex flex-col items-center gap-1 p-2 rounded-xl border border-transparent"
+            [ngClass]="{
+              'bg-white/10 border-white/10 shadow-lg': viewMode() === 'zoom',
+              'hover:bg-white/5': viewMode() === 'fit'
+            }"
+            pTooltip="Mode d'affichage"
+            tooltipPosition="right"
+          >
+            <div class="relative w-8 h-8 flex items-center justify-center">
+              @if (viewMode() === 'fit') {
+                <i class="pi pi-expand text-xl text-white/40"></i>
+              } @else {
+                <i class="pi pi-window-maximize text-xl text-white"></i>
+              }
+            </div>
+            <span class="text-[8px] font-black uppercase tracking-tighter opacity-40">
+              {{ viewMode() === 'fit' ? 'Fit' : 'Full' }}
+            </span>
+          </button>
+        </div>
       }
 
       @if (canNavigate()) {
@@ -62,19 +90,24 @@
   }
 
   <div 
-    class="flex-grow h-full w-full relative transition-colors duration-300"
-    [ngClass]="theme() === 'light' ? 'bg-white' : 'bg-zinc-900'"
+    class="flex-1 relative h-full"
+    [ngClass]="{
+      'bg-white': theme() === 'light',
+      'bg-zinc-900': theme() === 'dark',
+      'h-auto': isMobile(),
+      'h-full': !isMobile()
+    }"
   >
     <div 
       class="custom-scrollbar"
-      [ngClass]="isMobile() ? 'relative w-full h-auto overflow-visible' : 'absolute inset-0'"
-      [class.overflow-hidden]="!isMobile() && (layoutMode() === 'standard' || viewMode() === 'fit')"
-      [class.overflow-y-auto]="!isMobile() && layoutMode() !== 'standard' && viewMode() !== 'fit'"
+      [ngClass]="isMobile() ? 'relative w-full h-auto overflow-visible' : 'absolute inset-0 w-full h-full'"
+      [class.overflow-hidden]="!isMobile() && viewMode() === 'fit'"
+      [class.overflow-y-auto]="!isMobile() && viewMode() === 'zoom'"
     >
       @switch (type()) {
         @case ("xml") {
           @if (xml()) {
-            <app-xml-viewer [xml]="xml()!"></app-xml-viewer>
+            <app-xml-viewer [xml]="xml()!" class="block w-full h-full"></app-xml-viewer>
           } @else {
             <div class="flex items-center justify-center h-full">
               <span class="text-zinc-400 italic">Aucune partition disponible</span>
@@ -83,7 +116,7 @@
         }
         @case ("eps") {
           @if (jsonEps()) {
-            <app-eps-viewer [eps]="jsonEps()!"></app-eps-viewer>
+            <app-eps-viewer [eps]="jsonEps()!" [viewMode]="viewMode()" class="block w-full h-full"></app-eps-viewer>
           } @else {
             <div class="flex items-center justify-center h-full">
               <span class="text-zinc-400 italic">Aucun visuel disponible</span>
@@ -92,7 +125,7 @@
         }
         @case ("pdf") {
           @if (jsonPdf()) {
-            <app-pdf-viewer [pdf]="jsonPdf()!"></app-pdf-viewer>
+            <app-pdf-viewer [pdf]="jsonPdf()!" [viewMode]="viewMode()" class="block w-full h-full"></app-pdf-viewer>
           } @else {
             <div class="flex items-center justify-center h-full">
               <span class="text-zinc-400 italic">Document PDF non trouvé</span>
@@ -101,7 +134,7 @@
         }
         @case ("html") {
           @if (xml()) {
-            <app-html-viewer [url]="xml()!"></app-html-viewer>
+            <app-html-viewer [url]="xml()!" class="block w-full h-full"></app-html-viewer>
           } @else {
             <div class="flex items-center justify-center h-full">
               <span class="text-zinc-400 italic">Contenu HTML indisponible</span>

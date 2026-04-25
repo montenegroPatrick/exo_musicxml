@@ -22,13 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
     TooltipModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styles: [`
-    :host {
-      display: block;
-      height: 100%;
-      width: 100%;
-    }
-  `],
+  styleUrls: ['./diapo.component.scss'],
   templateUrl: './diapo.component.html',
 })
 export class DiapoComponent implements OnInit {
@@ -75,7 +69,10 @@ export class DiapoComponent implements OnInit {
     }, { allowSignalWrites: true });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Forcer le mode Fit par défaut à chaque initialisation pour stabiliser le rendu
+    this._diapoService.setViewMode('fit');
+  }
 
   printable = computed(() => {
     switch (this.type()) {
@@ -128,5 +125,10 @@ export class DiapoComponent implements OnInit {
     if (url) {
       window.open(url)?.print();
     }
+  }
+
+  toggleViewMode(): void {
+    const next = this.viewMode() === 'fit' ? 'zoom' : 'fit';
+    this._diapoService.setViewMode(next);
   }
 }

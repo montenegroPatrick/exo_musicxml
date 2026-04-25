@@ -7,33 +7,12 @@ import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
   selector: 'app-eps',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="flex items-center justify-center w-full" 
-         [ngClass]="isMobile() ? 'h-auto overflow-visible py-4' : 'h-full p-0 overflow-hidden'">
-      @for (img of [currentImage()]; track img?.fullUrl) {
-        @if (img) {
-          <img 
-            [src]="img.fullUrl" 
-            class="shadow-lg rounded transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95"
-            [ngClass]="{
-              'h-full w-auto max-w-full object-contain': viewMode() === 'fit' && !isMobile(),
-              'w-full h-auto object-top': isMobile() || viewMode() === 'zoom'
-            }"
-            alt="Diapo Image"
-          >
-        }
-      } @empty {
-        <div class="text-zinc-400">Aucune image sélectionnée</div>
-      }
-    </div>
-  `,
-  styles: [`
-    :host {
-      display: block;
-      height: 100%;
-      width: 100%;
-    }
-  `]
+  host: {
+    '[class.view-mode-zoom]': "viewMode() === 'zoom'",
+    '[class.view-mode-fit]': "viewMode() === 'fit'"
+  },
+  templateUrl: './eps.component.html',
+  styleUrls: ['./eps.component.scss'],
 })
 export class EpsComponent {
   private _diapoService = inject(DiapoStateService);

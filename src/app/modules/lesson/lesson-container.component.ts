@@ -5,6 +5,7 @@ import {
   OnInit,
   signal,
   ChangeDetectionStrategy,
+  HostListener,
 } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';

@@ -20,12 +20,12 @@ export const routes: Routes = [
     children: [
       {
         path: 'playback-score',
-        data: { controlBar: 'audiomixer' },
+        data: { controlBar: 'audio-mixer' },
         loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
       },
       {
         path: 'playback-diapo',
-        data: { controlBar: 'audiomixer' },
+        data: { controlBar: 'audio-mixer' },
         loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
       },
       {
@@ -55,7 +55,7 @@ export const routes: Routes = [
       },
       {
         path: 'playback-diapo',
-        data: { controlBar: 'audio-mixer' },
+        data: { controlBar: 'audiomixer' },
         loadComponent: () => import('./modules/playback-diapo/playback-diapo.component').then(m => m.PlaybackDiapoComponent),
       },
       {

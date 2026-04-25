@@ -6,12 +6,13 @@ import { AudioMixerBarComponent } from './bars/audio-mixer-bar/audio-mixer-bar.c
 import { VideoBarComponent } from './bars/video-bar/video-bar.component';
 import { VideoBarMobileComponent } from './bars/video-bar/mobile/video-bar-mobile.component';
 import { MetronomeBarComponent } from './bars/metronome-bar/metronome-bar.component';
+import { MetronomeBarMobileComponent } from './bars/metronome-bar/mobile/metronome-bar-mobile.component';
 import { HostListener, signal } from '@angular/core';
 
 @Component({
   selector: 'app-control-bar',
   standalone: true,
-  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent, MetronomeBarComponent],
+  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent, MetronomeBarComponent, MetronomeBarMobileComponent],
   template: `
     <div class="relative bg-transparent h-auto w-full">
       @switch (typeControlBar()) {
@@ -33,7 +34,11 @@ import { HostListener, signal } from '@angular/core';
           <app-audio-mixer-bar></app-audio-mixer-bar>
         }
         @case ('metronome') {
-          <app-metronome-bar></app-metronome-bar>
+          @if (isMobile()) {
+            <app-metronome-bar-mobile></app-metronome-bar-mobile>
+          } @else {
+            <app-metronome-bar></app-metronome-bar>
+          }
         }
         @default {
           @if (isMobile()) {

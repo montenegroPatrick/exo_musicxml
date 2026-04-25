@@ -1,0 +1,36 @@
+<div class="pdf-container" 
+     [ngClass]="{
+       'view-mode-fit': viewMode() === 'fit',
+       'view-mode-zoom': viewMode() === 'zoom'
+     }">
+  @if (pdfUrl()) {
+    @if (viewMode() === 'fit' && !isMobile()) {
+      <pdf-viewer 
+        [src]="pdfUrl()!"
+        [original-size]="false"
+        [zoom-scale]="isMobile() ? 'page-width' : 'page-fit'"
+        [autoresize]="true"
+        [show-all]="false"
+        [page]="currentPos()"
+        [render-text]="false"
+        (after-load-complete)="onPdfLoaded($event)"
+        (error)="onError($event)"
+        class="pdf-viewer-element view-mode-fit shadow-2xl"
+      ></pdf-viewer>
+    } @else {
+      <pdf-viewer 
+        [src]="pdfUrl()!"
+        [original-size]="false"
+        [fit-to-page]="false"
+        [zoom]="isMobile() ? 1 : zoomLevel()"
+        [autoresize]="true"
+        [show-all]="true"
+        [render-text]="false"
+        [stick-to-page]="false"
+        (after-load-complete)="onPdfLoaded($event)"
+        (error)="onError($event)"
+        class="pdf-viewer-element view-mode-zoom"
+      ></pdf-viewer>
+    }
+  }
+</div>

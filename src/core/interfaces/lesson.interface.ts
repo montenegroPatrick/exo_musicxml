@@ -74,6 +74,7 @@ export interface ILesson {
 
   // Audio & Media IDs
   audioUrl?: string;
+  bpm?: number;
   jw_player_id?: string | number;
   youtube_id?: string;
   vimeo_id?: string;

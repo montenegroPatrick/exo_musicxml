@@ -1,39 +1,50 @@
-import { Component, inject, signal, computed, effect, OnDestroy, ChangeDetectionStrategy, untracked } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy, ChangeDetectionStrategy, untracked, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MetronomeService } from '@core/services/utils/metronome.service';
 import { Router } from '@angular/router';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
-
 import { CoreDataService } from '@core/services/core-data.service';
-import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
+import { BridgeService } from '@core/services/bridge.service';
+import { LessonMetadataComponent } from '../../../components/lesson-metadata/lesson-metadata.component';
 
 @Component({
-  selector: 'app-metronome-bar',
+  selector: 'app-metronome-bar-mobile',
   standalone: true,
   imports: [CommonModule, FormsModule, LessonMetadataComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './metronome-bar.component.html',
-  styleUrls: ['./metronome-bar.component.scss']
+  templateUrl: './metronome-bar-mobile.component.html',
+  styleUrls: ['./metronome-bar-mobile.component.scss'],
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
+    }
+  `]
 })
-export class MetronomeBarComponent implements OnDestroy {
+export class MetronomeBarMobileComponent implements OnDestroy {
   protected readonly metronomeService = inject(MetronomeService);
   private readonly _router = inject(Router);
   private readonly _lessonService = inject(LessonService);
   private readonly _coreData = inject(CoreDataService);
-
-  readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  private readonly _bridgeService = inject(BridgeService);
+  private readonly _elementRef = inject(ElementRef);
 
   // -- State --
   readonly isTrainingMode = signal<boolean>(false);
   readonly trainingStep = signal<number>(5);
   readonly trainingInterval = signal<number>(4);
   private _measuresCounted = 0;
+  
+  showInfoPopin = signal(false);
   activePopin = signal<'none' | 'settings' | 'training'>('none');
+  private _popinTimer: any;
 
   // -- Lesson Info --
-  readonly chapterTitle = this._coreData.chapterTitle;
-  readonly sequenceTitle = this._coreData.sequenceTitle;
+  readonly hasVideo = this._lessonService.hasVideo;
+  readonly hasAudio = this._lessonService.hasAudio;
+  readonly useMetronome = this._lessonService.useMetronome;
+  readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
 
   constructor() {
     // Initialisation BPM depuis JSON
@@ -67,24 +78,23 @@ export class MetronomeBarComponent implements OnDestroy {
   }
 
   // -- Navigation --
-  switchToVideo(): void {
+  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    this._router.navigate(['/video-diapo'], { queryParams: { mock } });
+    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    this._router.navigate([route], { queryParams: { mock } });
   }
 
-  // Proxy for metadata buttons if needed
-  handlePrevious(): void { /* Optional: bridge to lesson nav */ }
-  handleNext(): void { /* Optional: bridge to lesson nav */ }
+  handlePrevious(): void {
+    this.closePopins();
+    this._bridgeService.sendAction('prev');
+  }
+
+  handleNext(): void {
+    this.closePopins();
+    this._bridgeService.sendAction('next');
+  }
 
   // -- Metronome Controls --
-  togglePlay(): void {
-    this.metronomeService.togglePlay();
-  }
-
-  stop(): void {
-    this.metronomeService.stop();
-  }
-
   handleMainAction(): void {
     if (this.isTrainingMode()) {
        this.metronomeService.togglePlay();
@@ -106,25 +116,6 @@ export class MetronomeBarComponent implements OnDestroy {
     this.metronomeService.setBpm(Number(val));
   }
 
-  // Local Tap Tempo Implementation
-  private _lastTap = 0;
-  private _tapTimes: number[] = [];
-  tapTempo(): void {
-    const now = Date.now();
-    if (this._lastTap > 0) {
-      const diff = now - this._lastTap;
-      if (diff < 2000) {
-        this._tapTimes.push(diff);
-        if (this._tapTimes.length > 5) this._tapTimes.shift();
-        const avg = this._tapTimes.reduce((a, b) => a + b) / this._tapTimes.length;
-        this.metronomeService.setBpm(Math.round(60000 / avg));
-      } else {
-        this._tapTimes = [];
-      }
-    }
-    this._lastTap = now;
-  }
-
   setDivision(s: number | 'shuffle'): void {
     if (s === 'shuffle') {
       this.metronomeService.setSubdivision(3);
@@ -136,15 +127,35 @@ export class MetronomeBarComponent implements OnDestroy {
   }
 
   // -- Popin Controls --
+  toggleInfoPopin(): void {
+    if (this._popinTimer) clearTimeout(this._popinTimer);
+    this.closePopins();
+    this.showInfoPopin.set(true);
+    this._popinTimer = setTimeout(() => {
+      this.showInfoPopin.set(false);
+      this._popinTimer = null;
+    }, 3000);
+  }
+
   togglePopin(popin: 'settings' | 'training'): void {
+    this.showInfoPopin.set(false);
     this.activePopin.update(v => v === popin ? 'none' : popin);
   }
 
   closePopins(): void {
     this.activePopin.set('none');
+    this.showInfoPopin.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.activePopin() === 'none' && !this.showInfoPopin()) return;
+    const clickedInside = this._elementRef.nativeElement.contains(event.target);
+    if (!clickedInside) this.closePopins();
   }
 
   ngOnDestroy(): void {
     this.metronomeService.stop();
+    if (this._popinTimer) clearTimeout(this._popinTimer);
   }
 }

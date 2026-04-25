@@ -1,7 +1,11 @@
 <div class="relative h-screen w-full flex flex-col bg-zinc-950 font-sans text-white overflow-hidden selection:bg-white/20">
   
   <!-- Main Content Area -->
-  <main class="relative overflow-hidden bg-black w-full flex-1 min-h-0">
+  <main 
+    class="relative bg-black w-full flex-1 min-h-0"
+    [class.overflow-y-auto]="isMobile()"
+    [class.overflow-hidden]="!isMobile()"
+  >
     <router-outlet></router-outlet>
     
     <!-- Premium Loading Overlay -->

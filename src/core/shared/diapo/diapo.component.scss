@@ -1,0 +1,46 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+  position: relative;
+ 
+  @media (max-width: 767px) {
+    height: auto;
+  }
+}
+
+// Conteneurs de visualisation
+app-pdf-viewer, app-eps-viewer, app-pdf, app-eps {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background-color: #FFF;
+}
+
+// Mode Zoom/Full
+.view-mode-zoom {
+  app-pdf-viewer, app-eps-viewer, app-pdf, app-eps {
+    height: auto;
+    min-height: 100%;
+  }
+}
+
+@media (max-width: 767px) {
+  app-pdf-viewer, app-eps-viewer, app-pdf, app-eps {
+    height: auto;
+    min-height: 770px;
+  }
+}
+
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+  }
+}

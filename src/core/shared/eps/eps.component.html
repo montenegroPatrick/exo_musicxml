@@ -1,0 +1,21 @@
+<div class="eps-container" 
+     [ngClass]="{
+       'view-mode-fit': viewMode() === 'fit',
+       'view-mode-zoom': viewMode() === 'zoom'
+     }">
+  @for (img of [currentImage()]; track img?.fullUrl) {
+    @if (img) {
+      <img 
+        [src]="img.fullUrl" 
+        class="eps-image shadow-lg rounded"
+        [ngClass]="{
+          'h-full w-auto object-contain': viewMode() === 'fit',
+          'w-full h-auto object-top': viewMode() === 'zoom'
+        }"
+        alt="Diapo Image"
+      >
+    }
+  } @empty {
+    <div class="text-zinc-400 italic py-8">Aucune image sélectionnée</div>
+  }
+</div>

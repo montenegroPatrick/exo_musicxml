@@ -592,8 +592,13 @@ export class AudioService {
   }
 
   setPlaybackRate(rate: number): void {
-    // On déclenche le processus complet de recalage via FlatService
-    this._flatService.reinitializeTrackWithSpeed(rate);
+    if (this._flatService.isReady()) {
+      // On déclenche le processus complet de recalage via FlatService
+      this._flatService.reinitializeTrackWithSpeed(rate);
+    } else {
+      // Mode mono-piste / PDF : application directe
+      this.internalSetRate(rate);
+    }
   }
 
   /** Internal method to actually apply the rate once synchronized */

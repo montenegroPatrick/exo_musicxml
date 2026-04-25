@@ -33,3 +33,38 @@ input[type=range]::-webkit-slider-thumb {
   width: 20px;
   height: 20px;
 }
+
+.loop-marker {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 100%;
+  background: white;
+  cursor: ew-resize;
+  z-index: 30;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loop-marker::after {
+  content: '';
+  width: 2px;
+  height: 60%;
+  background: rgba(0,0,0,0.2);
+}
+
+.loop-marker-a {
+  transform: translateX(-100%);
+  border-radius: 4px 0 0 4px;
+}
+
+.loop-marker-b {
+  transform: translateX(0%);
+  border-radius: 0 4px 4px 0;
+}
+
+.progress-active-range {
+  transition: all 0.1s ease-linear;
+}

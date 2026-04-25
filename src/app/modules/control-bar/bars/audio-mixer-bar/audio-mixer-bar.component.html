@@ -34,7 +34,7 @@
   <!-- Right side controls -->
   <section class="flex items-center gap-2 rounded-lg">
     <!-- MODE SWITCHER (Icons) -->
-    @if (hasVideo()) {
+    @if (hasVideo() && !isScoreMode()) {
       <div class="flex items-center bg-white/5 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-white/10 shrink-0">
         <button (click)="navigateToMode('video')" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-md sm:rounded-lg text-white/40 hover:text-white/60 transition-all">
           <i class="pi pi-video text-[10px] sm:text-xs"></i>

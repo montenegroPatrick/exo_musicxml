@@ -8,8 +8,8 @@ import { DiapoComponent } from '@core/shared/diapo/diapo.component';
   imports: [CommonModule, DiapoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="w-full h-full bg-white">
-      <app-diapo></app-diapo>
+    <div class="w-full h-full bg-zinc-950 relative">
+      <app-diapo theme="dark"></app-diapo>
     </div>
   `,
   styles: [`

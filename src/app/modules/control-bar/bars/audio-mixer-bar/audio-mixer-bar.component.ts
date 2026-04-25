@@ -61,6 +61,8 @@ export class AudioMixerBarComponent {
 
   isDirectMode = this._lessonService.isDirectMode;
 
+  readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+
   ready = computed(
     () => this._audioService.isReady() && this._flatService.isReady(),
   );

@@ -7,17 +7,15 @@ import { CommonModule } from '@angular/common';
   selector: 'app-eps-viewer',
   standalone: true,
   imports: [CommonModule, EpsComponent],
+  host: {
+    '[class.view-mode-zoom]': "viewMode() === 'zoom'",
+    '[class.view-mode-fit]': "viewMode() === 'fit'",
+    'class': 'block w-full h-full'
+  },
   template: `
-    <div 
-      class="w-full flex items-center justify-center overflow-hidden"
-      [ngClass]="isMobile() ? 'h-auto' : 'h-full'"
-    >
+    <div class="w-full h-full flex items-start justify-center overflow-hidden">
       @if (eps()) {
         <app-eps [eps]="eps()!"></app-eps>
-      } @else {
-        <div class="flex items-start justify-center h-full text-muted-foreground italic">
-          Aucune image à afficher.
-        </div>
       }
     </div>
   `,
@@ -27,20 +25,14 @@ import { CommonModule } from '@angular/common';
       width: 100%;
       height: 100%;
     }
-    @media (max-width: 767px) {
-      :host {
-        height: auto;
-      }
+    :host.view-mode-zoom {
+      height: auto;
+      min-height: 100%;
     }
   `]
 })
 export class EpsViewerComponent {
   eps = input.required<IJsonDiapoEps>();
-  
+  viewMode = input<'fit' | 'zoom'>('fit');
   readonly isMobile = signal<boolean>(window.innerWidth < 768);
-
-  @HostListener('window:resize')
-  onResize(): void {
-    this.isMobile.set(window.innerWidth < 768);
-  }
 }

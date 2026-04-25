@@ -2,7 +2,6 @@ import {
   Component,
   computed,
   inject,
-  OnInit,
   signal,
   ChangeDetectionStrategy,
   HostListener,
@@ -35,7 +34,7 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-diapo.component.html',
 })
-export class VideoDiapoComponent implements OnInit {
+export class VideoDiapoComponent {
   private readonly _lessonService = inject(LessonService);
   private readonly _jwpService = inject(JwpService);
   private readonly _flatService = inject(FlatService);
@@ -55,11 +54,6 @@ export class VideoDiapoComponent implements OnInit {
   @HostListener('window:resize')
   onResize(): void {
     this.isMobile.set(window.innerWidth < 768);
-  }
-
-  ngOnInit(): void {
-    // Ensure "Fit Content" is the default for a better first impression
-    this._diapoService.setViewMode('fit');
   }
 
   // -- Dynamic Classes --
@@ -110,7 +104,8 @@ export class VideoDiapoComponent implements OnInit {
         'flex-shrink': '0',
         'background-color': '#FFF',
         'display': 'block',
-        'overflow': 'visible'
+        'overflow': 'visible',
+        'min-height': '770px'
       };
     }
 
@@ -124,7 +119,6 @@ export class VideoDiapoComponent implements OnInit {
       order: order,
       padding: '0px',
       'flex-shrink': '0',
-      'transition': 'all 0.3s ease',
       'min-width': minWidth,
       'background-color': '#FFF',
       'display': 'block',

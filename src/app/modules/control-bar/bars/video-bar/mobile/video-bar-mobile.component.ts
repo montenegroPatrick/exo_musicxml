@@ -40,6 +40,8 @@ export class VideoBarMobileComponent {
   readonly hasAudio = this._lessonService.hasAudio;
   readonly useMetronome = this._lessonService.useMetronome;
 
+  readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+
   navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
     const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');

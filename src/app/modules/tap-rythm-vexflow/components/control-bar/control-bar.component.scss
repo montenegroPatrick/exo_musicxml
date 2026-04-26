@@ -1,0 +1,18 @@
+.settings-popin {
+  transform-origin: bottom right;
+}
+
+input[type='range'] {
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  &.accent-main::-webkit-slider-thumb {
+    background: #FA5E46;
+  }
+}

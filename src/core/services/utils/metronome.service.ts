@@ -22,6 +22,7 @@ export class MetronomeService implements OnDestroy {
   // -- Count In Specific Status (for TapRythm) --
   private readonly _countInStatus = signal<CountInStatus>('not-started');
   private readonly _metronomeTick = signal<number>(1);
+  private readonly _exerciseStartAudioTime = signal<number>(0);
 
   // -- Public Readonly Accessors --
   readonly bpm = this._bpm.asReadonly();
@@ -35,6 +36,11 @@ export class MetronomeService implements OnDestroy {
   readonly currentBeat = this._currentBeat.asReadonly();
   readonly countInStatus = this._countInStatus.asReadonly();
   readonly metronomeTick = this._metronomeTick.asReadonly();
+  readonly exerciseStartAudioTime = this._exerciseStartAudioTime.asReadonly();
+
+  get audioContext(): AudioContext | null {
+    return this._audioCtx;
+  }
 
   // -- Audio logic properties --
   private readonly _scheduleAheadTime = 0.1;
@@ -158,6 +164,13 @@ export class MetronomeService implements OnDestroy {
             this._metronomeTick.set(currentTick);
             
             if (currentTick === this._timeInMeasure()) {
+                // Le premier temps de l'exercice sera exactement au temps de la prochaine note
+                const secondsPerBeat = 60.0 / this._bpm();
+                const ratio = this._timeBeatType() === 2 ? 2 : (this._timeBeatType() === 8 ? 0.5 : 1);
+                const nextNoteTime = time + ((secondsPerBeat * ratio) / this._subdivision());
+                
+                this._exerciseStartAudioTime.set(nextNoteTime);
+
                 // Done with count-in
                 setTimeout(() => {
                     this._countInStatus.set('finish');

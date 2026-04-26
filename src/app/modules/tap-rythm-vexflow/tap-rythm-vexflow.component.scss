@@ -1,0 +1,38 @@
+.tap-zone {
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+// Forçage de la couleur orange uniforme (Flat) pour la barre de contrôle
+:host {
+  ::ng-deep {
+    .control-bar-outer {
+      background: #FA5E46 !important;
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+    
+    app-tap-rythm-vexflow-control-bar .control-bar {
+      background: transparent !important;
+      background-image: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    
+    // Nettoyage de tout overlay ou gradient interne
+    app-tap-rythm-vexflow-control-bar .control-bar::before,
+    app-tap-rythm-vexflow-control-bar .control-bar::after {
+      display: none !important;
+    }
+    
+    app-tap-rythm-vexflow-control-bar .control-bar * {
+      color: white !important;
+    }
+    
+    app-tap-rythm-vexflow-control-bar .control-bar .play-button {
+      background: rgba(255, 255, 255, 0.2) !important;
+      box-shadow: none !important;
+    }
+  }
+}

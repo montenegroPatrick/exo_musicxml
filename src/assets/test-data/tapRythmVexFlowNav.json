@@ -10,7 +10,7 @@
     "id": "bise_10",
     "title": "Exercice : taper le rythme",
     "tempo": "60",
-    "mesureSize": "150",
-    "mesureList": ["s,n,n,s", "n,n,s,n", "n,n,dp", "n,dp,n"]
+    "mesureSize": "320",
+    "mesureList": ["n,n,n,n", "dc,dc,dc,dc,cp,dcs,n,n", "n,n,b","dc,dc,dc,dc,n,n,n","n,n,n,n","n,n,n,n","n,s,n,n","n,n,n,n"]
 }
 

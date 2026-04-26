@@ -64,6 +64,11 @@ export const routes: Routes = [
         loadComponent: () => import('./modules/tap-rythm/tap-rythm.component').then(m => m.TapRythmPageComponent),
       },
       {
+        path: 'tap-rythm-vexflow',
+        data: { hideControlBar: true },
+        loadChildren: () => import('./modules/tap-rythm-vexflow/tap-rythm-vexflow.routes').then(m => m.TAP_RYTHM_VEXFLOW_ROUTES),
+      },
+      {
         path: 'music-xml',
         data: { },
         loadComponent: () => import('@core/shared/diapo/diapo.component').then(m => m.DiapoComponent),

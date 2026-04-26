@@ -1,0 +1,38 @@
+<div class="score-container" #scoreContainer>
+  @if (measures.length === 0) {
+    <div class="flex items-center justify-center w-full text-zinc-300 italic">
+      Chargement de la partition...
+    </div>
+  }
+  <div class="score-canvas-container relative">
+    <div #vexCanvas></div>
+    
+    <!-- Feedback Sticks (Taps effectués) -->
+    @if (totalDurationMs > 0) {
+      <div class="absolute bottom-0 left-0 w-full h-8 border-t border-zinc-100/50 flex items-start overflow-visible pointer-events-none" style="z-index: 999;">
+        @for (res of feedbackResults; track $index) {
+          @if (res.actualTimeMs !== null) {
+            <div class="absolute"
+                 [style.width.px]="3"
+                 [style.height.px]="26"
+                 [style.z-index]="1000"
+                 [style.transform]="'translateX(-50%)'"
+                 [style.top.px]="0"
+                 [style.background-color]="res.precision === 'perfect' ? '#22c55e' : (res.precision === 'good' ? '#eab308' : '#ef4444')"
+                 [style.box-shadow]="'0 0 8px ' + (res.precision === 'perfect' ? '#22c55e' : (res.precision === 'good' ? '#eab308' : '#ef4444'))"
+                 [style.left.px]="getCursorX(res.actualTimeMs / totalDurationMs)">
+            </div>
+          }
+        }
+      </div>
+    }
+
+    <!-- Reading Cursor (Follower) -->
+    @if (progress > 0) {
+      <div class="reading-cursor absolute top-0 w-[2px] bg-[#FA5E46] h-full shadow-[0_0_10px_rgba(250,94,70,0.6)] z-10"
+           [style.left.px]="getCursorX(progress)">
+        <div class="absolute -top-1 -left-[7px] w-4 h-4 rounded-full bg-[#FA5E46] shadow-md"></div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,142 @@
+<div class="page-container flex flex-col h-screen bg-white text-zinc-800">
+
+  <!-- Area d'exercice (Centrée) -->
+  <div class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden"
+       [class.invisible]="exerciseStatus() === 'finish'">
+
+    <!-- Score -->
+    <div class="w-full max-w-5xl mb-12">
+      @if (!data()) {
+      <div class="p-4 bg-red-100 text-red-700 rounded">
+        Données non chargées. Vérifiez l'URL ou le fichier JSON.
+      </div>
+      } @else {
+      <div class="bg-white rounded-xl shadow-sm border border-zinc-100 p-8">
+          <app-vexflow-score [measures]="processedMeasures()" [currentMeasureIndex]="currentMeasureIndex()"
+            [measureWidth]="measureWidth()" [feedbackResults]="tappedResults()" [progress]="exerciseProgress()"
+            [countdownProgress]="countdownProgress()" [clefOffset]="clefOffset()" [totalDurationMs]="totalDurationMs()"
+            [tempo]="metronome.bpm()"
+            [timeSignature]="(metronome.timeInMeasure() + '/' + metronome.timeBeatType())">
+          </app-vexflow-score>
+      </div>
+      }
+    </div>
+
+    <!-- Feedback & Instructions -->
+    <div class="flex flex-col items-center gap-8 w-full max-w-4xl">
+      <div class="min-h-[320px] flex items-center justify-center w-full">
+        @if (exerciseStatus() === 'playing' || exerciseStatus() === 'countdown') {
+        <div (mousedown)="handleTap($event)" (touchstart)="handleTap($event)" [class.!bg-[#FA5E46]/20]="isTapping()"
+          class="tap-zone w-full max-w-3xl h-80 border-2 border-dashed border-[#FA5E46]/30 rounded-3xl flex items-center justify-center cursor-pointer hover:bg-[#FA5E46]/5 transition-all select-none">
+          
+          @if (exerciseStatus() === 'countdown') {
+            <span class="text-8xl font-black text-[#FA5E46] animate-in zoom-in duration-200">{{ countdownValue() }}</span>
+          } @else {
+            <span class="text-4xl font-black text-[#FA5E46]/40 tracking-[0.3em]">TAP ICI</span>
+          }
+        </div>
+        } @else {
+        <p class="text-zinc-400 text-center font-medium leading-relaxed">
+          @if (exerciseStatus() === 'finish') {
+          <span class="text-2xl font-bold text-zinc-800">Exercice terminé !</span><br>
+          Score : {{ score() }}%
+          } @else {
+          Appuyez sur <span class="text-[#FA5E46] font-bold">Play</span> dans la barre de contrôle<br>
+          lorsque vous êtes prêt
+          }
+        </p>
+        }
+      </div>
+
+      <!-- Feedback visuel (Parfait/Bien/Erreur) -->
+      <div class="h-12">
+        @if (lastFeedback()) {
+        <span class="text-2xl font-black uppercase tracking-widest animate-out fade-out duration-500 fill-mode-forwards"
+          [ngClass]="{
+                  'text-green-500': lastFeedback() === 'perfect',
+                  'text-yellow-500': lastFeedback() === 'good',
+                  'text-red-500': lastFeedback() === 'bad' || lastFeedback() === 'missed'
+                }">
+          {{ lastFeedback() === 'perfect' ? 'Parfait' : lastFeedback() === 'good' ? 'Bien' : 'Erreur' }}
+        </span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Bar (Standard : Orange, en bas, pleine largeur) -->
+  <div class="control-bar-outer text-white relative z-[300]">
+    <app-tap-rythm-vexflow-control-bar [title]="data()?.title || 'Exercice'"
+      [subTitle]="data()?.sequenceTitle || data()?.subtitle || ''" [chapter]="data()?.chapter || ''"
+      [subChapter]="data()?.subChapter || ''" [sequence]="data()?.sequence || ''"
+      [chapterTitle]="data()?.chapterTitle || ''" [subChapterTitle]="data()?.subChapterTitle || ''"
+      [difficulty]="difficultyLevel()" [tempo]="metronome.bpm()"
+      [isPlaying]="exerciseStatus() === 'playing' || exerciseStatus() === 'countdown'"
+      [metronomeVolume]="metronomeVolume()" [beatsPerMeasure]="metronome.timeInMeasure()"
+      [currentBeat]="metronome.currentBeat()" [countdownMeasures]="countdownMeasures()"
+      [exerciseProgress]="exerciseProgress()" (togglePlay)="handleTogglePlay()"
+      (difficultyChange)="handleDifficultyChange($event)" (volumeChange)="handleVolumeChange($event)"
+      (tempoChange)="handleTempoChange($event)" (countdownChange)="handleCountdownChange($event)"
+      (previous)="handlePreviousSequence()" (next)="handleNextSequence()">
+    </app-tap-rythm-vexflow-control-bar>
+  </div>
+
+  <!-- Overlay de fin (Resultats) -->
+  @if (exerciseStatus() === 'finish') {
+    <div class="fixed top-0 left-0 right-0 bottom-0 bg-white z-[200] flex flex-col items-center justify-start p-6 animate-in fade-in duration-300 overflow-y-auto pb-32">
+      <div class="max-w-4xl w-full text-center pt-8">
+        <h2 class="text-3xl font-black text-zinc-800 mb-2">Résultats</h2>
+        <p class="text-zinc-400 mb-8 text-lg">{{ score() > 80 ? 'Excellent travail !' : 'Continuez à vous entraîner !' }}</p>
+        
+        <!-- Score & Chart Section -->
+        <div class="flex flex-col md:flex-row items-center justify-center gap-12 mb-12">
+          <!-- Circular Progress -->
+          <div class="relative w-40 h-40">
+            <svg class="w-full h-full transform -rotate-90">
+              <circle cx="80" cy="80" r="74" stroke="currentColor" stroke-width="12" fill="transparent" class="text-zinc-100" />
+              <circle cx="80" cy="80" r="74" stroke="currentColor" stroke-width="12" fill="transparent" 
+                      [attr.stroke-dasharray]="464.95"
+                      [attr.stroke-dashoffset]="464.95 - (464.95 * score() / 100)"
+                      class="text-[#A3C139] transition-all duration-1000 ease-out" />
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-3xl font-black text-zinc-700">{{ score() }}%</span>
+            </div>
+          </div>
+
+          <!-- Stats Breakdown -->
+          <div class="flex flex-col gap-3 text-left min-w-[200px]">
+            <div class="flex items-center justify-between gap-8 border-b border-zinc-100 pb-2">
+              <span class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Parfait</span>
+              <span class="text-lg font-black text-green-500">{{ results().perfect }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-8 border-b border-zinc-100 pb-2">
+              <span class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Bien</span>
+              <span class="text-lg font-black text-yellow-500">{{ results().good }}</span>
+            </div>
+            <div class="flex items-center justify-between gap-8 border-b border-zinc-100 pb-2">
+              <span class="text-sm font-bold text-zinc-400 uppercase tracking-wider">Erreur / Oubli</span>
+              <span class="text-lg font-black text-red-500">{{ results().bad + results().missed }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Partition -->
+        <div class="mb-12 bg-zinc-50 p-6 rounded-3xl border border-zinc-100 w-full">
+          <h3 class="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] mb-4 text-left px-2">Analyse de votre performance</h3>
+          <app-vexflow-score 
+            [measures]="processedMeasures()" 
+            [currentMeasureIndex]="-1"
+            [measureWidth]="measureWidth()"
+            [feedbackResults]="tappedResults()"
+            [progress]="0"
+            [totalDurationMs]="totalDurationMs()"
+            [tempo]="metronome.bpm()"
+            [timeSignature]="(metronome.timeInMeasure() + '/' + metronome.timeBeatType())">
+          </app-vexflow-score>
+          <p class="text-[10px] text-zinc-400 mt-4 italic">Utilisez la barre de contrôle pour recommencer ou passer à la suite.</p>
+        </div>
+      </div>
+    </div>
+  }
+</div>

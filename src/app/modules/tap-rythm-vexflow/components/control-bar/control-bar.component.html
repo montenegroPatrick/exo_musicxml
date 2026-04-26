@@ -1,0 +1,162 @@
+<div class="control-bar-wrapper relative select-none z-[400]">
+  
+  <!-- Popin Paramètres (Tempo) -->
+  @if (showSettingsPopin()) {
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-64 bg-black/95 backdrop-blur-md border border-white/20 p-4 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+      <h3 class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">Réglages</h3>
+      
+      <!-- Tempo & Countdown Control -->
+      <div class="flex flex-col gap-4 mb-6">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-white/80">Tempo</span>
+            <span class="text-xs font-mono font-bold text-[#FA5E46]">{{ tempo }} BPM</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <button (click)="onTempoAdjust(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white">-</button>
+            <input type="range" 
+                   class="flex-1 h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-main"
+                   [min]="40" [max]="240" [step]="1"
+                   [ngModel]="tempo"
+                   (input)="onTempoChange($event)">
+            <button (click)="onTempoAdjust(1)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-white">+</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-white/80">Mesures de décompte</span>
+            <div class="flex bg-white/5 p-1 rounded-lg border border-white/10">
+              @for (val of [1, 2]; track val) {
+                <button (click)="countdownChange.emit(val)"
+                        class="px-3 py-1 text-[10px] font-bold rounded-md transition-all"
+                        [class.bg-[#FA5E46]]="countdownMeasures === val"
+                        [class.text-white]="countdownMeasures === val"
+                        [class.text-white/40]="countdownMeasures !== val">
+                  {{ val }}
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Volume Métronome -->
+      <div class="flex flex-col gap-2">
+         <div class="flex items-center justify-between">
+          <span class="text-xs text-white/80">Volume Métronome</span>
+          <span class="text-xs font-bold text-white/40">{{ metronomeVolume }}%</span>
+        </div>
+        <input type="range" 
+               class="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
+               [min]="0" [max]="100"
+               [ngModel]="metronomeVolume"
+               (input)="onVolumeChange($event)">
+      </div>
+    </div>
+  }
+
+  <!-- Popin Difficulté -->
+  @if (showDifficultyPopin()) {
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-40 bg-black/95 backdrop-blur-md border border-white/20 p-1 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+      <div class="flex flex-col gap-1 p-1">
+        @for (level of [1, 2, 3]; track level) {
+          <button (click)="difficultyChange.emit(level); showDifficultyPopin.set(false)" 
+                  class="flex items-center justify-between p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  [class.bg-white/10]="difficulty === level">
+            <span class="text-xs" [class.text-white]="difficulty === level" [class.text-white/60]="difficulty !== level">
+              Niveau {{ level }}
+            </span>
+            @if (difficulty === level) {
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M20 6 9 17l-5-5"/></svg>
+            }
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Top Progress Bar (Seek-bar style) -->
+  <div class="absolute top-0 left-0 w-full h-1.5 sm:h-2 flex gap-0.5 px-0.5 z-[120]">
+    @for (beat of [].constructor(beatsPerMeasure); track $index) {
+      <div class="flex-1 h-full rounded-b-sm transition-all duration-150"
+           [class.bg-white]="isPlaying && currentBeat === $index"
+           [class.shadow-[0_0_15px_rgba(255,255,255,1)]]="isPlaying && currentBeat === $index"
+           [class.bg-black/20]="!isPlaying || currentBeat !== $index">
+           
+           @if (isPlaying && currentBeat === $index && $index === 0) {
+              <div class="absolute inset-0 bg-white/40 animate-pulse"></div>
+           }
+      </div>
+    }
+  </div>
+
+  <div class="control-bar relative flex items-center justify-between w-full h-16 sm:h-20 bg-black/40 backdrop-blur-md border-t border-white/10 px-4 text-white">
+    
+    <!-- GAUCHE : Navigation & Metadata -->
+    <div class="flex-1 flex items-center gap-1 sm:gap-2 overflow-hidden">
+      <div class="flex items-center gap-1 shrink-0">
+        <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="previous.emit()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </button>
+        <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="next.emit()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+        </button>
+      </div>
+
+      <!-- Vertical Separator -->
+      <div class="hidden sm:block h-8 w-px bg-white/10 mx-4 shrink-0"></div>
+
+      <!-- Lesson Info (3 lines style) -->
+      <div class="flex flex-col justify-center min-w-0 overflow-hidden py-1">
+        @if (chapterTitle || chapter) {
+          <span class="uppercase font-bold tracking-[0.1em] truncate text-white/50 text-[10px] leading-[1.1]">
+            {{ chapter }}{{ chapter ? '.' : '' }}{{ chapterTitle }}
+          </span>
+          <span class="font-semibold uppercase tracking-[0.1em] truncate text-white/40 text-[10px] leading-[1.1]">
+            {{ subChapter }}{{ subChapter ? '.' : '' }}{{ subChapterTitle }}
+          </span>
+          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[12px] leading-[1.2]">
+            {{ sequence }}{{ sequence ? '.' : '' }}{{ title || subTitle }}
+          </span>
+        } @else {
+          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[14px]">
+            {{ title || 'Exercice' }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- CENTRE : Play -->
+    <div class="flex items-center justify-center">
+      <!-- Play / Stop -->
+      <button id="main-play-pause-btn"
+              class="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all border border-white/10 relative z-[110]" 
+              (click)="onPlayClick($event)">
+        @if (isPlaying) {
+          <!-- STOP ICON (Square) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+        } @else {
+          <!-- PLAY ICON -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 ml-0.5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        }
+      </button>
+    </div>
+
+    <!-- DROITE : Actions -->
+    <div class="flex-1 flex justify-end items-center gap-2 sm:gap-4">
+      <!-- Difficulté Badge -->
+      <button (click)="showDifficultyPopin.set(!showDifficultyPopin()); showSettingsPopin.set(false)" 
+              class="hidden sm:flex h-8 px-3 items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-white/60 hover:text-white gap-2">
+        <span class="text-[9px] font-bold uppercase">Niveau {{ difficulty }}</span>
+      </button>
+
+      <!-- Paramètres (Tempo) -->
+      <button (click)="showSettingsPopin.set(!showSettingsPopin()); showDifficultyPopin.set(false)" 
+              class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-all text-white/70 hover:text-white"
+              [class.text-[#FA5E46]]="showSettingsPopin()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>

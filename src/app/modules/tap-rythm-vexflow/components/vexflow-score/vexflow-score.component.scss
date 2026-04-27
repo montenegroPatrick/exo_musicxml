@@ -8,6 +8,12 @@
   background: #fcfcfc;
   border: 1px solid #ddd;
   border-radius: 8px;
+  
+  /* Zoom mobile uniquement sur la partition */
+  @media (max-width: 767px) {
+    zoom: 0.8;
+  }
+
   /* Scrollbar fine pour plus de discrétion */
   &::-webkit-scrollbar {
     height: 4px;

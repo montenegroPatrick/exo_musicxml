@@ -1,9 +1,27 @@
 <div class="control-bar-wrapper relative select-none z-[400]">
   
+  <!-- Popin Info (Métadonnées) -->
+  @if (showInfoPopin()) {
+    <div class="settings-popin absolute bottom-[calc(100%+8px)] left-4 right-4 bg-black/95 backdrop-blur-md border border-white/20 p-4 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+       <div class="flex items-center justify-between mb-2">
+         <h3 class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Informations</h3>
+         <button (click)="showInfoPopin.set(false)" class="text-white/40 hover:text-white transition-colors">
+           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+         </button>
+       </div>
+       <app-lesson-metadata layout="popin" />
+    </div>
+  }
+
   <!-- Popin Paramètres (Tempo) -->
   @if (showSettingsPopin()) {
     <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-64 bg-black/95 backdrop-blur-md border border-white/20 p-4 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-      <h3 class="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-4">Réglages</h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Réglages</h3>
+        <button (click)="showSettingsPopin.set(false)" class="text-white/40 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
       
       <!-- Tempo & Countdown Control -->
       <div class="flex flex-col gap-4 mb-6">
@@ -59,6 +77,12 @@
   <!-- Popin Difficulté -->
   @if (showDifficultyPopin()) {
     <div class="settings-popin absolute bottom-[calc(100%+8px)] right-4 w-40 bg-black/95 backdrop-blur-md border border-white/20 p-1 rounded-xl z-[80] shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+      <div class="flex items-center justify-between p-2 border-b border-white/5 mb-1">
+        <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">Niveau</span>
+        <button (click)="showDifficultyPopin.set(false)" class="text-white/40 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
       <div class="flex flex-col gap-1 p-1">
         @for (level of [1, 2, 3]; track level) {
           <button (click)="difficultyChange.emit(level); showDifficultyPopin.set(false)" 
@@ -93,31 +117,18 @@
 
   <div class="control-bar relative flex items-center justify-between w-full h-20 bg-[var(--control-bar-bg)] border-t border-white/10 px-4 text-white">
     
-    <!-- GAUCHE : Navigation & Metadata -->
-    <div class="flex-1 flex items-center gap-1 sm:gap-2 overflow-hidden">
+    <!-- LEFT ZONE: Navigation & Metadata -->
+    <div class="flex items-center gap-1 sm:gap-2 flex-1 overflow-hidden">
       <app-lesson-navigator 
         [layout]="isMobile() ? 'mobile' : 'desktop'"
+        [showInfo]="showInfoPopin()"
         (previous)="previous.emit()" 
-        (next)="next.emit()">
+        (next)="next.emit()"
+        (toggleInfo)="toggleInfoPopin()">
       </app-lesson-navigator>
 
-      <!-- Lesson Info (3 lines style) -->
-      <div class="flex flex-col justify-center min-w-0 overflow-hidden py-1 border-l border-white/5 px-4">
-        @if (chapterTitle || chapter) {
-          <span class="uppercase font-bold tracking-[0.1em] truncate text-white/50 text-[12px] leading-[1.1]">
-            {{ chapter }}{{ chapter ? '.' : '' }}{{ chapterTitle }}
-          </span>
-          <span class="font-semibold uppercase tracking-[0.1em] truncate text-white/40 text-[12px] leading-[1.1]">
-            {{ subChapter }}{{ subChapter ? '.' : '' }}{{ subChapterTitle }}
-          </span>
-          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[14px] leading-[1.2]">
-            {{ sequence }}{{ sequence ? '.' : '' }}{{ title || subTitle }}
-          </span>
-        } @else {
-          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[14px]">
-            {{ title || 'Exercice' }}
-          </span>
-        }
+      <div class="hidden sm:block">
+        <app-lesson-metadata layout="inline" />
       </div>
     </div>
 

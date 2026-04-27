@@ -21,6 +21,7 @@ import { IMeasureInfo, IRhythmNote, ITapResult, ExerciseStatus, ITapRythmVexflow
 import { VexflowRendererService } from './services/vexflow-renderer.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
 import { PostMessageService } from '../tap-rythm/services/post-message.service';
+import { LessonService } from '@app/modules/lesson/services/lesson.service';
 
 @Component({
   selector: 'app-tap-rythm-vexflow-page',
@@ -37,6 +38,7 @@ export class TapRythmVexflowPageComponent implements OnInit, OnDestroy {
   private readonly _rendererService = inject(VexflowRendererService);
   private readonly _soundService = inject(SoundService);
   private readonly _postMessageService = inject(PostMessageService);
+  private readonly _lessonService = inject(LessonService);
   private readonly _cdr = inject(ChangeDetectorRef);
   readonly metronome = inject(MetronomeService);
 
@@ -115,9 +117,13 @@ export class TapRythmVexflowPageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const mock = this._route.snapshot.queryParamMap.get('mock') || 'tapRythmVexFlowNav';
-    this._http.get<ITapRythmVexflowData>(`assets/test-data/${mock}.json?t=${Date.now()}`).subscribe(data => {
+    this._http.get<ITapRythmVexflowData>(`assets/test-data/${mock}.json?t=${Date.now()}`).subscribe((data: ITapRythmVexflowData) => {
       if (data) {
         this.data.set(data);
+        
+        // Mise à jour du LessonService pour que les composants de barres (navigator, metadata) soient à jour
+        this._lessonService.setLessonData(data as any);
+
         this.tappedResults.set([]);
         this.metronome.setBpm(parseInt(data.tempo || '60', 10));
         

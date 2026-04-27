@@ -1,17 +1,17 @@
 <div class="page-container flex flex-col h-screen bg-white text-zinc-800">
 
   <!-- Area d'exercice (Centrée) -->
-  <div class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden"
+  <div class="flex-1 flex flex-col items-center justify-center p-1 sm:p-8 relative overflow-hidden"
        [class.invisible]="exerciseStatus() === 'finish'">
 
     <!-- Score -->
-    <div class="w-full max-w-5xl mb-12">
+    <div class="w-full sm:max-w-5xl mb-12">
       @if (!data()) {
       <div class="p-4 bg-red-100 text-red-700 rounded">
         Données non chargées. Vérifiez l'URL ou le fichier JSON.
       </div>
       } @else {
-      <div class="bg-white rounded-xl shadow-sm border border-zinc-100 p-8">
+      <div class="bg-white rounded-xl shadow-sm border border-zinc-100 p-0 sm:p-8 origin-center">
           <app-vexflow-score [measures]="processedMeasures()" [currentMeasureIndex]="currentMeasureIndex()"
             [measureWidth]="measureWidth()" [feedbackResults]="tappedResults()" [progress]="exerciseProgress()"
             [countdownProgress]="countdownProgress()" [clefOffset]="clefOffset()" [totalDurationMs]="totalDurationMs()"
@@ -84,12 +84,12 @@
   <!-- Overlay de fin (Resultats) -->
   @if (exerciseStatus() === 'finish') {
     <div class="fixed top-0 left-0 right-0 bottom-0 bg-white z-[200] flex flex-col items-center justify-start p-6 animate-in fade-in duration-300 overflow-y-auto pb-32">
-      <div class="max-w-4xl w-full text-center pt-8">
+      <div class="max-w-4xl w-full text-center md:pt-8">
         <h2 class="text-3xl font-black text-zinc-800 mb-2">Résultats</h2>
         <p class="text-zinc-400 mb-8 text-lg">{{ score() > 80 ? 'Excellent travail !' : 'Continuez à vous entraîner !' }}</p>
         
         <!-- Score & Chart Section -->
-        <div class="flex flex-col md:flex-row items-center justify-center gap-12 mb-12">
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-12 mb-4 md:mb-12">
           <!-- Circular Progress -->
           <div class="relative w-40 h-40">
             <svg class="w-full h-full transform -rotate-90">
@@ -122,7 +122,7 @@
         </div>
 
         <!-- Analysis Partition -->
-        <div class="mb-12 bg-zinc-50 p-6 rounded-3xl border border-zinc-100 w-full">
+        <div class="mb-12 bg-zinc-50 p-2 md:p-6 rounded-3xl border border-zinc-100 w-full">
           <h3 class="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] mb-4 text-left px-2">Analyse de votre performance</h3>
           <app-vexflow-score 
             [measures]="processedMeasures()" 
@@ -134,7 +134,7 @@
             [tempo]="metronome.bpm()"
             [timeSignature]="(metronome.timeInMeasure() + '/' + metronome.timeBeatType())">
           </app-vexflow-score>
-          <p class="text-[10px] text-zinc-400 mt-4 italic">Utilisez la barre de contrôle pour recommencer ou passer à la suite.</p>
+          <!-- <p class="text-[10px] text-zinc-400 mt-4 italic">Utilisez la barre de contrôle pour recommencer ou passer à la suite.</p> -->
         </div>
       </div>
     </div>

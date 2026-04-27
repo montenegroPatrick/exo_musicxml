@@ -2,11 +2,12 @@ import { Component, EventEmitter, Input, Output, signal, HostListener } from '@a
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
+import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
 
 @Component({
   selector: 'app-tap-rythm-vexflow-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LessonNavigatorComponent],
+  imports: [CommonModule, FormsModule, LessonNavigatorComponent, LessonMetadataComponent],
   templateUrl: './control-bar.component.html',
   styleUrls: ['./control-bar.component.scss'],
 })
@@ -42,8 +43,15 @@ export class TapRythmVexflowBarComponent {
     this.isMobile.set(window.innerWidth < 768);
   }
 
+  showInfoPopin = signal(false);
   showDifficultyPopin = signal(false);
   showSettingsPopin = signal(false);
+
+  toggleInfoPopin(): void {
+    this.showSettingsPopin.set(false);
+    this.showDifficultyPopin.set(false);
+    this.showInfoPopin.update(v => !v);
+  }
 
   onVolumeChange(event: Event): void {
     const val = (event.target as HTMLInputElement).value;

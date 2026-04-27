@@ -1,0 +1,40 @@
+.control-bar {
+  background: var(--control-bar-bg);
+  position: relative;
+  z-index: 50;
+  animation: slideUp 0.4s ease-out;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.settings-popin {
+  transform-origin: bottom right;
+  background: rgba(10, 10, 10, 0.98) !important;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+}
+
+input[type='range'] {
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+  }
+
+  &.accent-main::-webkit-slider-thumb {
+    background: #FA5E46;
+  }
+}

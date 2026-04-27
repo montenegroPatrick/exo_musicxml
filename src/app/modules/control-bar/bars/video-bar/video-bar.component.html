@@ -350,19 +350,7 @@
     
     <!-- LEFT ZONE: Navigation & Metadata -->
     <div class="flex items-center gap-1 sm:gap-2 flex-1">
-      @if (!isDirectMode()) {
-        <div class="nav-group flex items-center gap-1">
-          <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="handlePrevious()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-          </button>
-          <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="handleNext()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
-          </button>
-        </div>
-
-        <!-- Vertical Separator -->
-        <div class="nav-separator mx-4 hidden sm:block h-8 w-px bg-white/20"></div>
-      }
+      <app-lesson-navigator (previous)="handlePrevious()" (next)="handleNext()"></app-lesson-navigator>
 
       <app-lesson-metadata layout="inline" class="hidden sm:block" />
     </div>

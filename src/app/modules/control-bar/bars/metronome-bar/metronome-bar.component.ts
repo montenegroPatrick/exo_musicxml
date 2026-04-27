@@ -7,11 +7,12 @@ import { LessonService } from '@app/modules/lesson/services/lesson.service';
 
 import { CoreDataService } from '@core/services/core-data.service';
 import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
+import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
 
 @Component({
   selector: 'app-metronome-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LessonMetadataComponent],
+  imports: [CommonModule, FormsModule, LessonMetadataComponent, LessonNavigatorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './metronome-bar.component.html',
   styleUrls: ['./metronome-bar.component.scss']

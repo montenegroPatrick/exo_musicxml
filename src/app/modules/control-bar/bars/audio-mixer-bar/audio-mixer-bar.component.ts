@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, input, signal, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
@@ -11,6 +11,7 @@ import { FlatService } from '@core/services/flat.service';
 import { ControlBarService } from '../../services/control-bar.service';
 import { AudioService } from '@core/services/audio.service';
 import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
+import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
 
 @Component({
   selector: 'app-audio-mixer-bar',
@@ -21,7 +22,8 @@ import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson
     VolumeControlComponent,
     TrackMixerComponent,
     TimelineSliderComponent,
-    LessonMetadataComponent
+    LessonMetadataComponent,
+    LessonNavigatorComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audio-mixer-bar.component.html',
@@ -34,6 +36,13 @@ export class AudioMixerBarComponent {
   private _bridgeService = inject(BridgeService);
   private _lessonService = inject(LessonService);
   private _router = inject(Router);
+  
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   // -- Audio Capabilities --
   readonly hasVideo = this._lessonService.hasVideo;

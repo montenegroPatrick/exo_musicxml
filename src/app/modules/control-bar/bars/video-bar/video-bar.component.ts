@@ -7,13 +7,14 @@ import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
+import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-video-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, LessonMetadataComponent],
+  imports: [CommonModule, FormsModule, LessonMetadataComponent, LessonNavigatorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-bar.component.html',
   styles: [`

@@ -1,15 +1,16 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
 
 @Component({
-  selector: 'app-tap-rythm-vexflow-control-bar',
+  selector: 'app-tap-rythm-vexflow-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LessonNavigatorComponent],
   templateUrl: './control-bar.component.html',
   styleUrls: ['./control-bar.component.scss'],
 })
-export class ControlBarComponent {
+export class TapRythmVexflowBarComponent {
   @Input() title: string = '';
   @Input() subTitle: string = '';
   @Input() chapterTitle: string = '';
@@ -33,6 +34,13 @@ export class ControlBarComponent {
   @Output() countdownChange = new EventEmitter<number>();
   @Output() previous = new EventEmitter<void>();
   @Output() next = new EventEmitter<void>();
+  
+  isMobile = signal(window.innerWidth < 768);
+
+  @HostListener('window:resize')
+  onResize() {
+    this.isMobile.set(window.innerWidth < 768);
+  }
 
   showDifficultyPopin = signal(false);
   showSettingsPopin = signal(false);

@@ -109,19 +109,13 @@
     <div class="flex items-center justify-between w-full h-11 px-2 mb-1 mt-2">
       
       <!-- Left: Capsule Navigation -->
-      <div class="capsule flex items-center gap-1 px-1 py-1">
-        <button (click)="handlePrevious()" class="text-white/90 active:scale-90 p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button (click)="toggleInfoPopin(); $event.stopPropagation()" 
-                class="w-8 h-8 flex items-center justify-center text-white/90 active:scale-90 rounded-full" 
-                [class.bg-white/20]="showInfoPopin()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        </button>
-        <button (click)="handleNext()" class="text-white/90 active:scale-90 p-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
-        </button>
-      </div>
+      <app-lesson-navigator 
+        [layout]="'mobile'" 
+        [showInfo]="showInfoPopin()" 
+        (previous)="handlePrevious()" 
+        (next)="handleNext()" 
+        (toggleInfo)="toggleInfoPopin()">
+      </app-lesson-navigator>
 
       <!-- Center: Play & BPM -->
       <div class="capsule flex items-center gap-3 px-3 py-1">

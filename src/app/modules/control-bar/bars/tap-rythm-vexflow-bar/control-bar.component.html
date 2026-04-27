@@ -91,32 +91,26 @@
     }
   </div>
 
-  <div class="control-bar relative flex items-center justify-between w-full h-16 sm:h-20 bg-black/40 backdrop-blur-md border-t border-white/10 px-4 text-white">
+  <div class="control-bar relative flex items-center justify-between w-full h-20 bg-[var(--control-bar-bg)] border-t border-white/10 px-4 text-white">
     
     <!-- GAUCHE : Navigation & Metadata -->
     <div class="flex-1 flex items-center gap-1 sm:gap-2 overflow-hidden">
-      <div class="flex items-center gap-1 shrink-0">
-        <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="previous.emit()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-        </button>
-        <button class="hover:scale-110 active:scale-90 transition-all text-white p-1" (click)="next.emit()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
-        </button>
-      </div>
-
-      <!-- Vertical Separator -->
-      <div class="hidden sm:block h-8 w-px bg-white/10 mx-4 shrink-0"></div>
+      <app-lesson-navigator 
+        [layout]="isMobile() ? 'mobile' : 'desktop'"
+        (previous)="previous.emit()" 
+        (next)="next.emit()">
+      </app-lesson-navigator>
 
       <!-- Lesson Info (3 lines style) -->
-      <div class="flex flex-col justify-center min-w-0 overflow-hidden py-1">
+      <div class="flex flex-col justify-center min-w-0 overflow-hidden py-1 border-l border-white/5 px-4">
         @if (chapterTitle || chapter) {
-          <span class="uppercase font-bold tracking-[0.1em] truncate text-white/50 text-[10px] leading-[1.1]">
+          <span class="uppercase font-bold tracking-[0.1em] truncate text-white/50 text-[12px] leading-[1.1]">
             {{ chapter }}{{ chapter ? '.' : '' }}{{ chapterTitle }}
           </span>
-          <span class="font-semibold uppercase tracking-[0.1em] truncate text-white/40 text-[10px] leading-[1.1]">
+          <span class="font-semibold uppercase tracking-[0.1em] truncate text-white/40 text-[12px] leading-[1.1]">
             {{ subChapter }}{{ subChapter ? '.' : '' }}{{ subChapterTitle }}
           </span>
-          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[12px] leading-[1.2]">
+          <span class="font-bold tracking-[0.1em] text-white truncate filter drop-shadow-sm text-[14px] leading-[1.2]">
             {{ sequence }}{{ sequence ? '.' : '' }}{{ title || subTitle }}
           </span>
         } @else {

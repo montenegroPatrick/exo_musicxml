@@ -16,7 +16,7 @@ import { HttpClient } from '@angular/common/http';
 import { TapRythmVexflowService } from './services/tap-rythm-vexflow.service';
 import { MetronomeService } from '../../../core/services/utils/metronome.service';
 import { VexflowScoreComponent } from './components/vexflow-score/vexflow-score.component';
-import { ControlBarComponent } from './components/control-bar/control-bar.component';
+import { TapRythmVexflowBarComponent } from '../control-bar/bars/tap-rythm-vexflow-bar/control-bar.component';
 import { IMeasureInfo, IRhythmNote, ITapResult, ExerciseStatus, ITapRythmVexflowData } from './interfaces/tap-rythm-vexflow.interface';
 import { VexflowRendererService } from './services/vexflow-renderer.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
@@ -25,7 +25,7 @@ import { PostMessageService } from '../tap-rythm/services/post-message.service';
 @Component({
   selector: 'app-tap-rythm-vexflow-page',
   standalone: true,
-  imports: [CommonModule, VexflowScoreComponent, ControlBarComponent],
+  imports: [CommonModule, VexflowScoreComponent, TapRythmVexflowBarComponent],
   templateUrl: './tap-rythm-vexflow.component.html',
   styleUrls: ['./tap-rythm-vexflow.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

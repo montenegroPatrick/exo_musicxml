@@ -7,21 +7,19 @@
   }
 
   <div class="flex items-center">
+    <app-lesson-navigator 
+      [layout]="isMobile() ? 'mobile' : 'desktop'"
+      [showInfo]="showInfoPopin()"
+      (previous)="handlePrevious()" 
+      (next)="handleNext()"
+      (toggleInfo)="toggleInfoPopin()">
+    </app-lesson-navigator>
+
     <app-play-controls
       (togglePlay)="handleTogglePlay()"
       (stepBackward)="handleStepBackward()"
       (stepForward)="handleStepForward()"
-      (previous)="handlePrevious()"
-      (next)="handleNext()"
     />
-
-    <!-- Mobile Info Button (XS only) -->
-    <button 
-      (click)="toggleInfoPopin()"
-      class="sm:hidden ml-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white/70 active:bg-white/20"
-    >
-      <i class="fa-solid fa-circle-info text-sm"></i>
-    </button>
   </div>
 
   <app-lesson-metadata layout="inline" />

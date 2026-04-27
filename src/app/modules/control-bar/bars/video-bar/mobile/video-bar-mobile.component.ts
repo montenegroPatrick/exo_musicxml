@@ -9,11 +9,12 @@ import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { LessonMetadataComponent } from '../../../components/lesson-metadata/lesson-metadata.component';
+import { LessonNavigatorComponent } from '../../../components/lesson-navigator/lesson-navigator.component';
 
 @Component({
   selector: 'app-video-bar-mobile',
   standalone: true,
-  imports: [CommonModule, FormsModule, LessonMetadataComponent],
+  imports: [CommonModule, FormsModule, LessonMetadataComponent, LessonNavigatorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-bar-mobile.component.html',
   styleUrls: ['./video-bar-mobile.component.scss'],

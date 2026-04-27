@@ -1,14 +1,4 @@
 <section class="flex gap-1 text-white rounded-lg">
-  @if (!isDirectMode()) {
-    <p-button
-      icon="pi pi-angle-left"
-      size="small"
-      [text]="true"
-      variant="text"
-      styleClass="text-white!"
-      (onClick)="previous.emit()"
-    />
-  }
   <p-button
     icon="pi pi-step-backward"
     size="small"
@@ -31,14 +21,4 @@
     styleClass="text-white!"
     (onClick)="stepForward.emit()"
   />
-  @if (!isDirectMode()) {
-    <p-button
-      icon="pi pi-angle-right"
-      size="small"
-      [text]="true"
-      variant="text"
-      styleClass="text-white!"
-      (onClick)="next.emit()"
-    />
-  }
 </section>

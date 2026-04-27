@@ -66,7 +66,7 @@
 
   <!-- Control Bar (Standard : Orange, en bas, pleine largeur) -->
   <div class="control-bar-outer text-white relative z-[300]">
-    <app-tap-rythm-vexflow-control-bar [title]="data()?.title || 'Exercice'"
+    <app-tap-rythm-vexflow-bar [title]="data()?.title || 'Exercice'"
       [subTitle]="data()?.sequenceTitle || data()?.subtitle || ''" [chapter]="data()?.chapter || ''"
       [subChapter]="data()?.subChapter || ''" [sequence]="data()?.sequence || ''"
       [chapterTitle]="data()?.chapterTitle || ''" [subChapterTitle]="data()?.subChapterTitle || ''"
@@ -78,7 +78,7 @@
       (difficultyChange)="handleDifficultyChange($event)" (volumeChange)="handleVolumeChange($event)"
       (tempoChange)="handleTempoChange($event)" (countdownChange)="handleCountdownChange($event)"
       (previous)="handlePreviousSequence()" (next)="handleNextSequence()">
-    </app-tap-rythm-vexflow-control-bar>
+    </app-tap-rythm-vexflow-bar>
   </div>
 
   <!-- Overlay de fin (Resultats) -->

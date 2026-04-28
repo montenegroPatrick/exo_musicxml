@@ -10,6 +10,7 @@ import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
 import { LessonMetadataComponent } from '../../../components/lesson-metadata/lesson-metadata.component';
 import { LessonNavigatorComponent } from '../../../components/lesson-navigator/lesson-navigator.component';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Component({
   selector: 'app-video-bar-mobile',
@@ -35,6 +36,7 @@ export class VideoBarMobileComponent {
   private readonly _diapoService = inject(DiapoStateService);
   private readonly _elementRef = inject(ElementRef);
   private readonly _router = inject(Router);
+  private readonly _coreDataStore = inject(CoreDataService);
 
   // -- Reactive Data Sources --
   readonly hasVideo = this._lessonService.hasVideo;
@@ -179,7 +181,7 @@ export class VideoBarMobileComponent {
     this.showInfoPopin.set(false);
     this.activePopin.update(v => v === 'loop' ? 'none' : 'loop');
     if (!this.loopStart() && !this.loopEnd()) {
-      this._jwpService.setLoopRange(this.currentTime(), this.durationInSec());
+      this._coreDataStore.requestLoopRange(this.currentTime(), this.durationInSec(), 'ui');
     }
     this.startInactivityTimer();
   }
@@ -197,7 +199,7 @@ export class VideoBarMobileComponent {
       this.clearLoop();
     } else {
       this._jwpService.pause();
-      this._jwpService.setLoopRange(this.currentTime(), this.durationInSec());
+      this._coreDataStore.requestLoopRange(this.currentTime(), this.durationInSec(), 'ui');
     }
   }
 
@@ -235,18 +237,18 @@ export class VideoBarMobileComponent {
   }
 
   setLoopA(): void {
-    this._jwpService.setLoopRange(this.currentTime(), this.loopEnd());
+    this._coreDataStore.requestLoopRange(this.currentTime(), this.loopEnd(), 'ui');
   }
 
   setLoopB(): void {
     const current = this.currentTime();
     if (this.loopStart() !== null && current > this.loopStart()!) {
-      this._jwpService.setLoopRange(this.loopStart(), current);
+      this._coreDataStore.requestLoopRange(this.loopStart(), current, 'ui');
     }
   }
 
   clearLoop(): void {
-    this._jwpService.setLoopRange(null, null);
+    this._coreDataStore.requestLoopRange(null, null, 'ui');
   }
 
   navigateMenu(menu: 'main' | 'quality' | 'speed' | 'captions' | 'layout'): void {
@@ -289,6 +291,10 @@ export class VideoBarMobileComponent {
   }
 
   stopDrag(): void {
+    const marker = this.draggingMarker();
+    if (marker) {
+       this._coreDataStore.requestLoopRange(this.loopStart(), this.loopEnd(), 'ui');
+    }
     this.draggingMarker.set(null);
   }
 }

@@ -43,8 +43,14 @@ export class VideoSyncService {
           if (jwId) {
             console.log(`[VideoSyncService] Executing JW Player Seek to ${request.time}s`);
             this._jwpService.seek(request.time);
+            
+            // Synchronisation forcée de Flat.io car JWPlayer ne déclenche pas toujours 
+            // d'événement 'time' instantanément quand il est en pause
+            const isPlaying = this._jwpService.playbackState() === 'playing';
+            this._flatService.syncWithAudio(request.time, isPlaying);
           } else {
-            console.warn('[VideoSyncService] Seek ignored: No jwPlayerId found in CoreData');
+            console.warn('[VideoSyncService] Seek ignored: No jwPlayerId found in CoreData, but syncing Flat.io score anyway');
+            this._flatService.syncWithAudio(request.time, false);
           }
         });
       }
@@ -56,8 +62,14 @@ export class VideoSyncService {
       if (request) {
         untracked(() => {
           if (this._coreData.jwPlayerId()) {
-            console.log(`[VideoSyncService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s]`);
+            console.log(`[VideoSyncService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s] from ${request.source}`);
             this._jwpService.setLoopRange(request.start, request.end);
+            
+            // If the loop was adjusted from the video control bar, or if the loop was cleared globally,
+            // clear the Flat selection so they do not conflict and tilt the sync system.
+            if (request.source === 'ui' || (request.start === null && request.end === null)) {
+                this._flatService.clearSelection();
+            }
           }
         });
       }

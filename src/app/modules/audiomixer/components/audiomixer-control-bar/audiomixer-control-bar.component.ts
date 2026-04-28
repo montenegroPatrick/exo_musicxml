@@ -8,6 +8,7 @@ import { BridgeService } from '@core/services/bridge.service';
 import { AudioMixerStateService } from '../../services/audio-mixer-state.service';
 import { TrackTimePipe } from '../../pipes/track-time.pipe';
 import { LessonMetadataComponent } from '../../../control-bar/components/lesson-metadata/lesson-metadata.component';
+import { CoreDataService } from '@core/services/core-data.service';
 
 @Component({
   selector: 'app-audiomixer-control-bar',
@@ -22,6 +23,7 @@ export class AudioMixerControlBarComponent {
   private _lessonService = inject(LessonService);
   private _bridgeService = inject(BridgeService);
   private _mixerState = inject(AudioMixerStateService);
+  private _coreDataStore = inject(CoreDataService);
 
   // -- Inputs --
 
@@ -93,7 +95,7 @@ export class AudioMixerControlBarComponent {
 
   toggleLoopActive() {
     if (this.isLooping()) {
-      this._audioService.setLoopRange(null, null);
+      this._coreDataStore.requestLoopRange(null, null, 'ui');
     } else {
       // Pause first
       this._audioService.pause();
@@ -101,7 +103,7 @@ export class AudioMixerControlBarComponent {
       // Set pointers
       const start = this.currentTime();
       const end = this.duration();
-      this._audioService.setLoopRange(start, end);
+      this._coreDataStore.requestLoopRange(start, end, 'ui');
     }
   }
 
@@ -129,6 +131,10 @@ export class AudioMixerControlBarComponent {
   }
 
   stopDrag() {
+    const marker = this.draggingMarker();
+    if (marker) {
+       this._coreDataStore.requestLoopRange(this.loopStart(), this.loopEnd(), 'ui');
+    }
     this.draggingMarker.set(null);
   }
 }

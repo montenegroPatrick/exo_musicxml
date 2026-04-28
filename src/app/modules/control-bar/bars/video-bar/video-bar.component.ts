@@ -6,6 +6,7 @@ import { JwpService } from '@core/services/jwp.service';
 import { BridgeService } from '@core/services/bridge.service';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
+import { CoreDataService } from '@core/services/core-data.service';
 import { LessonMetadataComponent } from '../../components/lesson-metadata/lesson-metadata.component';
 import { LessonNavigatorComponent } from '../../components/lesson-navigator/lesson-navigator.component';
 import { CommonModule } from '@angular/common';
@@ -41,6 +42,7 @@ export class VideoBarComponent {
   private readonly _diapoService = inject(DiapoStateService);
   private readonly _elementRef = inject(ElementRef);
   private readonly _router = inject(Router);
+  private readonly _coreDataStore = inject(CoreDataService);
 
   // -- Reactive Data Sources --
   readonly hasVideo = this._lessonService.hasVideo;
@@ -301,18 +303,18 @@ export class VideoBarComponent {
   // -- Loop Methods --
   setLoopA(): void {
     const current = this.currentTime();
-    this._jwpService.setLoopRange(current, this.loopEnd());
+    this._coreDataStore.requestLoopRange(current, this.loopEnd(), 'ui');
   }
 
   setLoopB(): void {
     const current = this.currentTime();
     if (this.loopStart() !== null && current > this.loopStart()!) {
-      this._jwpService.setLoopRange(this.loopStart(), current);
+      this._coreDataStore.requestLoopRange(this.loopStart(), current, 'ui');
     }
   }
 
   clearLoop(): void {
-    this._jwpService.setLoopRange(null, null);
+    this._coreDataStore.requestLoopRange(null, null, 'ui');
   }
 
   navigateMenu(menu: 'main' | 'quality' | 'speed' | 'captions' | 'layout'): void {
@@ -359,6 +361,10 @@ export class VideoBarComponent {
   }
 
   stopDrag(): void {
+    const marker = this.draggingMarker();
+    if (marker) {
+       this._coreDataStore.requestLoopRange(this.loopStart(), this.loopEnd(), 'ui');
+    }
     this.draggingMarker.set(null);
   }
 

@@ -13,7 +13,7 @@
     </div>
 
     <!-- Diapo Section -->
-    <div [ngStyle]="scoreStyles()" class="relative shadow-2xl" [ngClass]="isMobile() ? 'overflow-visible' : 'overflow-hidden'">
+    <div [ngStyle]="scoreStyles()" class="relative shadow-2xl bg-white" [ngClass]="isMobile() ? 'overflow-visible' : 'overflow-hidden'">
       <app-diapo theme="dark" [showControls]="true" [allowZoom]="!isMobile()"></app-diapo>
     </div>
 

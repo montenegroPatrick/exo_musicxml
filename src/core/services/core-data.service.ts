@@ -12,7 +12,7 @@ export class CoreDataService {
 
   // -- Interaction Requests (Agnostic Command Store) --
   private readonly _seekRequest = signal<{ time: number, timestamp: number } | null>(null);
-  private readonly _loopRangeRequest = signal<{ start: number | null, end: number | null, timestamp: number } | null>(null);
+  private readonly _loopRangeRequest = signal<{ start: number | null, end: number | null, source?: string, timestamp: number } | null>(null);
   private readonly _pauseRequest = signal<{ timestamp: number } | null>(null);
   private readonly _playRequest = signal<{ timestamp: number } | null>(null);
   private readonly _rateRequest = signal<{ rate: number, timestamp: number } | null>(null);
@@ -242,8 +242,8 @@ export class CoreDataService {
     this._seekRequest.set({ time, timestamp: Date.now() });
   }
 
-  requestLoopRange(start: number | null, end: number | null): void {
-    this._loopRangeRequest.set({ start, end, timestamp: Date.now() });
+  requestLoopRange(start: number | null, end: number | null, source: string = 'flat'): void {
+    this._loopRangeRequest.set({ start, end, source, timestamp: Date.now() });
   }
 
   clear(): void {

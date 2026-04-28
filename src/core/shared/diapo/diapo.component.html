@@ -90,10 +90,8 @@
   }
 
   <div 
-    class="flex-1 relative h-full"
+    class="flex-1 relative h-full bg-white"
     [ngClass]="{
-      'bg-white': theme() === 'light',
-      'bg-zinc-900': theme() === 'dark',
       'h-auto': isMobile(),
       'h-full': !isMobile()
     }"

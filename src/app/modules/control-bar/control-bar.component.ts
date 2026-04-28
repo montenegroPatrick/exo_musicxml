@@ -7,12 +7,13 @@ import { VideoBarComponent } from './bars/video-bar/video-bar.component';
 import { VideoBarMobileComponent } from './bars/video-bar/mobile/video-bar-mobile.component';
 import { MetronomeBarComponent } from './bars/metronome-bar/metronome-bar.component';
 import { MetronomeBarMobileComponent } from './bars/metronome-bar/mobile/metronome-bar-mobile.component';
+import { MusicXMLBarComponent } from './bars/musicxml-bar/musicxml-bar.component';
 import { HostListener, signal } from '@angular/core';
 
 @Component({
   selector: 'app-control-bar',
   standalone: true,
-  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent, MetronomeBarComponent, MetronomeBarMobileComponent],
+  imports: [CommonModule, AudioMixerBarComponent, VideoBarComponent, VideoBarMobileComponent, MetronomeBarComponent, MetronomeBarMobileComponent, MusicXMLBarComponent],
   template: `
     <div class="relative bg-transparent h-auto w-full">
       @switch (typeControlBar()) {
@@ -39,6 +40,9 @@ import { HostListener, signal } from '@angular/core';
           } @else {
             <app-metronome-bar></app-metronome-bar>
           }
+        }
+        @case ('musicxml') {
+          <app-musicxml-bar></app-musicxml-bar>
         }
         @default {
           @if (isMobile()) {

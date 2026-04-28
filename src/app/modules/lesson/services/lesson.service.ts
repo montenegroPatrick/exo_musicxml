@@ -37,6 +37,7 @@ export class LessonService {
   readonly seq = this._seq.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
+  readonly isMidiMode = this._coreDataStore.isMidiMode;
 
   readonly titre = this._coreDataStore.titre;
   readonly compositeur = this._coreDataStore.compositeur;
@@ -151,8 +152,19 @@ export class LessonService {
 
     // -- XML Loading --
     if (data.url && determineImgType(data) === 'xml') {
-        console.log(`[LessonService] XML Data detected (URL or Content). Setting Store...`);
-        this._coreDataStore.setXmlContent(data.url);
+        if (data.url.startsWith('http')) {
+            console.log(`[LessonService] XML URL detected, fetching content: ${data.url}`);
+            this._http.get(data.url, { responseType: 'text' }).subscribe({
+                next: (xml) => {
+                    console.log(`[LessonService] XML content fetched successfully (${xml.length} chars)`);
+                    this._coreDataStore.setXmlContent(xml);
+                },
+                error: (err) => console.error('[LessonService] Failed to fetch XML content:', err)
+            });
+        } else {
+            console.log(`[LessonService] XML Data detected (Raw Content). Setting Store...`);
+            this._coreDataStore.setXmlContent(data.url);
+        }
     }
   }
 

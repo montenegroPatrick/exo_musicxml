@@ -1,0 +1,80 @@
+<div class="channel-strip flex flex-col items-center h-full bg-[#2a2a2a] border-r border-[#1a1a1a] w-[100px] select-none shadow-inner" [class.master-strip]="isMaster()">
+  <!-- Top Section (Icon + Pan/Out) -->
+  <div class="header-section flex flex-col items-center w-full py-2">
+    <!-- Icon -->
+    <div class="icon-box h-6 flex items-center justify-center">
+      @if (isMaster()) {
+        <i class="pi pi-bolt text-blue-400 text-sm shadow-[0_0_8px_rgba(96,165,250,0.5)]"></i>
+      } @else {
+        <i class="pi" [ngClass]="label().toLowerCase().includes('inst') ? 'pi-palette' : 'pi-waveform'" [style.color]="trackLabelColor()"></i>
+      }
+    </div>
+
+    <!-- Pan/Out Label -->
+    <span class="text-[9px] text-zinc-500 font-bold uppercase mt-2 mb-1">{{ isMaster() ? 'Out' : 'Pan' }}</span>
+
+    <!-- Control Area -->
+    <div class="control-box h-10 flex items-center justify-center">
+      @if (isMaster()) {
+        <div class="w-8 h-8 rounded-full bg-[#1a1a1a] border border-zinc-800 shadow-inner"></div>
+      } @else {
+        <app-knob [value]="pan()" (valueChange)="onPanChange($event)"></app-knob>
+      }
+    </div>
+  </div>
+  
+  <!-- dB Display -->
+  <div class="db-display mb-4">
+    <div class="db-box bg-black border border-zinc-700/50 rounded-sm px-1 min-w-[40px] h-5 flex items-center justify-center shadow-inner">
+      <span class="text-[10px] text-zinc-300 font-mono leading-tight tracking-tight">
+        {{ volume() / 10 - 10 | number:'1.1-1' }}
+      </span>
+    </div>
+    <span class="text-[8px] text-zinc-500 font-bold text-center block mt-1 uppercase tracking-tighter">{{ isMaster() ? 'Master dB' : 'dB' }}</span>
+  </div>
+
+  <!-- Fader and Meter Section -->
+  <div class="flex-1 flex gap-4 items-stretch py-2 h-full justify-center">
+    <!-- Fader -->
+    <div class="fader-track bg-[#111] w-2 rounded-full relative">
+      <p-slider 
+        [ngModel]="volume()"
+        (ngModelChange)="onVolumeChange($event)"
+        orientation="vertical" 
+        [class.master-fader]="isMaster()"
+        class="h-full logic-fader"
+        [min]="0" 
+        [max]="100"
+      ></p-slider>
+    </div>
+    <!-- Meter Placeholder -->
+    @if (showMeter()) {
+        <ng-content select="[meter]"></ng-content>
+    }
+  </div>
+
+  <!-- Solo / Mute Buttons -->
+  <div class="flex gap-1 w-full px-2 py-3 bg-[#222] border-t border-black/20">
+    <button 
+      class="mute-btn flex-1 h-7 text-[10px] font-bold rounded-sm border border-[#333] transition-colors"
+      [class.active]="mute()"
+      (click)="onMuteClick()"
+    >
+      M
+    </button>
+    <button 
+      class="solo-btn flex-1 h-7 text-[10px] font-bold rounded-sm border border-[#333] transition-colors"
+      [class.active]="solo()"
+      (click)="onSoloClick()"
+    >
+      {{ isMaster() ? 'D' : 'S' }}
+    </button>
+  </div>
+
+  <!-- Track Label -->
+  <div class="track-label w-full py-1.5 text-center border-t border-white/10" [style.background-color]="isMaster() ? '#444' : trackLabelColor()">
+    <span class="text-[10px] font-bold text-white uppercase tracking-widest block truncate px-1">
+      {{ label() }}
+    </span>
+  </div>
+</div>

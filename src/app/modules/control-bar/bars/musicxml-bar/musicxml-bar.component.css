@@ -1,0 +1,66 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.audiomixer-control-bar {
+  height: 80px;
+  background-color: #FA5E46;
+  color: white;
+}
+
+.progress-bar-container {
+  transition: height 0.2s ease;
+}
+
+.progress-bar-container:hover {
+  height: 8px;
+}
+
+.progress-bar-container:hover .progress-handle {
+  opacity: 1;
+}
+
+input[type=range] {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 2px solid #FA5E46;
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  border: 2px solid #FA5E46;
+}
+
+.settings-popin {
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

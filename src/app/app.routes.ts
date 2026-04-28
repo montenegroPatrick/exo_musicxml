@@ -83,6 +83,11 @@ export const routes: Routes = [
         data: { hideControlBar: true },
         loadComponent: () => import('./modules/metronome/metronome-page.component').then(m => m.MetronomePageComponent),
       },
+      {
+        path: 'score-musicxml',
+        data: { controlBar: 'musicxml' },
+        loadComponent: () => import('./modules/score-musicxml/score-musicxml.component').then(m => m.ScoreMusicXMLPageComponent),
+      },
       // Root redirect
       {
         path: '',

@@ -32,20 +32,36 @@ private diapoService = inject(DiapoStateService);
   xml = input.required<string>();
   xmlContainer = viewChild.required<ElementRef<HTMLDivElement>>('xmlContainer');
 
-   constructor() {
-  effect(() => {
-    // Cette fonction s'exécutera AUTOMATIQUEMENT à chaque fois que layoutMode() change
-    const mode = this.diapoService.layoutMode(); 
-    untracked(() => {
-        this.flatService.switchLayout();
+  private _lastFlatLayout: 'track' | 'responsive' | 'page' | null = null;
+  private _isInitialized = false;
+
+  constructor() {
+    effect(() => {
+      // Cette fonction s'exécutera AUTOMATIQUEMENT à chaque fois que layoutMode() change
+      const mode = this.diapoService.layoutMode(); 
+      untracked(async () => {
+          if (!this._isInitialized) return;
+          
+          const newFlatLayout = this.diapoService.getFlatLayout();
+          
+          // Si le type de layout (track vs responsive) change vraiment, on re-init
+          if (this._lastFlatLayout && this._lastFlatLayout !== newFlatLayout) {
+              console.log(`[XmlComponent] Layout changed from ${this._lastFlatLayout} to ${newFlatLayout}. Re-initializing embed...`);
+              await this.flatService.initEmbed(this.xmlContainer().nativeElement);
+              await this.flatService.loadMusicXML(this.xml());
+              this._lastFlatLayout = newFlatLayout;
+          }
+      });
     });
-  });
-}
+  }
 
   // Expose service signals
   isXmlReady = this.flatService.isReady;
 
   async ngAfterViewInit(): Promise<void> {
+    // On sauvegarde le layout avec lequel on démarre
+    this._lastFlatLayout = this.diapoService.getFlatLayout();
+
     // 1. Initialiser le conteneur visuel
     await this.flatService.initEmbed(this.xmlContainer().nativeElement);
 
@@ -54,10 +70,8 @@ private diapoService = inject(DiapoStateService);
     
     // 3. Enregistrement pour la synchro audio
     this.audioService.registerListener(this.flatService);
-  }
-
-  async ngOnChanges(): Promise<void> {
-     this.flatService.initEmbed(this.xmlContainer().nativeElement);
+    
+    this._isInitialized = true;
   }
 
   ngOnDestroy(): void {

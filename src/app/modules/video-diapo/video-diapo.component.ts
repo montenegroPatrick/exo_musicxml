@@ -5,6 +5,7 @@ import {
   signal,
   ChangeDetectionStrategy,
   HostListener,
+  OnInit
 } from '@angular/core';
 import { VideoComponent } from '@core/shared/video/video.component';
 import { DiapoComponent } from '@core/shared/diapo/diapo.component';
@@ -34,12 +35,16 @@ export const defaultVideoDiapoLayout: IVideoDiapoLayout = {
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './video-diapo.component.html',
 })
-export class VideoDiapoComponent {
+export class VideoDiapoComponent implements OnInit {
   private readonly _lessonService = inject(LessonService);
   private readonly _jwpService = inject(JwpService);
   private readonly _flatService = inject(FlatService);
   private readonly _videoSyncService = inject(VideoSyncService);
   private readonly _diapoService = inject(DiapoStateService);
+
+  ngOnInit(): void {
+    this._diapoService.initLayoutForRoute('video-diapo');
+  }
 
   // -- Reactive Data Sources --
   readonly typeImg = computed(() => this._lessonService.diapoType() ?? 'eps');

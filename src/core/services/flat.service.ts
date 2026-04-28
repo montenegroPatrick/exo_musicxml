@@ -6,29 +6,22 @@ import {
 } from '@core/interfaces/playback.interface';
 import { LessonService } from '@app/modules/lesson/services/lesson.service';
 import { CoreDataService } from './core-data.service';
-
 import { DiapoStateService } from '@core/shared/diapo/services/diapo.service';
-
+import { ITimeListener } from './audio.service';
 
 export interface RangeSelection {
   left: any;
   right: any;
 }
 
-export interface LoopBounds {
-  start: number | null;
-  end: number | null;
-}
-
 @Injectable({ providedIn: 'root' })
-export class FlatService {
+export class FlatService implements ITimeListener {
   private _lessonService = inject(LessonService);
   private _coreDataStore = inject(CoreDataService);
   private _diapoService = inject(DiapoStateService);
   private embed: any | undefined;
   private readonly TRACK_ID = 'external-1';
   private _lastSyncedTime = 0;
-  private _lastWarningTime = 0;
 
   // Event callbacks
   private cursorPositionCallbacks: Set<(position: any) => void> = new Set();
@@ -41,146 +34,79 @@ export class FlatService {
   private readonly _isReady = signal<boolean>(false);
   private readonly _isPlaying = signal<boolean>(false);
   private readonly _isTrackReady = signal<boolean>(false);
+  private readonly _currentSpeed = signal<number>(1);
+  private readonly _currentLayout = signal<'track' | 'responsive'>('track');
+  private readonly _time = signal<number>(0);
+  private readonly _duration = signal<number>(0);
+
+  private readonly _currentBeat = signal<number>(-1);
+  private readonly _timeInMeasure = signal<number>(4);
 
   // Public readonly signals
   readonly isReady = this._isReady.asReadonly();
   readonly isPlaying = this._isPlaying.asReadonly();
+  readonly isTrackReady = this._isTrackReady.asReadonly();
+  readonly currentSpeed = this._currentSpeed.asReadonly();
+  readonly time = this._time.asReadonly();
+  readonly duration = this._duration.asReadonly();
+  readonly currentBeat = this._currentBeat.asReadonly();
+  readonly timeInMeasure = this._timeInMeasure.asReadonly();
 
   readonly lessonJson = this._coreDataStore.lessonJson;
   readonly diapoType = computed(() => this._lessonService.diapoType());
-  readonly syncPoints = computed(() => {
-    return this._coreDataStore.syncPoints();
-  });
+  readonly syncPoints = computed(() => this._coreDataStore.syncPoints());
   
-  readonly totalTime = computed(() => {
-    return this._coreDataStore.totalTime();
-  });
-
-  // Measure tracking
-  readonly measuresUuids = signal<string[]>([]);
-  readonly nbMeasures = signal<number>(0);
-  readonly measurePoints = signal<number[]>([]);
-  readonly measureDetails = signal<MeasureDetails | null>(null);
-
-  // Loop management
+  readonly totalTime = computed(() => this._coreDataStore.totalTime());
+  readonly parts = signal<any[]>([]);
+  readonly measureDetails = signal<MeasureDetails[]>([]);
   readonly loopMode = signal<boolean>(false);
   readonly loopStart = signal<number | null>(null);
   readonly loopEnd = signal<number | null>(null);
 
-  // -- Interaction Requests (Agnostic) --
-  readonly seekRequest = this._coreDataStore.seekRequest;
-  readonly loopRangeRequest = this._coreDataStore.loopRangeRequest;
-
-  // Speed management
-  private readonly _currentSpeed = signal<number>(1);
-  readonly currentSpeed = this._currentSpeed.asReadonly();
+  private _lastLoadedXml: string | null = null;
 
   constructor() {
-    // 2. Playback Speed Sync
     effect(() => {
-      // NOTE: Le playback rate est géré dynamiquement par les services de synchro
-    });
-
-    // 3. Reactive Track Initialization
-    effect(() => {
-      const sync = this.syncPoints();
-      const ready = this.isReady();
-      if (ready && sync.length > 0 && this.embed) {
-        untracked(() => this.setupTrack());
-      }
-    });
-
-    // 4. Reactive Measure Points Calculation
-    effect(() => {
-      const nb = this.nbMeasures();
-      const sync = this.syncPoints();
-      if (nb > 0 && sync.length >= 2) {
-        untracked(() => this.calculateMeasurePoints());
+      const xml = this._lessonService.xmlContent();
+      if (xml && this.embed && xml !== this._lastLoadedXml) {
+        untracked(() => this.loadMusicXML(xml));
       }
     });
   }
-
-  /**
-   * Main Synchronization Hook
-   */
-  syncWithAudio(audioTime: number, isPlaying: boolean): void {
-    if (!this.embed) return;
-    
-    const sync = this.syncPoints();
-    
-    if (!sync || sync.length === 0) {
-      // console.warn(`[FlatService] Waiting for sync points...`);
-      return;
-    }
-
-    const startTime = sync[0].time;
-
-    // 1. Handle Play/Pause state
-    if (isPlaying && audioTime >= startTime) {
-      if (!this._isPlaying()) {
-        this._isPlaying.set(true);
-        this.embed.play().catch(() => {});
-      }
-    } else {
-      if (this._isPlaying()) {
-        this._isPlaying.set(false);
-        this.embed.pause().catch(() => {});
-      }
-    }
-
-    // 2. Position Sync
-    // Même avant le début (startTime), on force la position à 0 pour éviter la dérive
-    const targetFlatTime = audioTime < startTime ? 0 : audioTime;
-    const delta = Math.abs(targetFlatTime - this._lastSyncedTime);
-    
-    // Seuil réduit à 20ms pour plus de précision
-    if (delta > 0.02) {
-      this._lastSyncedTime = targetFlatTime;
-      this.embed.call('seekTrackTo', { time: targetFlatTime }).catch(() => {});
-    }
-  }
-
 
   async initEmbed(container: HTMLElement, customOptions: any = {}): Promise<void> {
-    if (this.embed) {
-      this.destroyEmbed();
-    }
-    let zoom = 1
-    if(window.innerWidth < 768) {
-      zoom = 0.7
+    if (this.embed) this.destroyEmbed();
+    let zoom = window.innerWidth < 768 ? 0.7 : 0.9;
+    container.innerHTML = '';
+    let layout = (this._diapoService.getFlatLayout() === 'track' || window.innerWidth < 768) ? 'track' : 'responsive';
+    
+    // Forcer le layout responsive sur la route score-musicxml
+    if (this._coreDataStore.isMidiMode()) {
+      layout = 'responsive';
     }
 
-    // On vide physiquement le conteneur pour supprimer l'ancienne iFrame
-    container.innerHTML = '';
-    let layout = 'responsive';
-    if (this._diapoService.getFlatLayout() === 'track' || window.innerWidth < 768) {
-      layout = 'track';
-    }
     this.embed = new Embed(container, {
       layout: layout,
       embedParams: {
         appId: environment.FLAT_APP_ID || '5ee76cf4fcef2d5e274f0f2a',
         layout: layout,
-        respectSystemBreaks: false,
         controlsDisplay: false,
         embedMode: 'view',
         scrolling: true,
         displayLayoutIcons: false,
-        themeSlider: '#afc638',
-        themeCursorV0: '#afc638',
-        themeCursorV1: '#afc638',
         autoplay: false,
-        displayFirstLinePartsNames: false,
-        displayOtherLinesPartsNames: false,
         branding: false,
-        themeControlsBackground: '#afc638',
-        themeIconsPrimary: '#afc638',
+        themeControlsBackground: '#FA5E46',
+        themeIconsPrimary: '#FA5E46',
         themeSelection: 'transparent',
         systemBorders: 'none',
         zoom: zoom,
+        playbackMetronome: true,
         hideminimalheader: true,
         hideTempo: true,
         allowNotationEdit: false,
+        displayFirstLinePartsNames: false,
+        displayOtherLinesPartsNames: false,
         ...customOptions?.embedParams
       },
       ...customOptions
@@ -188,280 +114,275 @@ export class FlatService {
 
     this.setupEventListeners();
   }
-  async switchLayout(): Promise<void> {
-    if (!this.embed || !this.embed.element || !this.embed.element.parentElement) return;
 
-    // 1. Sauvegarde de l'état actuel (Temps et XML)
-    const container = this.embed.element.parentElement;
-    const currentTime = this._lastSyncedTime;
-    const currentXml = await this.embed.getMusicXML();
-    
-    console.log('[FlatService] Force Re-init for layout change at:', currentTime);
-
-    // 2. Destruction et Création de l'iFrame (Reload complet)
-    await this.initEmbed(container);
-
-    // 3. Chargement du XML
-    await this.loadMusicXML(currentXml);
-
-    // 4. Repositionnement (Seek)
-    // On laisse un petit délai pour que l'iFrame soit totalement opérationnelle
-    setTimeout(async () => {
-      await this.seekTrackTo(currentTime);
-      console.log('[FlatService] Repositioning done at:', currentTime);
-    }, 800);
+  private setupEventListeners(): void {
+    if (!this.embed) return;
+    this.embed.on('play', () => { this._isPlaying.set(true); this.playCallbacks.forEach(cb => cb()); });
+    this.embed.on('pause', () => { this._isPlaying.set(false); this.pauseCallbacks.forEach(cb => cb()); });
+    this.embed.on('stop', () => { this._isPlaying.set(false); this._currentBeat.set(-1); this.stopCallbacks.forEach(cb => cb()); });
+    this.embed.on('ready', () => { 
+      this._isReady.set(true); 
+      // Initialize metronome volume to a default audible level
+      this.setMetronomeVolume(80);
+    });
+    this.embed.on('playbackPositionUpdated', (ev: any) => { 
+      const time = ev.seconds ?? ev.currentTime ?? 0;
+      this._time.set(time); 
+    });
+    this.embed.on('playbackPosition', (ev: any) => { 
+      const time = ev.seconds ?? ev.currentTime ?? 0;
+      this._time.set(time); 
+    });
+    this.embed.on('cursorPosition', (pos: any) => {
+      if (pos && pos.beatIdx !== undefined) this._currentBeat.set(pos.beatIdx);
+      this.cursorPositionCallbacks.forEach(cb => cb(pos));
+    });
+    this.embed.on('rangeSelection', (sel: any) => this.rangeSelectionCallbacks.forEach(cb => cb(sel)));
   }
 
   async loadMusicXML(xml: string): Promise<void> {
     if (!this.embed) return;
+    this._lastLoadedXml = xml;
     
     try {
-      let xmlContent = xml.trim();
+      // Parse initial tempo and signature from XML
+      const tempoMatch = xml.match(/<sound\s+[^>]*?tempo="(\d+)"/);
+      if (tempoMatch) {
+          console.log(`[FlatService] Detected tempo in XML: ${tempoMatch[1]} BPM`);
+      }
       
-      // 1. Si c'est une URL, on fetch le contenu texte (Logique originale)
-      if (xmlContent.startsWith('http')) {
-        console.log('[FlatService] Fetching MusicXML from URL:', xmlContent);
-        const response = await fetch(xmlContent);
-        if (!response.ok) throw new Error(`Fetch failed with status ${response.status}`);
-        xmlContent = await response.text();
+      const signatureMatch = xml.match(/<beats>(\d+)<\/beats>/);
+      if (signatureMatch) {
+          const beats = parseInt(signatureMatch[1], 10);
+          console.log(`[FlatService] Detected signature in XML: ${beats} beats`);
+          this._timeInMeasure.set(beats);
       }
 
-      // 2. On s'assure que Flat est prêt pour l'injection
-      if (!this._isReady()) {
-        console.log('[FlatService] Waiting for Flat ready before injection...');
-        await new Promise<void>((resolve) => {
-          this.embed.on('ready', () => resolve());
-          // Timeout de sécurité
-          setTimeout(() => resolve(), 500);
-        });
+      await this.embed.loadMusicXML(xml);
+      
+      // Wait for the score to be processed and ready to answer metadata calls
+      await new Promise(resolve => {
+        const check = async () => {
+            try {
+                await this.embed.call('getNbMeasures');
+                resolve(true);
+            } catch {
+                setTimeout(check, 100);
+            }
+        };
+        check();
+      });
+
+      // 1. Fetch Score Metadata
+      try {
+        const embed = this.embed as any;
+        const parts = await (embed.getParts?.() || embed.call('getParts')).catch(() => []);
+        const measures = await (embed.getNbMeasures?.() || embed.call('getNbMeasures')).catch(() => 0);
+        const playbackDetails = await (embed.getPlaybackDetails?.() || embed.call('getPlaybackDetails')).catch(() => ({ playbackDuration: 0 }));
+
+        this.parts.set(parts);
+        const duration = playbackDetails?.playbackDuration || 0;
+        if (duration) this._duration.set(duration);
+        console.log(`[FlatService] Score metadata: ${measures} measures, ${duration}s duration`);
+      } catch (e) {
+        console.warn('[FlatService] Error fetching metadata:', e);
       }
 
-      await this.embed.loadMusicXML(xmlContent);
-      this._isReady.set(true);
+      // 2. Fetch Measure Details for seek mapping
+      const embed = this.embed as any;
+      const rawDetails = await (embed.getMeasureDetails?.() || embed.call('getMeasureDetails'));
+      const detailsArray = Array.isArray(rawDetails) ? rawDetails : [rawDetails];
+      
+      const mappedDetails = detailsArray.map((m: any) => ({
+        ...m,
+        startTime: m.startTime ?? m.stime,
+        endTime: m.endTime ?? m.etime
+      }));
 
-      // 3. Récupération robuste des mesures (Attente si nécessaire)
-      let uuids: string[] = [];
-      let retries = 0;
-      while (uuids.length === 0 && retries < 10) {
-        uuids = await this.embed.call('getMeasuresUuids');
-        if (uuids.length === 0) {
-          console.log(`[FlatService] Waiting for measures (Retry ${retries + 1})...`);
-          await new Promise(resolve => setTimeout(resolve, 200));
-          retries++;
+      this.measureDetails.set(mappedDetails);
+
+      // Advanced duration calculation (Fallback if duration is still 0)
+      if (this._duration() === 0) {
+        let totalSeconds = 0;
+        const currentBpm = await this.getTempo();
+        
+        // Try to calculate from XML structure
+        const xml = this._lessonService.xmlContent();
+        if (xml) {
+            // Split by measure tags to handle each measure's time signature
+            const measures = xml.match(/<measure[^>]*>([\s\S]*?)<\/measure>/g) || [];
+            let currentBeats = 4;
+            let currentBeatType = 4;
+            
+            measures.forEach(m => {
+                const timeMatch = m.match(/<time[^>]*>[\s\S]*?<beats>(\d+)<\/beats>[\s\S]*?<beat-type>(\d+)<\/beat-type>[\s\S]*?<\/time>/);
+                if (timeMatch) {
+                    currentBeats = parseInt(timeMatch[1], 10);
+                    currentBeatType = parseInt(timeMatch[2], 10);
+                }
+                // Formula: duration = (beats * 60) / (bpm * (beatType / 4))
+                // For quarter-note based (4/4, 3/4, 2/4), it's beats * (60 / bpm)
+                // For eighth-note based (6/8, 12/8), it's beats * (60 / bpm) * (4/8) = beats * (30 / bpm)
+                const measureDuration = (currentBeats * 60) / (currentBpm * (currentBeatType / 4));
+                totalSeconds += measureDuration;
+            });
+        }
+        
+        if (totalSeconds > 0) {
+            console.log(`[FlatService] Calculated precise duration from XML: ${totalSeconds.toFixed(2)}s`);
+            this._duration.set(totalSeconds);
+        } else if (mappedDetails.length > 0) {
+            const last = mappedDetails[mappedDetails.length - 1];
+            if (last.endTime) this._duration.set(last.endTime);
         }
       }
 
-      this.measuresUuids.set(uuids);
-      this.nbMeasures.set(uuids.length);
-
-      console.log('%c[FlatService] EXTRACTED UUIDS COUNT:', 'color: #FFEB3B', uuids.length);
-
-      const details = await this.embed.call('getMeasureDetails');
-      console.log('%c[FlatService] MEASURE DETAILS DUMP:', 'background: #9C27B0; color: white', details?.[0], '... total:', details?.length);
-      this.measureDetails.set(details);
-    } catch (error) {
-      console.error('[FlatService] Error loading MusicXML:', error);
+      this._isReady.set(true);
+      if (!this._coreDataStore.isMidiMode()) {
+        await this.setupTrack();
+      } else {
+        this._isTrackReady.set(true);
+      }
+    } catch (error) { 
+      console.error('[FlatService] loadMusicXML error:', error); 
     }
+  }
+
+  private async setupTrack(): Promise<void> {
+    if (!this.embed) return;
+    const sync = this.syncPoints();
+    if (!sync || sync.length === 0) return;
+    try {
+      await this.embed.call('setTrack', { id: this.TRACK_ID, type: 'external', totalTime: this.totalTime(), synchronizationPoints: sync });
+      await this.embed.call('useTrack', { id: this.TRACK_ID });
+      await this.embed.call('setMasterVolume', { volume: 0 });
+      this._isTrackReady.set(true);
+    } catch (err) { console.error('[FlatService] setupTrack error:', err); }
+  }
+
+  // --- RESTORED COMPATIBILITY METHODS ---
+  
+  async play(): Promise<void> { if (this.embed) await this.embed.play(); }
+  async pause(): Promise<void> { if (this.embed) await this.embed.pause(); }
+  async stop(): Promise<void> { if (this.embed) await this.embed.stop(); }
+
+  async seekTrackTo(time: number): Promise<void> {
+    if (this.embed) await this.embed.call('seekTrackTo', { time });
   }
 
   async setPlaybackSpeed(speed: number): Promise<void> {
     if (!this.embed) return;
+    this._currentSpeed.set(speed);
+    await this.embed.call('setPlaybackSpeed', { speed });
+  }
+
+  async getPlaybackSpeed(): Promise<number> {
+    if (!this.embed) return 1;
+    return await this.embed.call('getPlaybackSpeed');
+  }
+
+  async reinitializeTrackWithSpeed(speed: number): Promise<void> {
+    await this.setPlaybackSpeed(speed);
+  }
+
+  syncWithAudio(audioTime: number, isPlaying: boolean): void {
+    if (!this.embed) return;
+    if (isPlaying && !this._isPlaying()) this.play();
+    else if (!isPlaying && this._isPlaying()) this.pause();
+    this.seekTrackTo(audioTime);
+  }
+
+  async findTimeByMeasure(position: any, useStart = false): Promise<number | null> {
+    if (!this.embed || !position) return null;
+    const details = this.measureDetails();
+    const measure = details[position.measureIdx];
+    return measure ? (useStart ? measure.startTime : measure.endTime) ?? null : null;
+  }
+
+  async getMeasureDetails(): Promise<any> {
+    const details = this.measureDetails();
+    return details && details.length > 0 ? details[0] : details;
+  }
+
+  async setZoom(zoom: number): Promise<void> {
+    if (!this.embed) return;
+    const embed = this.embed as any;
+    await (embed.setZoom?.(zoom) || embed.call('setZoom', zoom));
+  }
+
+  async getTempo(): Promise<number> {
+    // 1. Try to parse from XML first (user requirement)
+    const xml = this._lessonService.xmlContent();
+    if (xml) {
+        const tempoMatch = xml.match(/<sound\s+[^>]*?tempo="(\d+)"/);
+        if (tempoMatch) return parseInt(tempoMatch[1], 10);
+    }
+
+    // 2. Fallback to SDK
+    if (!this.embed) return 120;
+    const embed = this.embed as any;
     try {
-      await this.embed.call('setPlaybackSpeed', { speed });
-    } catch (error) {}
+        const details = await (embed.getMeasureDetails?.() || embed.call('getMeasureDetails'));
+        const detailsArray = Array.isArray(details) ? details : [details];
+        return detailsArray[0]?.tempo?.bpm || 120;
+    } catch {
+        return 120;
+    }
   }
 
-  calculateMeasurePoints(): void {
-    const points: number[] = [];
-    const syncPts = this.syncPoints();
-    const nbMeasures = this.nbMeasures();
-
-    console.log('%c[FlatService] NB MEASURES:', 'background: #FFEB3B; color: black; padding: 2px 5px; font-weight: bold', nbMeasures);
-    console.log('%c[FlatService] SYNC POINTS COUNT:', 'background: #FFEB3B; color: black; padding: 2px 5px', syncPts.length);
-
-    if (syncPts.length < 2 || nbMeasures === 0) {
-      console.warn('[FlatService] Cannot calculate measure points: missing data', { syncPts, nbMeasures });
-      return;
-    }
-
-    const endTime = syncPts[syncPts.length - 1].time;
-
-    for (let i = 0; i < syncPts.length - 1; i++) {
-      const syncPoint = syncPts[i];
-      const nextSyncPoint = syncPts[i + 1];
-      const currentStart = syncPoint.time;
-
-      let nbMeasureToInsert: number;
-      let timeOfMeasure: number;
-
-      if (nextSyncPoint.type === 'end') {
-        nbMeasureToInsert = nbMeasures - (syncPoint.location?.measureIdx ?? 0);
-        timeOfMeasure = (endTime - syncPoint.time) / (nbMeasureToInsert || 1);
-      } else {
-        nbMeasureToInsert = (nextSyncPoint.location?.measureIdx ?? 0) - (syncPoint.location?.measureIdx ?? 0);
-        timeOfMeasure = (nextSyncPoint.time - syncPoint.time) / (nbMeasureToInsert || 1);
-      }
-
-      for (let index = 0; index < nbMeasureToInsert; index++) {
-        points.push(timeOfMeasure * index + currentStart);
-      }
-    }
-
-    // -- Extrapolation Final Phase --
-    // If we have more measures in the score than in the sync points, 
-    // we extrapolate using the remaining time till the end of the video.
-    const lastSyncPoint = syncPts[syncPts.length - 1];
-    if (points.length < nbMeasures && lastSyncPoint) {
-        let durationPerMeasure = 2; // Default fallback
-        const prevSyncPoint = syncPts.length >= 2 ? syncPts[syncPts.length - 2] : null;
-
-        if (prevSyncPoint) {
-            const segDuration = lastSyncPoint.time - prevSyncPoint.time;
-            const segMeasures = (lastSyncPoint.location?.measureIdx ?? 0) - (prevSyncPoint.location?.measureIdx ?? 0);
-            if (segMeasures > 0) durationPerMeasure = segDuration / segMeasures;
-        }
-
-        const remainingMeasures = nbMeasures - (lastSyncPoint.location?.measureIdx ?? 0);
-        const totalDuration = this.totalTime();
-        const remainingTime = totalDuration - lastSyncPoint.time;
-
-        // Si on a encore du temps réel devant nous, on affine
-        if (remainingTime > 0.1 && remainingMeasures > 0) {
-            durationPerMeasure = remainingTime / remainingMeasures;
-            console.log(`[FlatService] Smart Extrapolation: ${remainingMeasures} measures over ${remainingTime.toFixed(2)}s (${durationPerMeasure.toFixed(2)}s/m)`);
-        } else {
-            console.log(`[FlatService] Constant Tempo Extrapolation: ${durationPerMeasure.toFixed(2)}s/m`);
-        }
-
-        const currentPointsCount = points.length;
-        const startMeasureIdx = lastSyncPoint.location?.measureIdx ?? 0;
-        const totalToPush = nbMeasures - currentPointsCount;
+  async setTempo(bpm: number): Promise<void> {
+    if (!this.embed) return;
+    
+    // 1. Update the XML content with new tempo
+    const currentXml = this._lessonService.xmlContent();
+    if (currentXml) {
+        // MusicXML tempo is usually in <sound tempo="..."/> or <metronome>
+        // We'll use a simple regex to update any 'tempo="..."' in <sound> tag
+        let updatedXml = currentXml.replace(/<sound\s+([^>]*?)tempo="(\d+)"/g, `<sound $1tempo="${bpm}"`);
         
-        for (let i = 0; i < totalToPush; i++) {
-            const absoluteMeasureIdx = currentPointsCount + i;
-            const offsetFromLastSync = absoluteMeasureIdx - startMeasureIdx;
-            const calculatedTime = lastSyncPoint.time + (offsetFromLastSync * durationPerMeasure);
-            
-            // On plafonne seulement si on a une vraie durée totale supérieure au dernier point
-            if (totalDuration > lastSyncPoint.time) {
-                points.push(Math.min(calculatedTime, totalDuration));
-            } else {
-                points.push(calculatedTime);
-            }
+        // If not found, try to add it to direction/sound if possible, or just use playbackSpeed as fallback
+        if (updatedXml !== currentXml) {
+            console.log(`[FlatService] XML tempo updated to ${bpm}. Reloading score...`);
+            this._coreDataStore.setXmlContent(updatedXml);
+            // The effect in component or service will reload it
+            return;
         }
     }
 
-    this.measurePoints.set(points);
-    console.log(`[FlatService] Final measurePoints count: ${points.length} (nbMeasures: ${nbMeasures})`);
+    // Fallback: use playback speed ratio if XML update failed
+    console.log(`[FlatService] XML tempo update failed or not found. Using setPlaybackSpeed fallback.`);
+    await this.embed.call('setPlaybackSpeed', bpm / 120); // Assumption: base is 120
   }
 
-  async play(): Promise<void> {
+  async print(): Promise<void> {
+    if (this.embed) await this.embed.call('print');
+  }
+
+  async getParts(): Promise<any[]> {
+    return this.parts();
+  }
+
+  async switchLayout(): Promise<void> {
     if (!this.embed) return;
-    this._isPlaying.set(true);
-    await this.embed.play();
-  }
-
-  async pause(): Promise<void> {
-    if (!this.embed) return;
-    this._isPlaying.set(false);
-    await this.embed.pause();
-  }
-
-  async stop(): Promise<void> {
-    if (!this.embed) return;
-    this._isPlaying.set(false);
-    await this.embed.stop();
-  }
-
-  async forcePlay(): Promise<void> {
-    await this.play();
-  }
-
-  onPlay(cb: () => void) { this.playCallbacks.add(cb); return () => this.playCallbacks.delete(cb); }
-  onPause(cb: () => void) { this.pauseCallbacks.add(cb); return () => this.pauseCallbacks.delete(cb); }
-  onStop(cb: () => void) { this.stopCallbacks.add(cb); return () => this.stopCallbacks.delete(cb); }
-  
-  onCursorPosition(callback: (p: any) => void) { this.cursorPositionCallbacks.add(callback); return () => this.cursorPositionCallbacks.delete(callback); }
-  onRangeSelection(callback: (s: any | null) => void) { this.rangeSelectionCallbacks.add(callback); return () => this.rangeSelectionCallbacks.delete(callback); }
-
-  public setupEventListeners(): void {
-    if (!this.embed) return;
-
-    this.embed.on('play', () => { this._isPlaying.set(true); this.playCallbacks.forEach(cb => cb()); });
-    this.embed.on('pause', () => { this._isPlaying.set(false); this.pauseCallbacks.forEach(cb => cb()); });
-    this.embed.on('stop', () => { this._isPlaying.set(false); this.stopCallbacks.forEach(cb => cb()); });
-    this.embed.on('ready', () => { this._isReady.set(true); });
-
-    this.embed.on('cursorPosition', (async (position: any) => {
-      console.log('%c[FlatService] CURSOR POSITION EVENT:', 'background: #FF5722; color: white; padding: 2px 5px', position);
-      
-      if (this.loopMode()) {
-        console.log('[FlatService] Seek ignored because LoopMode is active');
-        return;
-      }
-
-      const time = await this.findTimeByMeasure(position);
-      console.log(`[FlatService] Measure to Time mapping: ${time}s`);
-
-      if (time !== null) {
-        console.log(`[FlatService] DISPATCHING SEEK REQUEST to CoreData: ${time}s`);
-        this._coreDataStore.requestSeek(time);
-      } else {
-        console.warn('[FlatService] Could not map measure to time. measurePoints length:', this.measurePoints().length);
-      }
-      this.cursorPositionCallbacks.forEach(cb => cb(position));
-    }) as any);
-
-    this.embed.on('rangeSelection', (async (selection: any) => {
-      if (!selection) {
-        this.loopMode.set(false);
-        this.loopStart.set(null);
-        this.loopEnd.set(null);
-        this._coreDataStore.requestLoopRange(null, null);
-        this.rangeSelectionCallbacks.forEach(cb => cb(null));
-        return;
-      }
-
-      // 3. Application logique du temps
-      this.loopMode.set(true);
-      const startTime = await this.findTimeByMeasure(selection.left, false);
-      const endTime = await this.findTimeByMeasure(selection.right, true);
-      
-      if (startTime !== null && endTime !== null) {
-        console.log(`[FlatService] Range selection detected. Requesting Loop: [${startTime}s - ${endTime}s]`);
-        this.loopStart.set(startTime);
-        this.loopEnd.set(endTime);
-        this._coreDataStore.requestLoopRange(startTime, endTime);
-        this.rangeSelectionCallbacks.forEach(cb => cb(selection));
-      }
-    }) as any);
-  }
-
-  async findTimeByMeasure(position: any, isEnd = false): Promise<number | null> {
-    const { measureUuid } = position;
-    const uuids = this.measuresUuids();
-    const points = this.measurePoints();
+    const next = this._currentLayout() === 'track' ? 'responsive' : 'track';
+    this._currentLayout.set(next);
+    console.log(`[FlatService] Switching layout to: ${next}`);
     
-    const measureIndex = uuids.findIndex(e => e === measureUuid);
-    
-    if (measureIndex === -1 || points.length === 0) {
-      console.warn('[FlatService] findTimeByMeasure failed:', { measureIndex, pointsLength: points.length });
-      return null;
+    const embed = this.embed as any;
+    try {
+        if (typeof embed.setLayout === 'function') {
+            await embed.setLayout({ layout: next });
+        } else {
+            await embed.call('setLayout', { layout: next });
+        }
+    } catch (e) {
+        try {
+            await embed.call('setLayout', next);
+        } catch (e2) {
+            // Last resort: layout
+            await embed.call('layout', { layout: next }).catch(() => {});
+        }
     }
-    
-    if (isEnd) {
-      // Pour une fin de sélection, on veut inclure la mesure complète
-      // On prend donc le point de départ de la mesure suivante.
-      const targetIndex = measureIndex + 1;
-      if (targetIndex < points.length) {
-        return points[targetIndex];
-      } else {
-        // C'est la toute dernière mesure de la partition
-        return this.totalTime();
-      }
-    }
-    
-    return points[measureIndex] ?? null;
   }
 
   async getNbMeasures(): Promise<number> {
@@ -469,113 +390,103 @@ export class FlatService {
     return await this.embed.call('getNbMeasures');
   }
 
-  async getMeasureDetails(): Promise<any> {
-    if (!this.embed) return null;
-    return await this.embed.call('getMeasureDetails');
-  }
-
-  async getParts(): Promise<any[]> {
-    if (!this.embed) return [];
-    return await this.embed.call('getParts');
-  }
-
-  async setMetronomeMode(mode: number): Promise<void> {
+  async setMetronomeVolume(volume: number): Promise<void> {
     if (!this.embed) return;
-    await this.embed.call('setMetronomeMode', mode);
-  }
-
-  async setMasterVolume(volume: number): Promise<void> {
-    if (!this.embed) return;
-    await this.embed.call('setMasterVolume', { volume });
-  }
-
-  async setPartVolume(partUuid: string, volume: number): Promise<void> {
-    if (!this.embed) return;
-    await this.embed.call('setPartVolume', { partUuid, volume });
-  }
-
-  async seekTrackTo(time: number): Promise<void> {
-    if (!this.embed) return;
-    await this.embed.call('seekTrackTo', { time }).catch(() => {});
-  }
-
-  async reinitializeTrackWithSpeed(speed: number): Promise<void> {
-    // 1. Capture de l'état actuel et activation de l'overlay
-    const wasPlaying = this._isPlaying();
-    this._coreDataStore.setSyncing(true, 'Synchronisation de la partition...');
-    
-    // 2. Mise en pause immédiate de tous les moteurs
-    this._coreDataStore.requestPause();
-    this._currentSpeed.set(speed);
-
     try {
-      // 3. Réinitialisation technique de l'Embed Flat.io
-      console.log(`[FlatService] Starting re-sync for speed: ${speed}x`);
-      await this.setupTrack();
-      await this.embed.call('setPlaybackSpeed', { speed });
-
-      // 4. Délai de stabilisation minimal (presque imperceptible)
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // 5. Recalage visuel immédiat
-      // On force l'embed à se caler au dernier temps connu pour synchroniser l'affichage
-      await this.embed.call('seekTrackTo', { time: this._lastSyncedTime });
-
-      // 6. Mise à jour de la vitesse du moteur audio via le bus de commande
-      this._coreDataStore.requestRate(speed);
-
-    } catch (err) {
-      console.error('[FlatService] Error during speed reinitialization:', err);
-    } finally {
-      // 7. Retrait de l'overlay
-      this._coreDataStore.setSyncing(false);
-      
-      // 8. Reprise automatique si la lecture était en cours
-      if (wasPlaying) {
-        // Petit délai pour laisser l'interface s'effacer proprement
-        setTimeout(() => {
-          this._coreDataStore.requestPlay();
-        }, 150);
+      // Try both formats as SDK versions may vary
+      await this.embed.call('setMetronomeVolume', { volume });
+    } catch {
+      try {
+        await this.embed.call('setMetronomeVolume', volume);
+      } catch (e) {
+        console.warn('[FlatService] Failed to set metronome volume', e);
       }
     }
   }
 
-  private async setupTrack(): Promise<void> {
-    if (!this.embed) {
-      console.warn('[FlatService] setupTrack cancelled: embed not initialized');
-      return;
-    }
-    const sync = this.syncPoints();
-    if (!sync || sync.length === 0) {
-      console.warn('[FlatService] setupTrack cancelled: no sync points available');
-      return;
-    }
+  async setPartVolume(partUuid: string, volume: number): Promise<void> {
+    if (this.embed) await this.embed.call('setPartVolume', { partUuid, volume });
+  }
 
-    console.log(`[FlatService] Initializing external track with ${sync.length} points...`);
-    
-    try {
-      await this.embed.stop();
-      await this.embed.call('setTrack', {
-        id: this.TRACK_ID,
-        type: 'external',
-        totalTime: this.totalTime(),
-        synchronizationPoints: sync,
-      });
-      await this.embed.call('useTrack', { id: this.TRACK_ID });
-      await this.embed.call('setMasterVolume', { volume: 0 });
-      
-      this._isTrackReady.set(true);
-      console.log('%c[FlatService] External track successfully initialized!', 'color: #4CAF50; font-weight: bold');
-    } catch (err) {
-      console.error('[FlatService] Error during setupTrack:', err);
+  async getPartVolume(partUuid: string): Promise<number> {
+    if (!this.embed) return 100;
+    return await this.embed.call('getPartVolume', partUuid);
+  }
+
+  async setPartMute(partUuid: string, mute: boolean): Promise<void> {
+    if (this.embed) {
+        if (mute) {
+            await this.embed.call('mutePart', { partUuid });
+        } else {
+            await this.embed.call('unmutePart', { partUuid });
+        }
     }
   }
+
+  async setMasterVolume(volume: number): Promise<void> {
+    if (!this.embed) return;
+    const embed = this.embed as any;
+    await (embed.setMasterVolume?.({ volume }) || embed.call('setMasterVolume', { volume }));
+  }
+
+  async getMasterVolume(): Promise<number> {
+    if (!this.embed) return 100;
+    const embed = this.embed as any;
+    return await (embed.getMasterVolume?.() || embed.call('getMasterVolume'));
+  }
+
+  async setMetronomeMode(mode: number): Promise<void> {
+    if (!this.embed) return;
+    try {
+      await this.embed.call('setMetronomeMode', mode);
+    } catch {
+      try {
+        await this.embed.call('setMetronomeMode', { mode });
+      } catch (e) {
+        console.warn('[FlatService] Failed to set metronome mode', e);
+      }
+    }
+  }
+
+  async getMetronomeMode(): Promise<number> {
+    if (!this.embed) return 0;
+    return await this.embed.call('getMetronomeMode');
+  }
+
+  async gotoMeasure(delta: number): Promise<void> {
+    if (!this.embed) return;
+    const embed = this.embed as any;
+    try {
+        const current = await (embed.getCursorPosition?.() || embed.call('getCursorPosition'));
+        if (current) {
+            const targetIdx = Math.max(0, current.measureIdx + delta);
+            // 1. Visual Move
+            await (embed.setCursorPosition?.({ measureIdx: targetIdx }) || embed.call('setCursorPosition', { measureIdx: targetIdx }));
+            
+            // 2. Audio Move (if we have details)
+            const details = this.measureDetails();
+            if (details && details[targetIdx]) {
+                const targetTime = details[targetIdx].startTime;
+                if (targetTime !== undefined) {
+                    await (embed.setPlaybackPosition?.({ seconds: targetTime }) || embed.call('setPlaybackPosition', { seconds: targetTime }));
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[FlatService] gotoMeasure failed:', e);
+    }
+  }
+
+  onCursorPosition(cb: (pos: any) => void): void { this.cursorPositionCallbacks.add(cb); }
+  onRangeSelection(cb: (sel: any | null) => void): void { this.rangeSelectionCallbacks.add(cb); }
+  onPause(cb: () => void): void { this.pauseCallbacks.add(cb); }
+  onStop(cb: () => void): void { this.stopCallbacks.add(cb); }
 
   destroyEmbed(): void {
     if (this.embed) {
       this.embed = undefined;
       this._isReady.set(false);
-      this._isPlaying.set(false);
+      this._isTrackReady.set(false);
     }
   }
 }

@@ -1,0 +1,37 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.audiomixer-control-bar {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #111;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 2px;
+  }
+}
+
+.progress-bar-container {
+  &:hover .progress-fill {
+    height: 5px;
+    top: -1px;
+  }
+}
+
+.progress-fill {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
+}

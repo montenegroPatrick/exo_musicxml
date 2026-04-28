@@ -1,0 +1,36 @@
+<div class="tempo-control-group flex flex-col items-center gap-1.5">
+  
+
+  <!-- Tempo Pill UI -->
+  <div class="flex items-center gap-1 sm:gap-4 px-3 sm:px-5 py-2 bg-black/20 rounded-2xl border border-white/5 shadow-inner group">
+    
+    <!-- Decrement -->
+    <button (mousedown)="startAdjusting(-1)"
+            (mouseup)="stopAdjusting()"
+            (mouseleave)="stopAdjusting()"
+            (touchstart)="startAdjusting(-1); $event.preventDefault()"
+            (touchend)="stopAdjusting()" 
+            class="text-white/80 hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer">
+      <i class="pi pi-minus-circle text-xl"></i>
+    </button>
+
+    <!-- BPM Input & Label -->
+    <div class="flex flex-col items-center min-w-[60px] sm:min-w-[80px]">
+      <input type="number" 
+             [ngModel]="tempo()" 
+             (input)="onBpmInput($event)"
+             class="w-16 sm:w-20 bg-transparent text-2xl sm:text-3xl font-black font-mono text-white text-center focus:outline-none focus:text-[#FA5E46] transition-colors tabular-nums leading-none p-0 border-none">
+      <span class="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] -mt-1">BPM</span>
+    </div>
+
+    <!-- Increment -->
+    <button (mousedown)="startAdjusting(1)"
+            (mouseup)="stopAdjusting()"
+            (mouseleave)="stopAdjusting()"
+            (touchstart)="startAdjusting(1); $event.preventDefault()"
+            (touchend)="stopAdjusting()" 
+            class="text-white/80 hover:text-white transition-colors bg-transparent border-none p-0 cursor-pointer">
+      <i class="pi pi-plus-circle text-xl"></i>
+    </button>
+  </div>
+</div>

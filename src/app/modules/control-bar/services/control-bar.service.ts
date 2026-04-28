@@ -32,13 +32,14 @@ export class ControlBarService {
   constructor() {
     // Sync playback state reactively
     effect(() => {
-      this._isPlaying.set(this._audioService.isPlaying());
+      this._isPlaying.set(this._audioService.isPlaying() || this._flatService.isPlaying());
     }, { allowSignalWrites: true });
 
     // Sync loop logic and time reactively
     effect(() => {
-      const currentTime = this._audioService.currentTime();
-      this._time.set(currentTime);
+      const audioTime = this._audioService.currentTime();
+      const flatTime = this._flatService.time();
+      this._time.set(audioTime || flatTime);
     }, { allowSignalWrites: true });
 
     // Reactive Mode Initialization

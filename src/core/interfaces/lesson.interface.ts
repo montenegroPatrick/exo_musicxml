@@ -1,6 +1,6 @@
-export type LessonModuleType = 'video' | 'video-diapo' | 'diapo' | 'audio-mixer' | 'video-xml';
+export type LessonModuleType = 'video' | 'video-diapo' | 'diapo' | 'audio-mixer' | 'video-xml' | 'score-musicxml';
 export type DiapoType = 'xml' | 'eps' | 'pdf' | 'html';
-export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer' | 'metronome';
+export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer' | 'metronome' | 'musicxml';
 
 export interface ImageItem {
   pos?: number;

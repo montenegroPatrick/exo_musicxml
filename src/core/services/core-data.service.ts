@@ -19,6 +19,7 @@ export class CoreDataService {
 
   private readonly _isSyncing = signal<boolean>(false);
   private readonly _syncMessage = signal<string>('Optimisation de la partition...');
+  private readonly _isMidiMode = signal<boolean>(false);
 
   // -- Public Readonly Accessors --
   readonly lessonJson = this._lessonJson.asReadonly();
@@ -31,11 +32,16 @@ export class CoreDataService {
   readonly rateRequest = this._rateRequest.asReadonly();
   readonly isSyncing = this._isSyncing.asReadonly();
   readonly syncMessage = this._syncMessage.asReadonly();
+  readonly isMidiMode = this._isMidiMode.asReadonly();
 
   /** Set the syncing state with an optional message */
   setSyncing(value: boolean, message: string = 'Optimisation...'): void {
     this._syncMessage.set(message);
     this._isSyncing.set(value);
+  }
+
+  setMidiMode(value: boolean): void {
+    this._isMidiMode.set(value);
   }
 
   /** Request a global audio/video pause */
@@ -105,7 +111,10 @@ export class CoreDataService {
     const search = window.location.search;
     if (search.includes('mock=lesson_playback_xml')) return 'audio-mixer';
     if (search.includes('mock=video-img-xml-sync')) return 'video-xml';
+    if (search.includes('mock=flat-score')) return 'musicxml';
     
+    if (this.isMidiMode()) return 'musicxml';
+
     const lesson = this.lessonJson();
     return lesson ? determineControlBarType(lesson, this.moduleType()) : 'video';
   });

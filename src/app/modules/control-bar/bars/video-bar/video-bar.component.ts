@@ -66,6 +66,7 @@ export class VideoBarComponent {
   sidebarPosition = this._diapoService.sidebarPosition;
   
   isDirectMode = this._lessonService.isDirectMode;
+  isMidiMode = this._lessonService.isMidiMode;
   isMuted = this._jwpService.isMuted;
   videoVolume = this._jwpService.volume;
   
@@ -177,6 +178,11 @@ export class VideoBarComponent {
     const mock = new URLSearchParams(window.location.search).get('mock');
     const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
     this._router.navigate([route], { queryParams: { mock } });
+  }
+
+  switchToMIDI(): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    this._router.navigate(['/score-musicxml'], { queryParams: { mock } });
   }
 
   toggleInfoPopin(): void {

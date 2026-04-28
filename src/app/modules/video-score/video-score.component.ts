@@ -73,7 +73,8 @@ export class VideoScoreComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Les réglages de layout sont désormais persistés via DiapoStateService
+    // Les réglages de layout sont désormais persistés via DiapoStateService par route
+    this._diapoService.initLayoutForRoute('video-score');
   }
 
   readonly isVerticalMode = computed(() => {

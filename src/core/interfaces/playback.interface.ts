@@ -21,6 +21,8 @@ export interface EmbedOptions {
 }
 
 export interface MeasureDetails {
+  startTime?: number;
+  endTime?: number;
   tempo?: {
     bpm: number;
   };

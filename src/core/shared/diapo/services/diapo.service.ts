@@ -15,8 +15,7 @@ import { catchError, map, Observable, tap } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 import { CoreDataService } from '@core/services/core-data.service';
 
-const STORAGE_KEY_LAYOUT = 'ims_diapo_layout_mode';
-const STORAGE_KEY_POSITION = 'ims_diapo_sidebar_position';
+const STORAGE_KEY_SETTINGS = 'ims_diapo_settings';
 
 @Injectable({
   providedIn: 'root',
@@ -31,9 +30,35 @@ export class DiapoStateService {
   private readonly _type = signal<DiapoType | null>(null);
   private readonly _currentImageListPos = signal<number>(1);
   private readonly _viewMode = signal<'fit' | 'zoom'>('fit');
-  private readonly _layoutMode = signal<'standard' | 'expanded' | 'half' | 'track-top' | 'track-bottom'>((localStorage.getItem(STORAGE_KEY_LAYOUT) as any) || 'standard');
-  private readonly _sidebarPosition = signal<'left' | 'right'>((localStorage.getItem(STORAGE_KEY_POSITION) as any) || 'left');
+  private readonly _layoutMode = signal<'standard' | 'expanded' | 'half' | 'track-top' | 'track-bottom'>('standard');
+  private readonly _sidebarPosition = signal<'left' | 'right'>('left');
   private readonly _imageIsReady = signal<boolean>(false);
+
+  // Initialisation par route
+  initLayoutForRoute(routeName: string): void {
+    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    let settings: any = {};
+    if (raw) {
+      try { settings = JSON.parse(raw); } catch(e) {}
+    }
+    const routeSettings = settings[routeName] || { layoutMode: 'standard', sidebarPosition: 'left' };
+    this._layoutMode.set(routeSettings.layoutMode);
+    this._sidebarPosition.set(routeSettings.sidebarPosition);
+  }
+
+  private saveSettings(): void {
+    const routeName = window.location.pathname.split('/')[1] || 'default';
+    const raw = localStorage.getItem(STORAGE_KEY_SETTINGS);
+    let settings: any = {};
+    if (raw) {
+      try { settings = JSON.parse(raw); } catch(e) {}
+    }
+    settings[routeName] = {
+      layoutMode: this._layoutMode(),
+      sidebarPosition: this._sidebarPosition()
+    };
+    localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
+  }
 
   // -- EPS State Signals --
   private readonly _jsonDiapoEps = signal<IDiapo | null>(null);
@@ -107,7 +132,7 @@ export class DiapoStateService {
   setLayoutMode(mode: 'standard' | 'expanded' | 'half' | 'track-top' | 'track-bottom'): void {
     if (this._layoutMode() === mode) return;
     this._layoutMode.set(mode);
-    localStorage.setItem(STORAGE_KEY_LAYOUT, mode);
+    this.saveSettings();
   }
 
   /**
@@ -120,7 +145,7 @@ export class DiapoStateService {
 
   setSidebarPosition(pos: 'left' | 'right'): void {
     this._sidebarPosition.set(pos);
-    localStorage.setItem(STORAGE_KEY_POSITION, pos);
+    this.saveSettings();
   }
 
   setPdfTotalPages(count: number): void {

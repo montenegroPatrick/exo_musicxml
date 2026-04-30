@@ -13,6 +13,10 @@
   }
 }
 
+.theme-control-bar {
+  background: var(--control-bar-bg) !important;
+}
+
 @layer utilities {
   @variants responsive {
   .no-scrollbar::-webkit-scrollbar {

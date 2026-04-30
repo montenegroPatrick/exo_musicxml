@@ -6,7 +6,7 @@
 
 .audiomixer-control-bar {
   height: 80px;
-  background-color: #FA5E46;
+  background: var(--control-bar-bg);
   color: white;
 }
 

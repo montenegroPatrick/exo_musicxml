@@ -5,7 +5,7 @@
 }
 
 .audiomixer-control-bar {
-  background: #FA5E46;
+  background: var(--control-bar-bg);
 }
 
 .progress-bar-container {

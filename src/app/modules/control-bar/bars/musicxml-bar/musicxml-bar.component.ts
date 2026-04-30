@@ -16,7 +16,6 @@ import { LessonService } from '@app/modules/lesson/services/lesson.service';
   imports: [
     CommonModule, 
     FormsModule,
-    TrackTimePipe,
     LessonMetadataComponent,
     MidiTempoComponent
   ],

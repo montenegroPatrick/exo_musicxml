@@ -130,7 +130,7 @@ export class AudioService {
              console.log(`[AudioService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s]`);
              this.setLoopRange(request.start, request.end);
              
-             if (request.source === 'ui' || (request.start === null && request.end === null)) {
+             if (request.source === 'ui') {
                this._flatService.clearSelection();
              }
           }

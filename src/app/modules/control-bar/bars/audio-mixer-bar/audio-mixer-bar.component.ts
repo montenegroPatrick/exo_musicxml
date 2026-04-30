@@ -24,7 +24,6 @@ import { FormsModule } from '@angular/forms';
     SpeedControlComponent,
     VolumeControlComponent,
     UnifiedMixerComponent,
-    TimelineSliderComponent,
     LessonMetadataComponent,
     LessonNavigatorComponent,
     FormsModule

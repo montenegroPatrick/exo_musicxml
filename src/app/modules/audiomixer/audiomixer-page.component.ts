@@ -15,7 +15,7 @@ import { FlatService } from '@core/services/flat.service';
     <div class="relative w-full h-full bg-zinc-950 overflow-hidden flex flex-col">
       <!-- Diapo Section (Score) -->
       <div class="flex-grow min-h-0 relative">
-        <app-diapo theme="light" [showControls]="true" [allowZoom]="true"></app-diapo>
+        <app-diapo theme="light" [showControls]="false" [allowZoom]="true"></app-diapo>
       </div>
 
       <!-- Audio Mixer Section (Collapsible) -->

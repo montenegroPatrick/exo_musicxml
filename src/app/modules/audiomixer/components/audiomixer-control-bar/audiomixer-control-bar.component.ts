@@ -1,4 +1,5 @@
-import { Component, inject, computed, signal, effect, input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, signal, effect, input, ChangeDetectionStrategy, ElementRef, HostListener, untracked } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -34,43 +35,50 @@ export class AudioMixerControlBarComponent {
   playbackRate = this._audioService.playbackRate;
   isDirectMode = this._lessonService.isDirectMode;
   
+  hasVideo = this._lessonService.hasVideo;
+  hasAudio = this._lessonService.hasAudio;
+  isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  
   mixerVisible = this._mixerState.mixerVisible;
   isLooping = this._audioService.isLooping;
   loopStart = this._audioService.loopStart;
   loopEnd = this._audioService.loopEnd;
 
   // -- Local state --
+  private _router = inject(Router);
+  private _elementRef = inject(ElementRef);
+  
   seekbarValue = 0;
   isDragging = signal<boolean>(false);
   draggingMarker = signal<'A' | 'B' | null>(null);
-  private speeds = [0.5, 0.75, 1, 1.25, 1.5];
+  readonly playbackRates = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  
+  activePopin = signal<'none' | 'speed'>('none');
+  private _inactivityTimer: any;
 
   constructor() {
     // Sync seekbar locally when not dragging
     effect(() => {
-      const time = this.currentTime();
+      const current = this.currentTime();
       if (!this.isDragging()) {
-        this.seekbarValue = time;
+        untracked(() => {
+          this.seekbarValue = current;
+        });
       }
     });
   }
 
   togglePlay() {
-    console.log('[ControlBar] togglePlay() click!');
-    this.isPlaying() ? this._audioService.pause() : this._audioService.play();
+    if (this.isPlaying()) this._audioService.pause();
+    else this._audioService.play();
   }
 
-  handlePrevious() {
-    this._bridgeService.sendAction('prev');
-  }
+  handlePrevious() { this._bridgeService.sendAction('prev'); }
 
-  handleNext() {
-    this._bridgeService.sendAction('next');
-  }
+  handleNext() { this._bridgeService.sendAction('next'); }
 
-  handleStep(delta: number) {
-    const newTime = Math.max(0, Math.min(this.duration(), this.currentTime() + delta));
-    this._audioService.seek(newTime);
+  handleStep(offset: number) {
+    this._audioService.seek(this.currentTime() + offset);
   }
 
   startDragging() {
@@ -78,15 +86,60 @@ export class AudioMixerControlBarComponent {
   }
 
   onSeekEnd() {
+    if (this.isLooping()) {
+      const start = this.loopStart();
+      const end = this.loopEnd();
+      if (start !== null && end !== null) {
+        if (this.seekbarValue < start || this.seekbarValue > end) {
+          // If user seeks outside the loop range, clear the loop and the visual selection
+          this._coreDataStore.requestLoopRange(null, null, 'ui');
+          this._audioService.setLoopRange(null, null);
+        }
+      }
+    }
     this._audioService.seek(this.seekbarValue);
     this.isDragging.set(false);
   }
 
-  cycleSpeed() {
-    const current = this.playbackRate();
-    const idx = this.speeds.indexOf(current);
-    const nextIdx = (idx + 1) % this.speeds.length;
-    this._audioService.setPlaybackRate(this.speeds[nextIdx]);
+  setPlaybackRate(rate: number) {
+    this._audioService.setPlaybackRate(rate);
+    this.closePopins();
+  }
+  
+  toggleSpeedPopin(): void {
+    this.activePopin.update(v => v === 'speed' ? 'none' : 'speed');
+    this.startInactivityTimer();
+  }
+
+  closePopins(): void {
+    this.activePopin.set('none');
+  }
+
+  startInactivityTimer(): void {
+    if (this._inactivityTimer) clearTimeout(this._inactivityTimer);
+    this._inactivityTimer = setTimeout(() => {
+      this.closePopins();
+    }, 15000);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.activePopin() === 'none') return;
+    const clickedInside = this._elementRef.nativeElement.contains(event.target);
+    if (!clickedInside) {
+      this.closePopins();
+    }
+  }
+
+  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    this._router.navigate([route], { queryParams: { mock } });
+  }
+
+  switchToMIDI(): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    this._router.navigate(['/score-musicxml'], { queryParams: { mock } });
   }
 
   toggleMixer() {
@@ -133,7 +186,20 @@ export class AudioMixerControlBarComponent {
   stopDrag() {
     const marker = this.draggingMarker();
     if (marker) {
-       this._coreDataStore.requestLoopRange(this.loopStart(), this.loopEnd(), 'ui');
+       const start = this.loopStart();
+       const end = this.loopEnd();
+       // Set the loop range directly to bypass the UI request that triggers clearSelection
+       if (start !== null && end !== null) {
+           this._audioService.setLoopRange(start, end);
+           
+           // Snap playhead to loop start if dragged A, or if we are before the loop
+           const current = this.currentTime();
+           if (marker === 'A' || current < start) {
+             this._audioService.seek(start);
+           } else if (marker === 'B' && current > end) {
+             this._audioService.seek(start);
+           }
+       }
     }
     this.draggingMarker.set(null);
   }

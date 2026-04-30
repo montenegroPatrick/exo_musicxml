@@ -38,6 +38,7 @@ export class FlatService implements ITimeListener {
   private readonly _currentLayout = signal<'track' | 'responsive'>('track');
   private readonly _time = signal<number>(0);
   private _isSyncing = false;
+  private _isUserSelecting = false;
   private _measureNotesCache: Record<string, any[]> = {};
   private readonly _duration = signal<number>(0);
 
@@ -131,23 +132,63 @@ export class FlatService implements ITimeListener {
 
   private setupEventListeners(): void {
     if (!this.embed) return;
+    try {
+        console.log('[Flat] embed methods:', Object.keys(Object.getPrototypeOf(this.embed)), Object.keys(this.embed));
+    } catch(e) {}
     this.embed.on('play', () => { this._isPlaying.set(true); this.playCallbacks.forEach(cb => cb()); });
     this.embed.on('pause', () => { this._isPlaying.set(false); this.pauseCallbacks.forEach(cb => cb()); });
     this.embed.on('stop', () => { this._isPlaying.set(false); this._currentBeat.set(-1); this.stopCallbacks.forEach(cb => cb()); });
-    this.embed.on('ready', () => { 
-      this._isReady.set(true); 
-      // Initialize metronome volume to a default audible level
-      this.setMetronomeVolume(80);
-    });
-    this.embed.on('playbackPositionUpdated', (ev: any) => { 
-      const time = ev.seconds ?? ev.currentTime ?? 0;
-      this._time.set(time); 
-    });
+    this.embed.on('scoreLoaded', async () => {
+      this._isReady.set(true);
+
+   // On crée un wrapper pour simuler le "once"
+   const handlePlay = async () => {
+     // 1. On se désabonne immédiatement pour ne pas boucler
+     this.embed.off('play', handlePlay);
+
+     // 2. On attend un peu que l'audio s'initialise
+     await new Promise(resolve => setTimeout(resolve, 50));
+
+     try {
+       // 3. On pause
+       await this.embed.pause();
+
+       // 4. On replace le curseur
+       await this.embed.setCursorPosition({
+         measureIdx: 0,
+         noteIdx: 0
+       });
+       console.log('[Flat] Initialisation réussie');
+     } catch (err) {
+       console.error('[Flat] Erreur pendant le reset:', err);
+     }
+   };
+
+   // On s'abonne à l'event play
+   this.embed.on('play', handlePlay);
+
+   // On lance la machine
+   try {
+     await this.embed.play();
+   } catch (err) {
+     console.error('[Flat] play() failed:', err);
+   }
+ });
     this.embed.on('playbackPosition', (ev: any) => { 
       const time = ev.seconds ?? ev.currentTime ?? 0;
       this._time.set(time); 
     });
+    let cursorPositionTimeout: any;
+    let rangeSelectionTimeout: any;
+
     this.embed.on('cursorPosition', async (pos: any) => {
+      // Protection immédiate : empêcher syncWithAudio (déclenché par requestPause) 
+      // de faire un seekTrackTo qui casserait le début d'un glissé (drag)
+      this._isUserSelecting = true;
+
+      // Pause globale (Audio et Vidéo)
+      this._coreDataStore.requestPause();
+
       console.log('[FlatService] cursorPosition event received:', pos, '_isSyncing:', this._isSyncing);
       if (pos && pos.beatIdx !== undefined) this._currentBeat.set(pos.beatIdx);
       this.cursorPositionCallbacks.forEach(cb => cb(pos));
@@ -155,22 +196,29 @@ export class FlatService implements ITimeListener {
       // Feature 1: Clic sur une note -> seek
       // On ignore l'événement s'il est déclenché par notre propre synchronisation
       if (!this._isSyncing && pos) {
-         this._isSyncing = true;
-         try {
-             const time = await this.findTimeByMeasure(pos);
-             console.log('[FlatService] Time resolved for cursorPosition:', time);
-             if (time !== null) {
-                 this._coreDataStore.requestSeek(time);
-             }
-         } catch (e) { console.error('[FlatService] cursorPosition error:', e); }
-         setTimeout(() => { this._isSyncing = false; }, 500);
+         if (cursorPositionTimeout) clearTimeout(cursorPositionTimeout);
+         
+         cursorPositionTimeout = setTimeout(async () => {
+             this._isUserSelecting = false; // Relâcher la protection si c'était juste un clic
+             this._isSyncing = true;
+             try {
+                 const time = await this.findTimeByMeasure(pos);
+                 if (time !== null) {
+                     this._coreDataStore.requestSeek(time);
+                 }
+             } catch (e) { console.error('[FlatService] cursorPosition error:', e); }
+             setTimeout(() => { this._isSyncing = false; }, 500);
+         }, 150); // Attendre un peu pour voir si ce n'est pas le début d'un "drag" (rangeSelection)
       }
     });
 
-    let rangeSelectionTimeout: any;
-
     this.embed.on('rangeSelection', async (sel: any) => {
       this.rangeSelectionCallbacks.forEach(cb => cb(sel));
+      
+      this._isUserSelecting = true;
+
+      // Annuler le clic simple car on est en train de faire une sélection
+      if (cursorPositionTimeout) clearTimeout(cursorPositionTimeout);
       
       // Feature 2: Sélection d'une partie -> set loop
       // Utilisation d'un debounce (trailing) pour ne pas spammer la vidéo pendant le glissement
@@ -183,6 +231,8 @@ export class FlatService implements ITimeListener {
               try {
                  const embed = this.embed as any;
                  
+                 console.log('[FlatService] rangeSelection sel.left:', JSON.stringify(sel.left), 'sel.right:', JSON.stringify(sel.right));
+                 
                  let start = await this.findTimeByMeasure(sel.left);
                  let end = await this.findTimeByMeasure(sel.right, true);
 
@@ -190,9 +240,11 @@ export class FlatService implements ITimeListener {
                  
                  // If the user just clicked a single note, sel.left and sel.right are identical.
                  // This is effectively a "deselect range" or "simple seek" action, not a loop creation.
-                 const isSingleNote = sel.left.measureUuid === sel.right.measureUuid && sel.left.noteIdx === sel.right.noteIdx;
+                const isSingleNote = sel.left.measureUuid === sel.right.measureUuid &&
+                  sel.left.noteIdx === sel.right.noteIdx &&
+                  sel.left.noteIdx !== undefined;
                  
-                 if (end === null || end === start || isSingleNote) {
+                 if (end === null || end === start || isSingleNote || Math.abs(end - start) < 0.5) {
                      this._coreDataStore.requestLoopRange(null, null);
                  } else if (start !== undefined && end !== undefined && end > start) {
                      this._coreDataStore.requestLoopRange(start, end);
@@ -204,6 +256,8 @@ export class FlatService implements ITimeListener {
               // Désélection -> annuler la boucle
               this._coreDataStore.requestLoopRange(null, null);
           }
+          
+          setTimeout(() => { this._isUserSelecting = false; }, 300); // Wait for sync propagation
       }, 150); // 150ms debounce
     });
   }
@@ -211,7 +265,7 @@ export class FlatService implements ITimeListener {
   async clearSelection(): Promise<void> {
     if (!this.embed || !this._lastLoadedXml) return;
     try {
-        console.log('[FlatService] clearSelection requested, stopping internal loop and re-initializing score...');
+        console.trace('[FlatService] clearSelection requested, stopping internal loop and re-initializing score...');
         this._isSyncing = true;
         const embed = this.embed as any;
         
@@ -252,8 +306,8 @@ export class FlatService implements ITimeListener {
       await new Promise(resolve => {
         const check = async () => {
             try {
-                const uuids = await this.embed.call('getMeasuresUuids');
-                if (uuids && uuids.length > 0) {
+              const nbMeasures = await this.embed.getNbMeasures();
+              if (nbMeasures && nbMeasures > 0) {
                     resolve(true);
                 } else {
                     setTimeout(check, 100);
@@ -269,15 +323,20 @@ export class FlatService implements ITimeListener {
       try {
         const embed = this.embed as any;
         const parts = await (embed.getParts?.() || embed.call('getParts')).catch(() => []);
-        const measures = await (embed.getNbMeasures?.() || embed.call('getNbMeasures')).catch(() => 0);
-        const measuresUuids = await (embed.getMeasuresUuids?.() || embed.call('getMeasuresUuids')).catch(() => []);
-        const playbackDetails = await (embed.getPlaybackDetails?.() || embed.call('getPlaybackDetails')).catch(() => ({ playbackDuration: 0 }));
+
+        let measures = await embed.getNbMeasures().catch(() => 0);
+
+        if (measures === 0) {
+          const syncPts = this.syncPoints() as any[];
+          if (syncPts && syncPts.length > 0) {
+            const lastWithLocation = [...syncPts].reverse().find((s: any) => s.location && s.location.measureIdx !== undefined);
+            measures = lastWithLocation ? lastWithLocation.location.measureIdx + 1 : 0;
+          }
+        }
 
         this.parts.set(parts);
         this.nbMeasures.set(measures);
-        const duration = playbackDetails?.playbackDuration || 0;
-        if (duration) this._duration.set(duration);
-        console.log(`[FlatService] UUIDS:`, measuresUuids, `Score metadata: ${measures} measures, ${duration}s duration`);
+        console.log(`[FlatService] Score metadata: ${measures} measures`);
       } catch (e) {
         console.warn('[FlatService] Error fetching metadata:', e);
       }
@@ -333,8 +392,33 @@ export class FlatService implements ITimeListener {
     if (!this.embed) return;
     const sync = this.syncPoints();
     if (!sync || sync.length === 0) return;
+    
+    // Le SDK Flat considère que `measureIdx` dans les sync points est l'index "joué" (playback)
+    // et non l'index visuel (score). S'il y a des reprises, measureIdx 65 correspondra à
+    // la 66ème mesure jouée (qui peut être la mesure 62 visuellement !).
+    // Pour forcer l'alignement visuel, il faut utiliser les UUIDs des mesures.
+    const embed = this.embed as any;
+    const uuids = await (embed.getMeasuresUuids?.() || embed.call('getMeasuresUuids')).catch(() => []);
+    console.log('[FlatService] setupTrack got uuids length:', uuids ? uuids.length : 0);
+
+    const measurePoints = this._getMeasurePoints();
+    const exhaustiveSync: any[] = measurePoints.map((time, idx) => {
+        const location: any = {};
+        if (uuids && uuids[idx]) {
+            location.measureUuid = uuids[idx];
+        } else {
+            location.measureIdx = idx; // Fallback bête
+        }
+        return { type: 'measure', time: time, location };
+    });
+    
+    const endPoint = sync.find((s: any) => s.type === 'end');
+    if (endPoint) exhaustiveSync.push(endPoint);
+
+    console.log('[FlatService] setupTrack exhaustiveSync length:', exhaustiveSync.length, 'last 5:', exhaustiveSync.slice(-5));
+
     try {
-      await this.embed.call('setTrack', { id: this.TRACK_ID, type: 'external', totalTime: this.totalTime(), synchronizationPoints: sync });
+      await this.embed.call('setTrack', { id: this.TRACK_ID, type: 'external', totalTime: this.totalTime(), synchronizationPoints: exhaustiveSync });
       await this.embed.call('useTrack', { id: this.TRACK_ID });
       await this.embed.call('setMasterVolume', { volume: 0 });
       this._isTrackReady.set(true);
@@ -368,15 +452,24 @@ export class FlatService implements ITimeListener {
 
   async syncWithAudio(audioTime: number, isPlaying: boolean): Promise<void> {
     if (!this.embed) return;
-    this._isSyncing = true;
     try {
-        if (isPlaying && !this._isPlaying()) await this.embed.play();
-        else if (!isPlaying && this._isPlaying()) await this.embed.pause();
+      // 1. D'abord, recaler Flat si le décalage est important (> 0.5s)
+      const flatTime = this._time();
+      if (!this._isUserSelecting && Math.abs(flatTime - audioTime) > 0.5) {
+        this._isSyncing = true;
         await this.seekTrackTo(audioTime);
+        setTimeout(() => { this._isSyncing = false; }, 500);
+      }
+
+      // 2. Ensuite, lancer ou mettre en pause la lecture
+      if (isPlaying && !this._isPlaying()) {
+          await this.embed.play();
+      } else if (!isPlaying && this._isPlaying()) {
+          await this.embed.pause();
+      }
     } catch (e) {
         console.error('[FlatService] syncWithAudio error:', e);
-    } finally {
-        setTimeout(() => this._isSyncing = false, 500);
+        this._isSyncing = false;
     }
   }
 
@@ -398,99 +491,107 @@ export class FlatService implements ITimeListener {
         return this._measurePointsCache;
     }
 
-    const points: number[] = [];
-    let endTime = syncPoints[syncPoints.length - 1].time;
+    const points: number[] = new Array(nbMeasures).fill(undefined);
     
-    for (let i = 0; i < syncPoints.length - 1; i++) {
-        const syncPoint = syncPoints[i];
-        const nextSyncPoint = syncPoints[i + 1];
-        const currentStart = syncPoint.time;
-        
-        let nbMeasureToInsert = 0;
-        let timeOfMeasure = 0;
-        
-        if ((!nextSyncPoint || nextSyncPoint.type === 'end') && syncPoint.type !== 'end') {
-            nbMeasureToInsert = nbMeasures - (syncPoint.location?.measureIdx ?? 0);
-            if (nbMeasureToInsert > 0) timeOfMeasure = (endTime - syncPoint.time) / nbMeasureToInsert;
-        } else {
-            nbMeasureToInsert = (nextSyncPoint.location?.measureIdx ?? 0) - (syncPoint.location?.measureIdx ?? 0);
-            if (nbMeasureToInsert > 0) timeOfMeasure = (nextSyncPoint.time - syncPoint.time) / nbMeasureToInsert;
+    // 1. Fill known points
+    for (const sp of syncPoints) {
+        if (sp.location && sp.location.measureIdx !== undefined && sp.location.measureIdx < nbMeasures) {
+            points[sp.location.measureIdx] = sp.time;
+        }
+    }
+    
+    // Default measure 0 to time 0 if missing
+    if (points[0] === undefined) {
+        points[0] = syncPoints.length > 0 ? syncPoints[0].time : 0;
+    }
+
+    // 2. Interpolate gaps
+    let lastKnownIdx = 0;
+    let lastKnownTime = points[0];
+    
+    for (let i = 1; i < nbMeasures; i++) {
+        if (points[i] !== undefined) {
+            const gap = i - lastKnownIdx;
+            const timeGap = points[i] - lastKnownTime;
+            for (let j = lastKnownIdx + 1; j < i; j++) {
+                points[j] = lastKnownTime + (timeGap * (j - lastKnownIdx) / gap);
+            }
+            lastKnownIdx = i;
+            lastKnownTime = points[i];
+        }
+    }
+    
+    // 3. Extrapolate any remaining measures at the end
+    if (lastKnownIdx < nbMeasures - 1) {
+        let endTime = this.totalTime() || 0;
+        const endPoint = syncPoints.find(sp => sp.type === 'end');
+        if (endPoint) {
+            endTime = endPoint.time;
         }
         
-        for (let idx = 0; idx < nbMeasureToInsert; idx++) {
-            points.push(currentStart + (timeOfMeasure * idx));
+        const gap = nbMeasures - lastKnownIdx;
+        const timeGap = endTime - lastKnownTime;
+        for (let j = lastKnownIdx + 1; j < nbMeasures; j++) {
+             points[j] = lastKnownTime + (timeGap * (j - lastKnownIdx) / gap);
         }
     }
     
     this._measurePointsCache = points;
-    console.log('[FlatService] _getMeasurePoints generated:', points.length, 'points. First 5:', points.slice(0, 5), 'syncPoints used:', syncPoints);
+    console.log('[FlatService] _getMeasurePoints generated:', points.length, 'points. First 5:', points.slice(0, 5));
     return points;
   }
 
   async findTimeByMeasure(position: any, isEnd = false): Promise<number | null> {
-    console.log('[FlatService] findTimeByMeasure called with position:', position, 'isEnd:', isEnd);
     if (!this.embed || !position) {
-        console.log('[FlatService] findTimeByMeasure aborted: no embed or position');
         return null;
     }
-    
-    // Find index by measureUuid
-    const embed = this.embed as any;
+
     let measureIndex = position.measureIdx;
-    let measureUuid = position.measureUuid;
-
-    const uuids = await (embed.getMeasuresUuids?.() || embed.call('getMeasuresUuids')).catch(() => []);
     
-    if (measureUuid && measureIndex === undefined) {
-        measureIndex = uuids.indexOf(measureUuid);
-    } else if (measureIndex !== undefined && !measureUuid) {
-        measureUuid = uuids[measureIndex];
+    // Si l'événement (comme rangeSelection) ne fournit que le measureUuid, on retrouve l'index
+    if (measureIndex === undefined && position.measureUuid) {
+        const embed = this.embed as any;
+        const uuids = await (embed.getMeasuresUuids?.() || embed.call('getMeasuresUuids')).catch(() => []);
+        measureIndex = uuids.indexOf(position.measureUuid);
     }
 
-    if (measureIndex === -1 || measureIndex === undefined || !measureUuid) {
-        console.log('[FlatService] findTimeByMeasure aborted: invalid measureIndex or measureUuid', { measureIndex, measureUuid });
+    if (measureIndex === -1 || measureIndex === undefined) {
         return null;
-    }
-
-    let notes: any[] = [];
-    if (this._measureNotesCache[measureUuid]) {
-      notes = this._measureNotesCache[measureUuid];
-    } else {
-      let index = 0;
-      const maxAttempts = 50;
-      while (index < maxAttempts) {
-        try {
-          const noteData = await embed.call('getNoteData', {
-            measureUuid: measureUuid,
-            noteIdx: index,
-            voiceUuid: position.voiceUuid,
-            partUuid: position.partUuid
-          });
-          if (!noteData) break;
-          notes.push(noteData);
-          index++;
-          await new Promise(resolve => setTimeout(resolve, 10)); // tiny delay
-        } catch (e) { break; }
-      }
-      this._measureNotesCache[measureUuid] = notes;
     }
 
     const measurePoints = this._getMeasurePoints();
     const startOfMeasure = measurePoints[measureIndex] ?? 0;
     
-    if (notes.length > 0 && position.noteIdx !== undefined) {
-      const endOfMeasure = (measureIndex < measurePoints.length - 1) ? measurePoints[measureIndex + 1] : startOfMeasure;
-      if (startOfMeasure !== undefined && endOfMeasure !== undefined) {
-         const subdivisionsPerMeasure = notes.length;
-         const timeOfOneNote = (endOfMeasure - startOfMeasure) / subdivisionsPerMeasure;
-         // Si isEnd est vrai, on veut la fin de la note (noteIdx + 1), sinon le début de la note (noteIdx)
-         const targetIdx = isEnd ? position.noteIdx + 1 : position.noteIdx;
-         const timeOfNote = targetIdx * timeOfOneNote;
-         return startOfMeasure + timeOfNote;
-      }
+    // Pour l'instant, on n'utilise plus les uuids pour récupérer les notes car
+    // getMeasuresUuids fait crasher le SDK Flat sur certaines partitions.
+    // On se repose donc sur measurePoints (qui est très fiable) pour trouver le temps.
+
+    // Si l'utilisateur clique sur une note spécifique (ex: milieu de mesure)
+    // On pourrait utiliser getNoteData, mais comme partUuid est souvent invalide,
+    // on fait une interpolation simple basée sur noteIdx si on l'a, sinon on prend le début/fin de la mesure.
+    let endOfMeasure = measurePoints[measureIndex + 1];
+
+    if (isEnd && endOfMeasure === undefined) {
+      // C'est la dernière mesure de la partition, on utilise le temps total
+      endOfMeasure = this.totalTime() || startOfMeasure;
+    }
+
+    if (position.noteIdx !== undefined && position.noteIdx > 0 && endOfMeasure !== undefined) {
+      // Pour l'interpolation, on ne connait pas le nombre exact de notes dans la mesure.
+      // On suppose 4 par défaut, MAIS on s'assure de ne jamais dépasser endOfMeasure !
+      // Plus la noteIdx est grande, plus on se rapproche de endOfMeasure sans jamais le franchir.
+      const timeGap = endOfMeasure - startOfMeasure;
+      const fallbackMaxNotes = Math.max(position.noteIdx + 1, 4); // S'adapte si la mesure a beaucoup de notes
+      const timeOfOneNote = timeGap / fallbackMaxNotes;
+      
+      const targetIdx = isEnd ? position.noteIdx + 1 : position.noteIdx;
+      const interpolatedTime = startOfMeasure + (targetIdx * timeOfOneNote);
+      
+      // Sécurité absolue : on ne dépasse jamais la fin de la mesure
+      return Math.min(interpolatedTime, endOfMeasure - 0.01);
     }
     
-    return isEnd ? (measurePoints[measureIndex + 1] ?? startOfMeasure) : startOfMeasure;
+    return isEnd ? (endOfMeasure ?? startOfMeasure) : startOfMeasure;
   }
 
   async getMeasureDetails(): Promise<any> {
@@ -660,7 +761,7 @@ export class FlatService implements ITimeListener {
         if (current) {
             const targetIdx = Math.max(0, current.measureIdx + delta);
             // 1. Visual Move
-            await (embed.setCursorPosition?.({ measureIdx: targetIdx }) || embed.call('setCursorPosition', { measureIdx: targetIdx }));
+          await (embed.setCursorPosition?.({ measureIdx: targetIdx }));
             
             // 2. Audio Move (using measurePoints)
             const points = this._getMeasurePoints();

@@ -65,9 +65,8 @@ export class VideoSyncService {
             console.log(`[VideoSyncService] Loop Range requested via CoreData: [${request.start}s - ${request.end}s] from ${request.source}`);
             this._jwpService.setLoopRange(request.start, request.end);
             
-            // If the loop was adjusted from the video control bar, or if the loop was cleared globally,
-            // clear the Flat selection so they do not conflict and tilt the sync system.
-            if (request.source === 'ui' || (request.start === null && request.end === null)) {
+            // If the loop was adjusted from the video control bar, clear the Flat selection.
+            if (request.source === 'ui') {
                 this._flatService.clearSelection();
             }
           }

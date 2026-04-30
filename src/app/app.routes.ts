@@ -25,8 +25,8 @@ export const routes: Routes = [
       },
       {
         path: 'playback-diapo',
-        data: { controlBar: 'audio-mixer' },
-        loadComponent: () => import('./modules/audiomixer/audiomixer-page.component').then(m => m.AudioMixerPageComponent),
+        data: { controlBar: 'audiomixer' },
+        loadComponent: () => import('./modules/playback-diapo/playback-diapo.component').then(m => m.PlaybackDiapoComponent),
       },
       {
         path: 'video',
@@ -52,11 +52,6 @@ export const routes: Routes = [
         path: 'metronome-diapo',
         data: { controlBar: 'metronome' },
         loadComponent: () => import('./modules/metronome-diapo/metronome-diapo.component').then(m => m.MetronomeDiapoComponent),
-      },
-      {
-        path: 'playback-diapo',
-        data: { controlBar: 'audiomixer' },
-        loadComponent: () => import('./modules/playback-diapo/playback-diapo.component').then(m => m.PlaybackDiapoComponent),
       },
       {
         path: 'tap-rythm',

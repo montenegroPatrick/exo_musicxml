@@ -6,7 +6,8 @@
       <div class="fixed inset-0 z-[10] bg-black/[0.01]" (click)="closePopins()"></div>
     }
 
-    <!-- SEEK BAR -->
+    <!-- SEEK BAR (Hidden in pure MIDI mode because duration is unknown) -->
+    @if (!isMidiMode()) {
     <div class="progress-bar-container group absolute top-0 left-0 w-full h-[3px] bg-white/20 cursor-pointer overflow-visible z-[100]">
       <input type="range"
              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
@@ -29,6 +30,7 @@
            [style.left.%]="(currentTime() / (duration() || 1)) * 100">
       </div>
     </div>
+    }
 
     <div class="grid grid-cols-3 items-center w-full h-full px-6 gap-6">
       
@@ -136,7 +138,7 @@
                          [max]="200" 
                          [ngModel]="zoomValue()" 
                          (input)="onZoomSliderChange($any($event.target).value)"
-                         class="w-full h-1 bg-white rounded-full appearance-none cursor-pointer accent-[#FA5E46] outline-none">
+                         class="w-full h-1 bg-white rounded-full cursor-pointer accent-[#FA5E46]">
                 </div>
               </div>
 

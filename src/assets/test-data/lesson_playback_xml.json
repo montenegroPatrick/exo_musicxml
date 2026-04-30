@@ -23,13 +23,6 @@
             }
         },
         {
-            "type": "measure",
-            "time": 97.48380952380953,
-            "location": {
-                "measureIdx": 63
-            }
-        },
-        {
             "type": "end",
             "time": 104.9
         }

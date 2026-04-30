@@ -20,6 +20,8 @@ export class MidiTempoComponent implements OnInit, OnDestroy {
   private _interval: any;
 
   private _tempoInterval: any;
+  private _isAdjusting = false;
+  private _lastAdjustmentTime = 0;
 
   ngOnInit() {
     // Initial sync
@@ -28,6 +30,10 @@ export class MidiTempoComponent implements OnInit, OnDestroy {
     });
 
     this._interval = setInterval(async () => {
+      // Don't sync from engine if user is adjusting or just finished adjusting (wait 3s)
+      if (this._isAdjusting || Date.now() - this._lastAdjustmentTime < 3000) {
+        return;
+      }
       const t = await this._flatService.getTempo();
       if (t > 0 && t !== this.tempo()) {
         this.tempo.set(Math.round(t));
@@ -41,26 +47,37 @@ export class MidiTempoComponent implements OnInit, OnDestroy {
   }
 
   adjustTempo(delta: number) {
-    if (this._flatService.isPlaying()) {
-      this._flatService.pause();
-    }
     const next = Math.max(20, Math.min(300, this.tempo() + delta));
     this.tempo.set(next);
-    this._flatService.setTempo(next);
   }
 
   startAdjusting(delta: number) {
+    this._isAdjusting = true;
+    if (this._flatService.isPlaying()) {
+      this._flatService.pause();
+    }
     this.adjustTempo(delta);
-    this.stopAdjusting();
+    
+    // Clear any existing interval
+    if (this._tempoInterval) {
+      clearInterval(this._tempoInterval);
+    }
+    
     this._tempoInterval = setInterval(() => {
       this.adjustTempo(delta);
     }, 100);
   }
 
   stopAdjusting() {
-    if (this._tempoInterval) {
-      clearInterval(this._tempoInterval);
-      this._tempoInterval = null;
+    if (this._isAdjusting || this._tempoInterval) {
+      if (this._tempoInterval) {
+        clearInterval(this._tempoInterval);
+        this._tempoInterval = null;
+      }
+      this._isAdjusting = false;
+      this._lastAdjustmentTime = Date.now();
+      // Only apply the tempo to the engine when the user stops adjusting
+      this._flatService.setTempo(this.tempo());
     }
   }
 
@@ -68,6 +85,8 @@ export class MidiTempoComponent implements OnInit, OnDestroy {
     const val = (event.target as HTMLInputElement).value;
     const bpm = Number(val);
     if (!isNaN(bpm) && bpm >= 20 && bpm <= 320) {
+      this._isAdjusting = false;
+      this._lastAdjustmentTime = Date.now();
       if (this._flatService.isPlaying()) {
         this._flatService.pause();
       }

@@ -193,6 +193,10 @@ export class FlatService implements ITimeListener {
       if (pos && pos.beatIdx !== undefined) this._currentBeat.set(pos.beatIdx);
       this.cursorPositionCallbacks.forEach(cb => cb(pos));
       
+      // Capture the playing state synchronously because Flat SDK might auto-pause 
+      // or other events might trigger a pause during the 150ms timeout.
+      const wasPlaying = this._isPlaying();
+      
       // Feature 1: Clic sur une note -> seek
       // On ignore l'événement s'il est déclenché par notre propre synchronisation
       if (!this._isSyncing && pos) {
@@ -204,7 +208,26 @@ export class FlatService implements ITimeListener {
              try {
                  const time = await this.findTimeByMeasure(pos);
                  if (time !== null) {
+                     this._time.set(time); // Mettre à jour la barre de progression immédiatement
                      this._coreDataStore.requestSeek(time);
+                 }
+                 
+                 // Pour le mode MIDI pur : forcer le lecteur à sauter sur la note cliquée
+                 if (this._coreDataStore.isMidiMode()) {
+                     console.log(`[FlatService] cursorPosition: Synchronizing playhead in MIDI mode (wasPlaying: ${wasPlaying})`);
+                     
+                     if (wasPlaying) {
+                         await this.stop();
+                         await (this.embed.setCursorPosition?.(pos) || this.embed.call('setCursorPosition', pos)).catch(() => {});
+                         await this.play();
+                     } else {
+                         // Pour forcer l'API Flat à mémoriser la nouvelle tête de lecture quand on est en pause,
+                         // il faut parfois "tromper" le lecteur avec une brève lecture.
+                       await this.stop();
+                         await this.play();
+                         await this.embed.setCursorPosition?.(pos) || this.embed.call('setCursorPosition', pos);
+                         await this.pause();
+                     }
                  }
              } catch (e) { console.error('[FlatService] cursorPosition error:', e); }
              setTimeout(() => { this._isSyncing = false; }, 500);
@@ -432,7 +455,41 @@ export class FlatService implements ITimeListener {
   async stop(): Promise<void> { if (this.embed) await this.embed.stop(); }
 
   async seekTrackTo(time: number): Promise<void> {
-    if (this.embed) await this.embed.call('seekTrackTo', { time });
+    if (!this.embed) return;
+    
+    if (this._coreDataStore.isMidiMode()) {
+       console.log(`[FlatService] seekTrackTo called in MIDI mode with time: ${time}`);
+       const embed = this.embed as any;
+       // Si on était en lecture, on met en pause AVANT de bouger le curseur
+       const wasPlaying = this._isPlaying();
+       if (wasPlaying) {
+           console.log('[FlatService] seekTrackTo pausing playback before move');
+           await this.stop();
+       }
+
+       try {
+           console.log('[FlatService] attempting setPlaybackPosition...');
+           await (embed.setPlaybackPosition?.({ seconds: time }) || embed.call('setPlaybackPosition', { seconds: time }));
+       } catch (e) {
+           console.log('[FlatService] setPlaybackPosition failed, falling back to setCursorPosition', e);
+           const points = this._getMeasurePoints();
+           let targetIdx = 0;
+           for (let i = 0; i < points.length; i++) {
+               if (time >= points[i]) targetIdx = i;
+               else break;
+           }
+           console.log(`[FlatService] Target measureIdx: ${targetIdx}`);
+           await (embed.setCursorPosition?.({ measureIdx: targetIdx }) || embed.call('setCursorPosition', { measureIdx: targetIdx })).catch((err: any) => console.error('[FlatService] setCursorPosition error', err));
+       }
+       
+       if (wasPlaying) {
+           console.log('[FlatService] seekTrackTo restarting playback');
+           await this.play();
+       }
+       return;
+    }
+
+    await this.embed.call('seekTrackTo', { time }).catch(() => {});
   }
 
   async setPlaybackSpeed(speed: number): Promise<void> {

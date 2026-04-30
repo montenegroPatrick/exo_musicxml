@@ -18,7 +18,7 @@
     <div class="flex flex-col items-center min-w-[60px] sm:min-w-[80px]">
       <input type="number" 
              [ngModel]="tempo()" 
-             (input)="onBpmInput($event)"
+             (change)="onBpmInput($event)"
              class="w-16 sm:w-20 bg-transparent text-2xl sm:text-3xl font-black font-mono text-white text-center focus:outline-none focus:text-[#FA5E46] transition-colors tabular-nums leading-none p-0 border-none">
       <span class="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] -mt-1">BPM</span>
     </div>

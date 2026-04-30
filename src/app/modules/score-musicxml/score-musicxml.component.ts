@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { XmlComponent } from '@core/shared/xml/xml.component';
 import { LessonService } from '../lesson/services/lesson.service';
 import { CoreDataService } from '@core/services/core-data.service';
+import { FlatService } from '@core/services/flat.service';
 import { MidiMixerComponent } from './components/midi-mixer/midi-mixer.component';
 import { MidiMixerStateService } from './services/midi-mixer-state.service';
 
@@ -50,6 +51,7 @@ export class ScoreMusicXMLPageComponent implements OnInit, OnDestroy {
   private readonly _lessonService = inject(LessonService);
   private readonly _coreDataStore = inject(CoreDataService);
   private readonly _mixerState = inject(MidiMixerStateService);
+  private readonly _flatService = inject(FlatService);
 
   readonly xmlContent = this._lessonService.xmlContent;
   readonly mixerVisible = this._mixerState.mixerVisible;

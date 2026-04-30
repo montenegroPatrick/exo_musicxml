@@ -63,7 +63,8 @@ export class LessonService {
   readonly hasVideo = computed(() => !!this.jwPlayerId());
   readonly hasAudio = computed(() => {
     const lesson = this.lessonJson();
-    return !!(lesson?.loadAudio && lesson?.audioUrl);
+    const hasTracks = this._coreDataStore.trackList()?.length > 0;
+    return !!(lesson?.loadAudio && (lesson?.audioUrl || hasTracks));
   });
   readonly useMetronome = computed(() => !this.hasAudio());
 

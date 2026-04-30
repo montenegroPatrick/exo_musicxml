@@ -46,6 +46,11 @@ export class MetronomeBarMobileComponent implements OnDestroy {
   readonly hasAudio = this._lessonService.hasAudio;
   readonly useMetronome = this._lessonService.useMetronome;
   readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  readonly hasScore = computed(() => this._lessonService.diapoType() === 'xml' || !!this._lessonService.xmlUrl());
+  readonly hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
 
   constructor() {
     // Initialisation BPM depuis JSON
@@ -79,9 +84,9 @@ export class MetronomeBarMobileComponent implements OnDestroy {
   }
 
   // -- Navigation --
-  navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
+  switchToMedia(): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    const route = this.hasVideo() ? '/video-diapo' : '/playback-diapo';
     this._router.navigate([route], { queryParams: { mock } });
   }
 

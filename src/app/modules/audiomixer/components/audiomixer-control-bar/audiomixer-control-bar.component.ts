@@ -38,6 +38,11 @@ export class AudioMixerControlBarComponent {
   hasVideo = this._lessonService.hasVideo;
   hasAudio = this._lessonService.hasAudio;
   isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  hasScore = computed(() => this._lessonService.diapoType() === 'xml' || !!this._lessonService.xmlUrl());
+  hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
   
   mixerVisible = this._mixerState.mixerVisible;
   isLooping = this._audioService.isLooping;
@@ -133,7 +138,8 @@ export class AudioMixerControlBarComponent {
 
   navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    const route = mode === 'metronome' ? '/metronome-diapo' : 
+                  (mode === 'playback' ? '/playback-diapo' : '/video-diapo');
     this._router.navigate([route], { queryParams: { mock } });
   }
 

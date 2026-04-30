@@ -116,21 +116,23 @@
       <!-- Right -->
       <div class="flex items-center gap-2">
         <!-- MODE SWITCHER (Mobile) -->
-        @if (hasVideo() && !isScoreMode()) {
+        @if (isScoreMode()) {
           <div class="flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10">
             <button class="w-8 h-8 flex items-center justify-center rounded-md bg-white/20 text-white">
               <i class="pi pi-video text-[10px]"></i>
             </button>
-            
-            @if (hasAudio()) {
-              <button (click)="navigateToMode('playback')" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
-                <i class="pi pi-volume-up text-[10px]"></i>
-              </button>
-            } @else if (useMetronome()) {
-              <button (click)="navigateToMode('metronome')" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
-                <i class="pi pi-clock text-[10px]"></i>
-              </button>
-            }
+            <button (click)="switchToMIDI()" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </button>
+          </div>
+        } @else if (hasDiapo()) {
+          <div class="flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10">
+            <button class="w-8 h-8 flex items-center justify-center rounded-md bg-white/20 text-white">
+              <i class="pi pi-video text-[10px]"></i>
+            </button>
+            <button (click)="navigateToMode('metronome')" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
+              <i class="pi pi-clock text-[10px]"></i>
+            </button>
           </div>
         }
 

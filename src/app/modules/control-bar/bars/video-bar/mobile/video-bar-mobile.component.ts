@@ -38,17 +38,27 @@ export class VideoBarMobileComponent {
   private readonly _router = inject(Router);
   private readonly _coreDataStore = inject(CoreDataService);
 
-  // -- Reactive Data Sources --
   readonly hasVideo = this._lessonService.hasVideo;
   readonly hasAudio = this._lessonService.hasAudio;
   readonly useMetronome = this._lessonService.useMetronome;
 
   readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  readonly hasScore = computed(() => this._lessonService.diapoType() === 'xml' || !!this._lessonService.xmlUrl());
+  readonly hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
 
   navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    const route = mode === 'metronome' ? '/metronome-diapo' : 
+                  (mode === 'playback' ? '/playback-diapo' : '/video-diapo');
     this._router.navigate([route], { queryParams: { mock } });
+  }
+
+  switchToMIDI(): void {
+    const mock = new URLSearchParams(window.location.search).get('mock');
+    this._router.navigate(['/score-musicxml'], { queryParams: { mock } });
   }
   showInfoPopin = signal(false);
   activePopin = signal<'none' | 'settings' | 'speed' | 'loop'>('none');

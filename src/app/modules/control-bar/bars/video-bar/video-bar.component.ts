@@ -47,6 +47,11 @@ export class VideoBarComponent {
   // -- Reactive Data Sources --
   readonly hasVideo = this._lessonService.hasVideo;
   readonly hasAudio = this._lessonService.hasAudio;
+  readonly hasScore = computed(() => this._lessonService.diapoType() === 'xml' || !!this._lessonService.xmlUrl());
+  readonly hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
   readonly useMetronome = this._lessonService.useMetronome;
 
   // -- Component Local State --
@@ -178,7 +183,8 @@ export class VideoBarComponent {
 
   navigateToMode(mode: 'video' | 'metronome' | 'playback'): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    const route = mode === 'video' ? '/video-diapo' : (mode === 'metronome' ? '/metronome-diapo' : '/playback-diapo');
+    const route = mode === 'metronome' ? '/metronome-diapo' : 
+                  (mode === 'playback' ? '/playback-diapo' : '/video-diapo');
     this._router.navigate([route], { queryParams: { mock } });
   }
 

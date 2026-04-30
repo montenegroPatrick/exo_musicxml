@@ -33,6 +33,10 @@ export class MusicXMLBarComponent {
   // -- Media Signals --
   readonly hasVideo = this._lessonService.hasVideo;
   readonly hasAudio = this._lessonService.hasAudio;
+  readonly hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
   
   // -- Signals mapping --
   isPlaying = this._controlBarService.isPlaying;
@@ -110,6 +114,7 @@ export class MusicXMLBarComponent {
 
   switchToMedia(): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    this._router.navigate(['/video-score'], { queryParams: { mock } });
+    const route = this.hasVideo() ? '/video-score' : '/playback-score';
+    this._router.navigate([route], { queryParams: { mock } });
   }
 }

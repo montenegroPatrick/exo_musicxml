@@ -139,14 +139,20 @@
 
       <!-- Right: Settings & Mode -->
       <div class="flex items-center gap-2">
-        <div class="flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10">
-          <button (click)="navigateToMode('video')" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
-            <i class="pi pi-video text-[10px]"></i>
-          </button>
-          <button class="w-8 h-8 flex items-center justify-center rounded-md bg-white/20 text-white">
-            <i class="pi pi-clock text-[10px]"></i>
-          </button>
-        </div>
+        @if (hasVideo() || hasAudio()) {
+          <div class="flex items-center bg-white/5 p-0.5 rounded-lg border border-white/10">
+            <button (click)="switchToMedia()" class="w-8 h-8 flex items-center justify-center rounded-md text-white/40">
+              @if (hasVideo()) {
+                <i class="pi pi-video text-[10px]"></i>
+              } @else {
+                <i class="pi pi-volume-up text-[10px]"></i>
+              }
+            </button>
+            <button class="w-8 h-8 flex items-center justify-center rounded-md bg-white/20 text-white">
+              <i class="pi pi-clock text-[10px]"></i>
+            </button>
+          </div>
+        }
 
         <button (click)="togglePopin('settings'); $event.stopPropagation()" 
                 class="w-10 h-10 flex items-center justify-center text-white/90 active:rotate-90 transition-all rounded-xl bg-white/20" 

@@ -24,6 +24,13 @@ export class MetronomeBarComponent implements OnDestroy {
   private readonly _coreData = inject(CoreDataService);
 
   readonly isScoreMode = computed(() => this._lessonService.diapoType() === 'xml');
+  readonly hasScore = computed(() => this._lessonService.diapoType() === 'xml' || !!this._lessonService.xmlUrl());
+  readonly hasDiapo = computed(() => {
+    const t = this._lessonService.diapoType();
+    return !!t && t !== 'xml';
+  });
+  readonly hasVideo = this._lessonService.hasVideo;
+  readonly hasAudio = this._lessonService.hasAudio;
 
   // -- State --
   readonly isTrainingMode = signal<boolean>(false);
@@ -68,9 +75,10 @@ export class MetronomeBarComponent implements OnDestroy {
   }
 
   // -- Navigation --
-  switchToVideo(): void {
+  switchToMedia(): void {
     const mock = new URLSearchParams(window.location.search).get('mock');
-    this._router.navigate(['/video-diapo'], { queryParams: { mock } });
+    const route = this.hasVideo() ? '/video-diapo' : '/playback-diapo';
+    this._router.navigate([route], { queryParams: { mock } });
   }
 
   // Proxy for metadata buttons if needed

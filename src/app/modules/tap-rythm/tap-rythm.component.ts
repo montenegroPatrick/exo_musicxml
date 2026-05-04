@@ -8,21 +8,17 @@ import {
   OnDestroy,
   signal,
   ViewChild,
+  HostListener
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TapRythmService } from './services/tap-rythm.service';
 import { ExerciseStateService } from './services/exercise-state.service';
 import { TimerService } from './services/timer.service';
-import { MetronomeService } from '../../../core/services/utils/metronome.service';
 import { ErrorMessageComponent } from './components/error-message/error-message.component';
-import { CountdownDisplayComponent } from './components/countdown-display/countdown-display.component';
 import { ExerciseResultsComponent } from './components/exercise-results/exercise-results.component';
 import { TapVisualizerComponent } from './components/tap-visualizer/tap-visualizer.component';
 import { TapButtonComponent } from './components/tap-button/tap-button.component';
-import { ControlButtonsComponent } from './components/control-buttons/control-buttons.component';
-import { SettingsButtonComponent } from './components/settings-button/settings-button.component';
 import { Level } from './interface/flat.interface';
-import { ControlBarComponent } from './components/control-bar/control-bar.component';
 import { ButtonModule } from 'primeng/button';
 import { TapEvaluationService } from '@app/modules/tap-rythm/services/tap-evaluation.service';
 import { SoundService } from 'src/core/services/utils/sound-service.service';
@@ -32,11 +28,9 @@ import {
   L10nTranslationService,
 } from 'angular-l10n';
 import { OnboardingService } from '../../../core/services/utils/onboarding.service';
-import { HelpbuttonComponent } from './components/help-button/help-button.component';
-import { PostMessageService } from './services/post-message.service';
+import { BridgeService } from '../../../core/services/bridge.service';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
-import { BottomButtonsComponent } from './components/bottom-buttons/bottom-buttons.component';
 import { FlatService } from '@core/services/flat.service';
 
 @Component({
@@ -44,17 +38,10 @@ import { FlatService } from '@core/services/flat.service';
   selector: 'app-tap-rythm',
   imports: [
     ErrorMessageComponent,
-    CountdownDisplayComponent,
     ExerciseResultsComponent,
     TapVisualizerComponent,
-    TapButtonComponent,
-    ControlButtonsComponent,
-    SettingsButtonComponent,
-    ControlBarComponent,
     ButtonModule,
     L10nTranslatePipe,
-    HelpbuttonComponent,
-    BottomButtonsComponent,
     FormsModule,
   ],
   templateUrl: './tap-rythm.component.html',
@@ -72,16 +59,16 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
   private readonly _tapEvaluationService = inject(TapEvaluationService);
   private readonly _soundService = inject(SoundService);
   private readonly _onboardingService = inject(OnboardingService);
-  private readonly _postMessageService = inject(PostMessageService);
+  private readonly _bridgeService = inject(BridgeService);
   private readonly _route = inject(ActivatedRoute);
 
   readonly exerciseState = inject(ExerciseStateService);
   readonly timer = inject(TimerService);
-  readonly metronome = inject(MetronomeService);
 
   // -- Private State --
   private readonly _currentSequence = signal<string>('7');
   private readonly _parts = signal<any[]>([]);
+  readonly isTapping = signal<boolean>(false);
 
   // -- Reactive Mappings --
   readonly hasFinePointer = window.matchMedia('(pointer: fine)').matches;
@@ -101,6 +88,7 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
   }
 
   private async _initializeFlat(): Promise<void> {
+    this._flatService.disableInitHack = true;
     this._flatService.initEmbed(this._flatContainer.nativeElement, {
       controlsDisplay: false,
       playbackMetronome: 'active',
@@ -117,21 +105,57 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
     await this._flatService.setMetronomeMode(1);
 
     const details = await this._flatService.getMeasureDetails();
-    if (details?.tempo?.bpm) {
-      this.metronome.setOriginalBpm(details.tempo.bpm);
-      this.metronome.setBpm(details.tempo.bpm);
+    if (details) {
+      const arr = Array.isArray(details) ? details : [details];
+      const bpm = arr[0]?.tempo?.bpm || 120;
+      const beats = arr[0]?.timeSignature?.beats || 4;
+      this.exerciseState.setOriginalBpm(bpm);
+      this.exerciseState.setTimeSignatureBeats(beats);
+      
+      const countInMs = (60000 / bpm) * beats;
+      this.exerciseState.setCountInMs(countInMs);
     }
 
     if (this.exerciseState.level() !== 1) {
-      this.handleLevelChange(this.exerciseState.level());
+      const level = this.exerciseState.level();
+      await this._flatService.setPlaybackSpeed(level);
+      this._tapRythmService.changeSpeedNotes(level);
     }
-
-    this.metronome.setTimeBeatType(details?.time?.['beat-type'] as number);
-    this.metronome.setTimeSignature(details?.time?.beats || 4);
 
     // Sync persisted settings
     await this._flatService.setMasterVolume(this.exerciseState.masterVolume());
     await this._flatService.setPlaybackSpeed(this.exerciseState.level());
+
+    this._flatService.onPlay(() => {
+      if (this.exerciseState.isListening() || this.exerciseState.exerciseStatus() === 'playing') {
+        const countInMs = this.exerciseState.countInMs() || 0;
+        const beats = this.exerciseState.timeSignatureBeats();
+        
+        if (countInMs > 0 && beats > 0) {
+          const msPerBeat = countInMs / beats;
+          let currentBeat = 1;
+          this.exerciseState.setVisualCountInBeat(currentBeat);
+          
+          const interval = setInterval(() => {
+            currentBeat++;
+            if (currentBeat > beats) {
+              clearInterval(interval);
+              this.exerciseState.setVisualCountInBeat(0);
+            } else {
+              this.exerciseState.setVisualCountInBeat(currentBeat);
+            }
+          }, msPerBeat);
+
+          setTimeout(() => {
+            if (this.exerciseState.isPlaying()) {
+              this.timer.start();
+            }
+          }, countInMs);
+        } else {
+          this.timer.start();
+        }
+      }
+    });
   }
 
   private _initEmbedEvents(): void {
@@ -144,7 +168,6 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
 
     this._flatService.onStop(() => {
       this.timer.stop();
-      this.metronome.stop();
 
       if (this.timer.currentTimeMs() >= this.totalDurationMs()) {
         this._tapEvaluationService.evaluateMissedTap(this.exerciseState.userTaps());
@@ -164,11 +187,14 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
     this.exerciseState.resetTaps();
     this.timer.reset();
     this.exerciseState.setExerciseStatus('playing');
-    this.exerciseState.setIsPlaying(true);
-    
-    this.metronome.startCountIn(() => {
-      this.timer.start();
-    });
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (event.code === 'Space') {
+      event.preventDefault();
+      this.handleUserTap(event);
+    }
   }
 
   handleUserTap(e: Event): void {
@@ -177,6 +203,9 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
     
     if (!this.exerciseState.canTap()) return;
     
+    this.isTapping.set(true);
+    setTimeout(() => this.isTapping.set(false), 80);
+
     const tapMs = this.timer.currentTimeMs();
     this._soundService.playTapSound();
     
@@ -224,42 +253,15 @@ export class TapRythmPageComponent implements AfterViewInit, OnDestroy {
   resetExercise(): void {
     this.exerciseState.reset();
     this.timer.reset();
-    this.metronome.reset();
   }
 
   handleContinue(): void {
-    this._postMessageService.emitSequenceChange();
+    this._bridgeService.sendAction('next');
   }
 
-  // -- Settings Adjustments --
-
-  async handleMasterVolumeChange(value: number): Promise<void> {
-    this.exerciseState.setMasterVolume(value);
-    await this._flatService.setMasterVolume(value);
-  }
-
-  handleTapVolumeChange(value: number): void {
-    this.exerciseState.setTapVolume(value);
-  }
-
-  async handleLevelChange(value: Level): Promise<void> {
-    this.exerciseState.setLevel(value);
-    await this._flatService.setPlaybackSpeed(value);
-    this.metronome.setBpm(this.metronome.originalBpm() * value);
-    this._tapRythmService.changeSpeedNotes(value);
-  }
-
-  async handlePartSoundChange(value: boolean): Promise<void> {
-    this.exerciseState.setPartSound(value);
-    const firstPart = this._parts()[0];
-    if (this.exerciseState.isPlaying() && firstPart?.uuid) {
-      const vol = value ? 100 : 0;
-      await this._flatService.setPartVolume(firstPart.uuid, vol);
-    }
-  }
-
-  startOnboarding(): void {
-    this._onboardingService.startTour(this._onboardingService.defaultExoxmlTourSteps());
+  handleDownloadLog(): void {
+    const notes = this.jsonContent().notes ?? [];
+    this.exerciseState.exportEvaluationLog(notes);
   }
 
   ngOnDestroy(): void {

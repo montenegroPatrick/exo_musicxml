@@ -1,11 +1,13 @@
 export interface IJsonXml {
   notes?: number[];
   duration?: number;
+  noteErrorMarge?: string;
 }
 export interface IUserTap {
   timeMs: number;
-  result: 'Good' | 'Late' | 'Too late' | 'Early' | 'Too early';
+  result: 'Good' | 'Late' | 'Too late' | 'Early' | 'Too early' | 'Perfect';
   diffMs: number;
+  expectedMs: number;
 }
 
 export type ExerciseStatus = 'not-started' | 'playing' | 'finish';

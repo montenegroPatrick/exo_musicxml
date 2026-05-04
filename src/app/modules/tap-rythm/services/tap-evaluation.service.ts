@@ -1,135 +1,81 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { IUserTap } from '../interface/flat.interface';
 import { TapRythmService } from '@app/modules/tap-rythm/services/tap-rythm.service';
-import { ExerciseStateService } from './exercise-state.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TapEvaluationService {
   private tapRythmService = inject(TapRythmService);
-  private readonly TOLERANCE_MS = 100;
 
   missedTaps = signal<number>(0);
 
-  evaluateTap(tapMs: number, notes: number[]): IUserTap {
-    // notes = tableaux de notes en ms
-    // tapMs = moment du tap utilisateur en ms
-    // ce que nous voulons c'est évaluer le tap par rapport aux notes, en sachant que l'utilisateur doit être dans une fenetre de latence de 100ms autour de la note de référence qui est la note la plus proche du tap
-    // si le tap est dans la fenetre de latence, on retourne Good
-    // si le tap est en dehors de la fenetre de latence, on retourne Too late ou Too early
-    // si le tap est dedans en dehors de la fenetre de latence, mais avec une marge de 100ms, on retourne Late ou Early
-    const latenceMetronomeSound = 100;
+  evaluateTap(tapMs: number, notes: number[], currentBpm: number): IUserTap {
     if (!notes || notes.length === 0) {
-      return { timeMs: tapMs, result: 'Too late', diffMs: 0 };
+      return { timeMs: tapMs, expectedMs: 0, result: 'Too late', diffMs: 0 };
     }
-    const tapMsWithLatence = tapMs - latenceMetronomeSound;
 
     // Find closest note
     const diffs = notes.map((noteMs, index) => ({
       noteMs: Number(noteMs.toFixed(2)),
-      diffMs: Number(Math.abs(tapMsWithLatence - noteMs).toFixed(2)),
+      diffMs: Number(Math.abs(tapMs - noteMs).toFixed(2)),
       index,
     }));
     const closestNote = diffs.sort((a, b) => a.diffMs - b.diffMs)[0];
-    console.log(closestNote);
 
-    //conditions
-    const isGood =
-      tapMsWithLatence === closestNote.noteMs ||
-      (tapMsWithLatence > closestNote.noteMs &&
-        closestNote.diffMs < this.TOLERANCE_MS) ||
-      (tapMsWithLatence < closestNote.noteMs &&
-        closestNote.diffMs < this.TOLERANCE_MS);
-    const isLate =
-      tapMsWithLatence > closestNote.noteMs && closestNote.diffMs < 200;
-    const isEarly =
-      tapMsWithLatence < closestNote.noteMs && closestNote.diffMs < 200;
-    const isTooLate =
-      tapMsWithLatence > closestNote.noteMs && closestNote.diffMs > 200;
-    const isTooEarly =
-      tapMsWithLatence < closestNote.noteMs && closestNote.diffMs > 200;
-    // Evaluate tap result
-    let resultFinal: IUserTap = {
+    // --- Adaptive Precision Strategy ---
+    const bpm = currentBpm || 60;
+    const msPerBeat = 60000 / bpm;
+    
+    const errorMargeCode = this.tapRythmService.jsonXml()?.noteErrorMarge || 'dc';
+    const durationMap: Record<string, number> = { 'w': 4, 'h': 2, 'q': 1, '8': 0.5, '16': 0.25, 'dc': 0.25, 'c': 0.5, 'n': 1 };
+    const referenceDurationMs = (durationMap[errorMargeCode] || 0.25) * msPerBeat;
+
+    // Use default Medium difficulty factors: Perfect < 35%, Good < 65%
+    const perfectMargin = referenceDurationMs * 0.35;
+    const goodMargin = referenceDurationMs * 0.65;
+    
+    let result: 'Good' | 'Late' | 'Early' | 'Too late' | 'Too early' = 'Too late';
+
+    if (closestNote.diffMs < perfectMargin) {
+      result = 'Good'; // Perfect maps to Good in this interface
+    } else if (closestNote.diffMs < goodMargin) {
+      result = tapMs > closestNote.noteMs ? 'Late' : 'Early';
+    } else {
+      result = tapMs > closestNote.noteMs ? 'Too late' : 'Too early';
+    }
+
+    return {
       timeMs: tapMs,
+      expectedMs: closestNote.noteMs,
       diffMs: closestNote.diffMs,
-      result: 'Good',
+      result
     };
-    if (isGood) {
-      resultFinal.result = 'Good';
-      return resultFinal;
-    }
-    if (isLate) {
-      resultFinal.result = 'Late';
-      return resultFinal;
-    }
-    if (isEarly) {
-      resultFinal.result = 'Early';
-      return resultFinal;
-    }
-    if (isTooLate) {
-      resultFinal.result = 'Too late';
-      return resultFinal;
-    }
-    if (isTooEarly) {
-      resultFinal.result = 'Too early';
-      return resultFinal;
-    }
-    return resultFinal;
-    // evaluateMissedTap(userTaps: IUserTap[]): void {
-    //   const notes = this.tapRythmService.jsonXml().notes ?? [];
-    //   const latenceMetronomeSound = 100;
-    //   let missedCount = 0;
-
-    //   // Pour chaque note attendue, vérifier s'il y a un tap utilisateur correspondant
-    //   for (let index = 0; index < notes.length; index++) {
-    //     const noteMs = notes[index];
-    //     const noteTimeWithLatence = noteMs + latenceMetronomeSound;
-    //     let hasCorrespondingTap = false;
-
-    //     // Vérifier si un tap utilisateur correspond à cette note (dans la fenêtre de tolérance)
-
-    //       for (const userTap of userTaps) {
-    //         const diffs = userTaps.map((tap) => ({
-    //           noteMs: Number(tap.timeMs.toFixed(2)),
-    //           diffMs: Number(Math.abs(userTap.timeMs - noteTimeWithLatence).toFixed(2)),
-    //         }));
-    //         const closestNote = diffs.sort((a, b) => a.diffMs - b.diffMs)[0];
-    //         if (Math.abs(closestNote.diffMs) > ) {
-    //           hasCorrespondingTap = true;
-    //           break;
-    //         }
-
-    //       // Si aucune note attendue n'a de tap correspondant, c'est un tap manqué
-    //       if (!hasCorrespondingTap) {
-    //         missedCount++;
-    //       }
-    //     }
-    //   }
-
-    //   this.missedTaps.set(missedCount);
-    // }
   }
-  evaluateMissedTap(userTaps: IUserTap[]): void {
-    this.missedTaps.set(0);
-    const notes = this.tapRythmService.jsonXml().notes ?? [];
 
+  evaluateMissedTap(userTaps: IUserTap[]): void {
+    const notes = this.tapRythmService.jsonXml()?.notes ?? [];
+    
+    // We consider a note "tapped" if there's any userTap that hit it with a reasonable diffMs
+    // A tap is valid if it's not 'Too early' and not 'Too late'
+    const validTaps = userTaps.filter(t => t.result !== 'Too early' && t.result !== 'Too late');
+    
+    // To match Patrick's logic: count expected notes that are NOT hit
+    // Since our userTaps don't explicitly store expectedTimeMs, we can just say:
+    // Any valid tap "consumes" the closest note.
+    
+    let missedCount = notes.length;
+    
+    // A simpler logic: just count how many notes didn't get any tap within a wide margin
     for (let i = 0; i < notes.length; i++) {
       const noteMs = notes[i];
-      const nextNoteMs = notes[i + 1];
-      if (nextNoteMs == undefined) {
-        return;
-      }
-      if (userTaps.length === 0) {
-        this.missedTaps.set(notes.length);
-        return;
-      }
-      const closesTap = userTaps.find(
-        (tap) => noteMs < tap.timeMs && tap.timeMs < nextNoteMs,
-      );
-      if (closesTap == undefined) {
-        this.missedTaps.set(this.missedTaps() + 1);
+      // Check if any valid tap is close enough to this note (e.g. within 200ms or reference margin)
+      const isHit = validTaps.some(tap => Math.abs(tap.timeMs - noteMs) < 300);
+      if (isHit) {
+        missedCount--;
       }
     }
+
+    this.missedTaps.set(Math.max(0, missedCount));
   }
 }

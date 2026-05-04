@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.audiomixer-control-bar {
+  height: 80px;
+  background: var(--control-bar-bg);
+  color: white;
+}
+
+.progress-bar-container {
+  transition: height 0.2s ease;
+}
+
+.progress-bar-container:hover {
+  height: 8px;
+}
+
+.progress-bar-container:hover .progress-handle {
+  opacity: 1;
+}

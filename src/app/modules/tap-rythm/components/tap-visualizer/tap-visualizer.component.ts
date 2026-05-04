@@ -18,12 +18,12 @@ import { TimerService } from '@app/modules/tap-rythm/services/timer.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="w-full h-12 relative overflow-hidden rounded-2xl bg-black/40 border border-white/10 backdrop-blur-md shadow-2xl"
+      class="w-full h-12 relative overflow-hidden rounded-b-xl rounded-t-none bg-zinc-50 border border-t-0 border-zinc-100 shadow-sm"
       #tapViewContainer
     >
       <!-- MEASURE MARKERS -->
       @for (time of measureTimes(); track $index) {
-        <div class="absolute inset-y-0 w-px bg-white/10 z-0"
+        <div class="absolute inset-y-0 w-px bg-black/10 z-0"
              [style.left]="getTapPosition(time)"></div>
       }
 
@@ -49,7 +49,7 @@ import { TimerService } from '@app/modules/tap-rythm/services/timer.service';
       </div>
 
       <!-- PROGRESS OVERLAY -->
-      <div class="absolute inset-y-0 left-0 bg-white/5 pointer-events-none z-10"
+      <div class="absolute inset-y-0 left-0 bg-black/5 pointer-events-none z-10"
            [style.width]="progressPosition()"></div>
     </div>
   `,

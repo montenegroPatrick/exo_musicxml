@@ -1,0 +1,80 @@
+<div class="audiomixer-control-bar relative flex flex-row items-center justify-between px-6 w-full text-white h-full shadow-[0_-4px_12px_rgba(0,0,0,0.2)]">
+    
+    <!-- SEEK BAR (Visual Only) -->
+    <div class="progress-bar-container group absolute top-0 left-0 w-full h-[3px] bg-white/20 overflow-visible z-[100]">
+      
+      <!-- MEASURE MARKERS -->
+      @for (time of measureTimes(); track $index) {
+        <div class="absolute inset-y-0 w-px bg-white/50 z-0"
+             [style.left.%]="(time / totalDuration()) * 100"></div>
+      }
+
+      <!-- Progress Fill -->
+      <div class="progress-fill absolute top-0 left-0 h-full bg-white transition-all duration-100 ease-linear shadow-[0_0_8px_rgba(255,255,255,0.5)]"
+           [style.width.%]="(currentTime() / totalDuration()) * 100">
+      </div>
+      
+      <!-- Progress Handle -->
+      <div class="progress-handle absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+           [style.left.%]="(currentTime() / totalDuration()) * 100">
+      </div>
+
+      <!-- TAP FEEDBACK -->
+      <div class="absolute inset-0 z-20 pointer-events-none overflow-hidden">
+        @for (tap of taps(); track $index) {
+          <div
+            class="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full transition-all duration-300"
+            [style.left.%]="(tap.timeMs / totalDuration()) * 100"
+            [ngClass]="getTapColor(tap.result)"
+          ></div>
+        }
+      </div>
+    </div>
+    <div class="grid grid-cols-3 items-center w-full h-full gap-6">
+        <!-- LEFT ZONE: Navigation & Metadata -->
+        <div class="flex items-center flex-1 min-w-0">
+            <div class="nav-group flex items-center gap-6 pr-6 border-r border-white/30 h-10">
+                <button class="hover:scale-110 active:scale-90 transition-transform text-white bg-transparent border-none p-0 flex items-center cursor-pointer" (click)="handlePrevious()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                </button>
+                <button class="hover:scale-110 active:scale-90 transition-transform text-white bg-transparent border-none p-0 flex items-center cursor-pointer" (click)="handleNext()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6z"/></svg>
+                </button>
+            </div>
+            <div class="flex items-center min-w-0 flex-1 pl-6">
+                <app-lesson-metadata layout="inline" />
+            </div>
+        </div>
+
+        <!-- CENTER ZONE: Playback Controls -->
+        <div class="controls-center flex items-center gap-8 flex-shrink-0 justify-center">
+            <button #listenButton class="flex items-center justify-center w-10 h-10 bg-white/5 hover:bg-white/10 active:scale-95 rounded-full transition-all border-none p-0 cursor-pointer backdrop-blur-md" 
+                    (click)="toggleListen(); listenButton.blur()"
+                    [title]="exerciseState.isListening() ? 'Arrêter l\'écoute' : 'Écouter l\'exemple'">
+              <i class="pi" [ngClass]="exerciseState.isListening() ? 'pi-stop text-red-400' : 'pi-headphones text-white'"></i>
+            </button>
+            <button #playButton class="play-button flex items-center justify-center w-14 h-14 bg-white/10 hover:bg-white/20 active:scale-95 rounded-full transition-all border-none p-0 cursor-pointer backdrop-blur-md" 
+                    (click)="handlePlayStop(); playButton.blur()">
+              @if (exerciseState.isPlaying()) {
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+              }
+            </button>
+        </div>
+
+        <!-- RIGHT ZONE: Options (Settings & Help) -->
+        <div class="flex items-center gap-1.5 sm:gap-4 flex-1 justify-end relative">
+            @if(!exerciseState.isPlaying() && !exerciseState.isListening()) {
+                <app-settings-button
+                    (handleLevelChange)="handleLevelChange($event)"
+                    (handlePartSoundChange)="handlePartSoundChange($event)"
+                    (handleMasterVolumeChange)="handleMasterVolumeChange($event)"
+                    (handleTapVolumeChange)="handleTapVolumeChange($event)"
+                    (handleShowTutorial)="startOnboarding()"
+                ></app-settings-button>
+                <app-help-button></app-help-button>
+            }
+        </div>
+    </div>
+</div>

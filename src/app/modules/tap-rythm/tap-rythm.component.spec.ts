@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TapRythmPage } from './tap-rythm.component';
+import { TapRythmPageComponent } from './tap-rythm.component';
 
-describe('TapRythmPage', () => {
-  let component: TapRythmPage;
-  let fixture: ComponentFixture<TapRythmPage>;
+describe('TapRythmPageComponent', () => {
+  let component: TapRythmPageComponent;
+  let fixture: ComponentFixture<TapRythmPageComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TapRythmPage],
+      imports: [TapRythmPageComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TapRythmPage);
+    fixture = TestBed.createComponent(TapRythmPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

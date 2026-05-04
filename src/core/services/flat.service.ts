@@ -22,6 +22,8 @@ export class FlatService implements ITimeListener {
   private embed: any | undefined;
   private readonly TRACK_ID = 'external-1';
   private _lastSyncedTime = 0;
+  
+  public disableInitHack: boolean = false;
 
   // Event callbacks
   private cursorPositionCallbacks: Set<(position: any) => void> = new Set();
@@ -141,6 +143,8 @@ export class FlatService implements ITimeListener {
     this.embed.on('scoreLoaded', async () => {
       this._isReady.set(true);
 
+      if (this.disableInitHack) return;
+
    // On crée un wrapper pour simuler le "once"
    const handlePlay = async () => {
      // 1. On se désabonne immédiatement pour ne pas boucler
@@ -177,6 +181,18 @@ export class FlatService implements ITimeListener {
     this.embed.on('playbackPosition', (ev: any) => { 
       const time = ev.seconds ?? ev.currentTime ?? 0;
       this._time.set(time); 
+      
+      // Feature: MIDI Loop Range Support
+      if (this._coreDataStore.isMidiMode()) {
+        const loopRange = this._coreDataStore.loopRangeRequest();
+        if (loopRange && loopRange.start !== null && loopRange.end !== null) {
+            // Un petit delta pour s'assurer qu'on ne boucle pas à l'infini sur la même frame
+            if (time >= loopRange.end) {
+                console.log(`[FlatService] Loop end reached (${time} >= ${loopRange.end}), jumping to start (${loopRange.start})`);
+                this.seekTrackTo(loopRange.start);
+            }
+        }
+      }
     });
     let cursorPositionTimeout: any;
     let rangeSelectionTimeout: any;
@@ -215,19 +231,7 @@ export class FlatService implements ITimeListener {
                  // Pour le mode MIDI pur : forcer le lecteur à sauter sur la note cliquée
                  if (this._coreDataStore.isMidiMode()) {
                      console.log(`[FlatService] cursorPosition: Synchronizing playhead in MIDI mode (wasPlaying: ${wasPlaying})`);
-                     
-                     if (wasPlaying) {
-                         await this.stop();
-                         await (this.embed.setCursorPosition?.(pos) || this.embed.call('setCursorPosition', pos)).catch(() => {});
-                         await this.play();
-                     } else {
-                         // Pour forcer l'API Flat à mémoriser la nouvelle tête de lecture quand on est en pause,
-                         // il faut parfois "tromper" le lecteur avec une brève lecture.
-                       await this.stop();
-                         await this.play();
-                         await this.embed.setCursorPosition?.(pos) || this.embed.call('setCursorPosition', pos);
-                         await this.pause();
-                     }
+                     await this._syncPlayheadInMidiMode(pos, wasPlaying);
                  }
              } catch (e) { console.error('[FlatService] cursorPosition error:', e); }
              setTimeout(() => { this._isSyncing = false; }, 500);
@@ -470,6 +474,11 @@ export class FlatService implements ITimeListener {
        try {
            console.log('[FlatService] attempting setPlaybackPosition...');
            await (embed.setPlaybackPosition?.({ seconds: time }) || embed.call('setPlaybackPosition', { seconds: time }));
+           
+           if (wasPlaying) {
+               console.log('[FlatService] seekTrackTo restarting playback');
+               await this.play();
+           }
        } catch (e) {
            console.log('[FlatService] setPlaybackPosition failed, falling back to setCursorPosition', e);
            const points = this._getMeasurePoints();
@@ -479,12 +488,7 @@ export class FlatService implements ITimeListener {
                else break;
            }
            console.log(`[FlatService] Target measureIdx: ${targetIdx}`);
-           await (embed.setCursorPosition?.({ measureIdx: targetIdx }) || embed.call('setCursorPosition', { measureIdx: targetIdx })).catch((err: any) => console.error('[FlatService] setCursorPosition error', err));
-       }
-       
-       if (wasPlaying) {
-           console.log('[FlatService] seekTrackTo restarting playback');
-           await this.play();
+           await this._syncPlayheadInMidiMode({ measureIdx: targetIdx }, wasPlaying);
        }
        return;
     }
@@ -834,6 +838,7 @@ export class FlatService implements ITimeListener {
 
   onCursorPosition(cb: (pos: any) => void): void { this.cursorPositionCallbacks.add(cb); }
   onRangeSelection(cb: (sel: any | null) => void): void { this.rangeSelectionCallbacks.add(cb); }
+  onPlay(cb: () => void): void { this.playCallbacks.add(cb); }
   onPause(cb: () => void): void { this.pauseCallbacks.add(cb); }
   onStop(cb: () => void): void { this.stopCallbacks.add(cb); }
 
@@ -843,5 +848,24 @@ export class FlatService implements ITimeListener {
       this._isReady.set(false);
       this._isTrackReady.set(false);
     }
+  }
+
+  /**
+   * Pour forcer l'API Flat à mémoriser la nouvelle tête de lecture en mode MIDI pur,
+   * il faut utiliser stop() et parfois "tromper" le lecteur avec une brève lecture.
+   */
+  private async _syncPlayheadInMidiMode(pos: any, wasPlaying: boolean): Promise<void> {
+      if (!this.embed) return;
+      const embed = this.embed as any;
+      if (wasPlaying) {
+          await this.stop();
+          await (embed.setCursorPosition?.(pos) || embed.call('setCursorPosition', pos)).catch(() => {});
+          await this.play();
+      } else {
+          await this.stop();
+          await this.play();
+          await (embed.setCursorPosition?.(pos) || embed.call('setCursorPosition', pos)).catch(() => {});
+          await this.pause();
+      }
   }
 }

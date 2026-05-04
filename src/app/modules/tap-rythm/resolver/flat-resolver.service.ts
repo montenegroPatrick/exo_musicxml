@@ -2,14 +2,9 @@ import { ResolveFn } from '@angular/router';
 import { TapRythmPageComponent } from '../tap-rythm.component';
 import { TapRythmService } from '../services/tap-rythm.service';
 import { inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 export const flatResolver: ResolveFn<any> = (route, state): Observable<any> => {
-  // get the seq from the url
-  const seq = route.params['seq'];
-  const tapRythmService = inject(TapRythmService);
-  if (seq) {
-    return tapRythmService.xmlFetch(seq);
-  }
-  return tapRythmService.xmlFetch('7');
+  // Data fetching is now handled upstream by CoreDataService
+  return of(true);
 };

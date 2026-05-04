@@ -3,7 +3,6 @@ import { ExerciseStatus, IUserTap, Level } from '../interface/flat.interface';
 import { TapEvaluationService } from './tap-evaluation.service';
 import { LocalStorageService } from '../../../../core/services/utils/local-storage.service';
 import { TapRythmService } from '@app/modules/tap-rythm/services/tap-rythm.service';
-import { MetronomeService } from '../../../../core/services/utils/metronome.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +14,6 @@ export class ExerciseStateService {
   private readonly _tapEvaluationService = inject(TapEvaluationService);
   private readonly _localStorageService = inject(LocalStorageService);
   private readonly _tapRythmService = inject(TapRythmService);
-  private readonly _metronomeService = inject(MetronomeService);
   
   private readonly _savedSettings = this._localStorageService.loadSettings();
 
@@ -34,6 +32,10 @@ export class ExerciseStateService {
   private readonly _metronomeVolume = signal<number>(this._savedSettings.metronomeVolume);
   private readonly _level = signal<Level>(this._savedSettings.level);
   private readonly _exerciseMode = signal<boolean>(false);
+  private readonly _originalBpm = signal<number>(60);
+  private readonly _countInMs = signal<number>(0);
+  private readonly _timeSignatureBeats = signal<number>(4);
+  private readonly _visualCountInBeat = signal<number>(0);
 
   // -- Public Readonly Signals --
   readonly nbMeasures = this._nbMeasures.asReadonly();
@@ -50,13 +52,16 @@ export class ExerciseStateService {
   readonly metronomeVolume = this._metronomeVolume.asReadonly();
   readonly level = this._level.asReadonly();
   readonly exerciseMode = this._exerciseMode.asReadonly();
+  readonly originalBpm = this._originalBpm.asReadonly();
+  readonly countInMs = this._countInMs.asReadonly();
+  readonly timeSignatureBeats = this._timeSignatureBeats.asReadonly();
+  readonly visualCountInBeat = this._visualCountInBeat.asReadonly();
 
   // -- Reactive Derived States --
   
   readonly canTap = computed(() => 
     this._isPlaying() && 
-    this._exerciseStatus() === 'playing' && 
-    this._metronomeService.countInStatus() === 'finish'
+    this._exerciseStatus() === 'playing'
   );
 
   readonly lastTap = computed(() => {
@@ -105,9 +110,14 @@ export class ExerciseStateService {
   setTapVolume(val: number): void { this._tapVolume.set(val); }
   setMasterVolume(val: number): void { this._masterVolume.set(val); }
   setMetronomeVolume(val: number): void { this._metronomeVolume.set(val); }
+  setOriginalBpm(val: number): void { this._originalBpm.set(val); }
+  setCountInMs(val: number): void { this._countInMs.set(val); }
+  setTimeSignatureBeats(val: number): void { this._timeSignatureBeats.set(val); }
+  setVisualCountInBeat(val: number): void { this._visualCountInBeat.set(val); }
 
   recordTap(tapMs: number, notes: number[]): void {
-    const evaluatedTap = this._tapEvaluationService.evaluateTap(tapMs, notes);
+    const currentBpm = this._originalBpm() * this._level();
+    const evaluatedTap = this._tapEvaluationService.evaluateTap(tapMs, notes, currentBpm);
     this._userTaps.update(taps => [...taps, evaluatedTap]);
   }
 
@@ -123,25 +133,51 @@ export class ExerciseStateService {
   }
 
   calculateResult(): void {
-    const taps = this._userTaps();
-    if (taps.length === 0) {
+    const perfect = this.goodTaps();
+    const good = this.lateTaps() + this.earlyTaps();
+    const bad = this.tooLateTaps() + this.tooEarlyTaps();
+    const missed = this.missedTaps();
+
+    const total = perfect + good + bad + missed;
+    if (total === 0) {
       this._resultPercentage.set(0);
       return;
     }
 
-    const good = this.goodTaps();
-    const late = this.lateTaps();
-    const early = this.earlyTaps();
-    const tooLate = this.tooLateTaps();
-    const tooEarly = this.tooEarlyTaps();
-    const missed = this.missedTaps();
+    const score = Math.round(((perfect + good * 0.7) / total) * 100);
+    this._resultPercentage.set(score);
+  }
 
-    // Adjusted accuracy calculation logic
-    const score = good - (late * 0.2) - (early * 0.2) - (tooLate * 0.5) - (tooEarly * 0.5) - missed;
-    const maxScore = this.totalNotes() || 1;
-    
-    let result = (score / maxScore) * 100;
-    this._resultPercentage.set(Math.round(Math.max(0, result)));
+  exportEvaluationLog(notes: number[]): void {
+    const taps = this._userTaps();
+    let logContent = `--- TAP RYTHM EVALUATION LOG ---\n`;
+    logContent += `BPM: ${this.originalBpm()} | Level: ${this.level()}\n`;
+    logContent += `Note Attendue (ms) | Tap Utilisateur (ms) | Différence (ms) | Jugement\n`;
+    logContent += `-----------------------------------------------------------------------\n`;
+
+    const maxNotes = Math.max(notes.length, taps.length);
+    for (let i = 0; i < maxNotes; i++) {
+      const expected = notes[i] !== undefined ? Math.round(notes[i]) : 'N/A';
+      if (i < taps.length) {
+        const tap = taps[i];
+        const tapTime = Math.round(tap.timeMs);
+        const diffMs = tapTime - (tap.expectedMs || 0);
+        const sign = diffMs > 0 ? '+' : '';
+        logContent += `${expected.toString().padEnd(18)} | ${tapTime.toString().padEnd(20)} | ${(sign + diffMs).padEnd(15)} | ${tap.result}\n`;
+      } else {
+        logContent += `${expected.toString().padEnd(18)} | (Manqué)             | N/A             | Erreur / Oubli\n`;
+      }
+    }
+
+    console.log(logContent);
+
+    const blob = new Blob([logContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tap_rythm_log_${new Date().getTime()}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 
   resetSettings(): void {

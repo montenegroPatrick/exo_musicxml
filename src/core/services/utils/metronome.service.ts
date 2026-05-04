@@ -104,17 +104,20 @@ export class MetronomeService implements OnDestroy {
     this._countInStatus.set('not-started');
   }
 
+  private _silentCountIn: boolean = false;
+
   // -- Count In Logic (TapRythm) --
 
-  startCountIn(onComplete: () => void): void {
+  startCountIn(onComplete: () => void, silent: boolean = false): void {
     this._onCountInComplete = onComplete;
     this._countInStatus.set('play');
     this._metronomeTick.set(1);
+    this._silentCountIn = silent;
     
     // Reset internal beat tracker to align with count in
     this._currentNoteInMeasure = 0;
     
-    // We start the metronome audio as well for the count-in
+    // We start the metronome audio/scheduler as well for the count-in
     this.start();
   }
 
@@ -180,6 +183,10 @@ export class MetronomeService implements OnDestroy {
             }
           });
       }
+    }
+
+    if (this._silentCountIn && this._countInStatus() === 'play') {
+      return;
     }
 
     const osc = this._audioCtx.createOscillator();

@@ -148,14 +148,16 @@ export class LessonService {
   setLessonData(data: ILesson): void {
     console.log('%c[LessonService] RECEIVING DATA:', 'background: #0277BD; color: white; padding: 2px 5px; border-radius: 2px', data);
     this._coreDataStore.setLessonData(data);
+    this._coreDataStore.setExercisePayload(data);
     if (data.chapter !== undefined) this._lessonId.set(data.chapter.toString());
     if (data.sequence !== undefined) this._seq.set(data.sequence.toString());
 
     // -- XML Loading --
-    if (data.url && determineImgType(data) === 'xml') {
-        if (data.url.startsWith('http')) {
-            console.log(`[LessonService] XML URL detected, fetching content: ${data.url}`);
-            this._http.get(data.url, { responseType: 'text' }).subscribe({
+    const xmlUrl = data.url || (data.xmlFile ? `https://www.imusic-school.info/app/datas/xmlExo/${data.xmlFile}` : undefined);
+    if (xmlUrl && determineImgType(data) === 'xml') {
+        if (xmlUrl.startsWith('http') || xmlUrl.startsWith('assets/')) {
+            console.log(`[LessonService] XML URL detected, fetching content: ${xmlUrl}`);
+            this._http.get(xmlUrl, { responseType: 'text' }).subscribe({
                 next: (xml) => {
                     console.log(`[LessonService] XML content fetched successfully (${xml.length} chars)`);
                     this._coreDataStore.setXmlContent(xml);
@@ -164,7 +166,7 @@ export class LessonService {
             });
         } else {
             console.log(`[LessonService] XML Data detected (Raw Content). Setting Store...`);
-            this._coreDataStore.setXmlContent(data.url);
+            this._coreDataStore.setXmlContent(xmlUrl);
         }
     }
   }

@@ -55,7 +55,7 @@ export const routes: Routes = [
       },
       {
         path: 'tap-rythm',
-        data: { },
+        data: { controlBar: 'tap-rythm' },
         loadComponent: () => import('./modules/tap-rythm/tap-rythm.component').then(m => m.TapRythmPageComponent),
       },
       {

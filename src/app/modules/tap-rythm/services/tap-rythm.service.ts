@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
-import { EnvironmentInjector, inject, Injectable, signal } from '@angular/core';
+import { EnvironmentInjector, inject, Injectable, signal, effect } from '@angular/core';
 import { environment } from '@environments/environment';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { api_url } from 'src/core/constant/api_url';
@@ -14,74 +14,30 @@ import { CoreDataService } from '@core/services/core-data.service';
 })
 export class TapRythmService {
   static readonly FLAT_APP_ID = environment.FLAT_APP_ID;
-  private readonly _http = inject(HttpClient);
   private readonly _coreData = inject(CoreDataService);
   
   // -- Private Writable Signals (Processed Data) --
   private readonly _jsonXml = signal<IJsonXml>({});
   private readonly _jsonXmlOriginal = signal<IJsonXml>({}); // Keeping cache for speed scaling
-  private readonly _isError = signal<boolean>(false);
 
   // -- Public Readonly Accessors --
   readonly musicXml = this._coreData.xmlContent;
   readonly jsonXml = this._jsonXml.asReadonly();
-  readonly isError = this._isError.asReadonly();
+  
+  // Since we rely on CoreDataStore which manages its own error state if needed,
+  // we can map isError to a simple false or link it to CoreDataStore's error state.
+  readonly isError = signal<boolean>(false).asReadonly();
 
-  /**
-   * Fetches the MusicXML file for a specific sequence.
-   * On success, also triggers the fetch for the companion JSON data.
-   */
-  xmlFetch(seq: string): Observable<HttpResponse<string | null>> {
-    const url = `${api_url.exoMusicXml}${seq}.musicxml`;
-    const headers = new HttpHeaders({
-      'Content-Type': 'text/xml',
-      'Cache-Control': 'no-cache',
-    });
-
-    return this._http.get(url, { responseType: 'text', observe: 'response', headers }).pipe(
-      map((res: HttpResponse<string | null>) => {
-        if (res.status === 200 && res.body) {
-          this._coreData.setXmlContent(res.body);
-          this._isError.set(false);
-          this.getJsonFile(seq).subscribe();
-        } else {
-          this._isError.set(true);
-        }
-        return res;
-      }),
-      catchError((error) => {
-        console.error('[TapRythmService]: Error fetching XML', error);
-        this._isError.set(true);
-        return of(new HttpResponse({ body: null, status: error.status || 500 }));
-      })
-    );
-  }
-
-  /**
-   * Fetches the JSON companion file for scoring and metadata.
-   */
-  getJsonFile(seq: string): Observable<HttpResponse<IJsonXml | null>> {
-    const url = `${api_url.exoMusicXml}${seq}.json`;
-    const headers = new HttpHeaders({ 'Cache-Control': 'no-cache' });
-
-    return this._http.get<IJsonXml>(url, { observe: 'response', headers }).pipe(
-      map((res: HttpResponse<IJsonXml | null>) => {
-        if (res.status === 200 && res.body) {
-          this._coreData.setExercisePayload(res.body);
-          this._jsonXmlOriginal.set(res.body);
-          this._jsonXml.set(res.body);
-          this._isError.set(false);
-        } else {
-          this._isError.set(true);
-        }
-        return res;
-      }),
-      catchError((error) => {
-        console.error('[TapRythmService]: Error fetching JSON', error);
-        this._isError.set(true);
-        return of(new HttpResponse({ body: null, status: error.status || 500 }));
-      })
-    );
+  constructor() {
+    // Reactively update local JSON state when the unified store updates
+    effect(() => {
+      const payload = this._coreData.exercisePayload() as IJsonXml;
+      if (payload && payload.notes) {
+        // Only set if we actually have notes, to avoid resetting on empty payloads
+        this._jsonXmlOriginal.set(payload);
+        this._jsonXml.set(payload);
+      }
+    }, { allowSignalWrites: true });
   }
 
   /**

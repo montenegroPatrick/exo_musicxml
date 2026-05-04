@@ -1,6 +1,6 @@
-export type LessonModuleType = 'video' | 'video-diapo' | 'diapo' | 'audio-mixer' | 'video-xml' | 'score-musicxml';
+export type LessonModuleType = 'video' | 'video-diapo' | 'diapo' | 'audio-mixer' | 'video-xml' | 'score-musicxml' | 'tap-rythm';
 export type DiapoType = 'xml' | 'eps' | 'pdf' | 'html';
-export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer' | 'metronome' | 'musicxml';
+export type ControlBarType = 'video' | 'video-xml' | 'audio-mixer' | 'metronome' | 'musicxml' | 'tap-rythm';
 
 export interface ImageItem {
   pos?: number;
@@ -64,6 +64,7 @@ export interface ILesson {
   pos?: number;
   imageList?: ImageItem[];
   url?: string;
+  xmlFile?: string;
 
   // XML & Data Properties
   folder?: string;
@@ -128,7 +129,7 @@ export function determineImgType(lesson: ILesson): DiapoType | undefined {
   const url = lesson.url?.toLowerCase();
   
   // 1. Détection XML prioritaire (via type, URL ou structure de données)
-  if (typeImg === 'xml' || url?.endsWith('.xml') || lesson.sync || lesson.trackList || lesson.TrackList) {
+  if (typeImg === 'xml' || url?.endsWith('.xml') || lesson.sync || lesson.trackList || lesson.TrackList || lesson.xmlFile) {
     return 'xml';
   }
 

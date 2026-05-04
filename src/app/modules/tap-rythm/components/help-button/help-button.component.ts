@@ -6,12 +6,13 @@ import { OnboardingService } from '../../../../../core/services/utils/onboarding
   selector: 'app-help-button',
   imports: [ButtonModule],
   template: `
-    <p-button
-      icon="pi pi-question-circle"
-      size="large"
-      styleClass="p-1!"
+    <button
+      class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/10 transition-all text-white/80 hover:text-white cursor-pointer bg-transparent border-none"
+      title="Aide"
       (click)="handleClick()"
-    ></p-button>
+    >
+      <i class="pi pi-question-circle text-lg"></i>
+    </button>
   `,
   styles: ``,
 })

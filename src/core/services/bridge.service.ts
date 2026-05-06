@@ -139,11 +139,19 @@ export class BridgeService {
       case 'mobile': {
         const handlerName = HANDLER_MAP[action] ?? 'onPlaybackEvent';
         if ((window as any).flutter_inappwebview?.callHandler) {
-          (window as any).flutter_inappwebview.callHandler(
-            handlerName,
-            message,
-          );
-          // console.log(`[BridgeService]: Mobile => [${handlerName}]`, message);
+          (window as any).flutter_inappwebview
+            .callHandler(handlerName, message)
+            .then((response: Record<string, unknown> | null) => {
+              if (response && typeof response === 'object') {
+                this._push(response);
+              }
+            })
+            .catch((err: unknown) => {
+              console.error(
+                `[BridgeService]: callHandler [${handlerName}] error`,
+                err,
+              );
+            });
         } else {
           console.warn('[BridgeService]: callHandler not available yet');
         }
